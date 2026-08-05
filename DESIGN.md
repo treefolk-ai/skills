@@ -4,7 +4,7 @@
 
 Treefolk Skills is a small, portable collection of complete workflows for AI agents. It exists to turn recurring user intent into maintainable procedures with explicit outcomes, safety boundaries, and verification—not to collect isolated prompts or command aliases.
 
-The current public surface is intentionally limited to `setup-repo`, `commit-push`, and `to-mmd`.
+The current public surface is intentionally limited to `setup-repo`, `commit-push`, `pr`, and `to-mmd`.
 
 ## Skill vs step vs script vs resource
 
@@ -58,7 +58,7 @@ Taxonomy is metadata, not an installation path. Installed skills remain flat, wh
 - The category for outward communication, distribution, adoption, and growth does not yet have a final English name.
 - Do not stabilize `market`, `reach`, or another candidate in directories, validation rules, or compatibility promises before that decision is made.
 
-Future taxonomy is not a stable API. The current skills use `core / git / workflow` for `setup-repo` and `commit-push`, and `core / format / transform` for `to-mmd`.
+Future taxonomy is not a stable API. The current skills use `core / git / workflow` for `setup-repo`, `commit-push`, and `pr`, and `core / format / transform` for `to-mmd`.
 
 ## Naming rules
 
