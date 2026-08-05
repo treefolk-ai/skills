@@ -1,0 +1,7 @@
+interface:
+  display_name: "Setup Repo"
+  short_description: "Safely initialize and publish a repository"
+  default_prompt: "Use $s-repo to initialize and publish this repository safely."
+
+policy:
+  allow_implicit_invocation: false

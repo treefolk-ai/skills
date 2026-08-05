@@ -14,19 +14,27 @@ Skill bodies live only in `SKILL.md`. Taxonomy lives in metadata and exists prim
 
 ## Current skills
 
-| Skill | Category | Domain | Kind | Purpose |
-| --- | --- | --- | --- | --- |
-| `setup-repo` | core | git | workflow | Safely initialize and perform the first remote push |
-| `commit-push` | core | git | workflow | Review, commit, and push daily changes |
-| `to-mmd` | core | format | transform | Convert structured information into Mermaid |
+| Skill | Category | Domain | Kind | Invocation | Purpose |
+| --- | --- | --- | --- | --- | --- |
+| `s-repo` | core | git | workflow | P0: explicit only | Safely initialize and perform the first remote push |
+| `c-push` | core | git | workflow | P0: explicit only | Review, commit, and push daily changes |
+| `pr` | core | git | workflow | P0: explicit only | Safely publish current work and open or reuse a pull request |
+| `to-mmd` | core | format | transform | P1: implicit allowed | Convert structured information into Mermaid |
 
 ## Workflow examples
 
 - “Set up this local project on `main`, connect it to this existing remote, and publish it safely.”
 - “Review the changes for this task, commit only those files, and push the current branch.”
+- “Put this work on a safe topic branch if needed, then open a pull request for review.”
 - “Turn these service interactions into a Mermaid sequence diagram.”
 
 Each skill defines its own inputs, stop conditions, safety rules, verification, and completion report.
+
+## Invocation policy
+
+Treefolk uses P0, P1, and P2 as a maintainer convention rather than a numeric Codex priority. Side-effecting Git workflows are P0 and require an explicit `$skill-name`; focused, low-risk workflows may remain P1 and participate in description matching; P2 skills remain installable but are disabled by host configuration. Taxonomy metadata never controls invocation. See the Chinese guide [Skill 调用参与层级与启用策略](docs/skill-priority.md) for the decision flow, Mermaid diagram, and configuration examples.
+
+> **P0 user notice:** Activating a P0 skill does not make it eligible for automatic description-based matching. The model will not select it from an ordinary natural-language request; the user must invoke its exact command. P0 skills may still appear in the host's skill list or command completion. The current Codex adapter uses `$s-repo`, `$c-push`, and `$pr`. A future, separately implemented and tested Claude Code adapter would use `/s-repo`, `/c-push`, and `/pr`; the current `setup` does not yet support Claude Code.
 
 ## Installation
 
@@ -126,7 +134,7 @@ Do not add a public skill when the capability is only an internal step, a determ
 
 ## Safety
 
-The Git workflows inspect repository state and candidate diffs before changing history or remote state. They prohibit force pushes, implicit history reconciliation, remote replacement, automatic amend, global Git configuration changes, and committing suspected secrets. A workflow stops when it cannot prove that the next action is non-destructive.
+The Git workflows inspect repository state and candidate diffs before changing history or remote state. They prohibit force pushes, implicit history reconciliation, remote replacement, automatic amend, global Git configuration changes, and committing suspected secrets. Automatic pull-request branch creation is limited to a verified base branch with coherent current-task work and a new, non-conflicting branch name. A workflow stops when it cannot prove that the next action is non-destructive.
 
 The bootstrap uses the network to acquire the installer and source over HTTPS. It refuses to overwrite its source installation directory and does not use `sudo` or edit Codex configuration. The local `setup` and `uninstall` adapters use safe symlinks, refuse conflicts, support true dry-runs, and do not access the network.
 
