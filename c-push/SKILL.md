@@ -1,5 +1,5 @@
 ---
-name: commit-push
+name: c-push
 description: Review current Git changes, create a scoped and meaningful commit when needed, and safely push the current branch; use for routine delivery of local work to its intended remote.
 metadata:
   treefolk-category: core
@@ -21,7 +21,7 @@ Deliver the current task's reviewed changes as a meaningful commit on the curren
 
 ## Do not use when
 
-- The project has not been initialized or connected for its first push; use `setup-repo`.
+- The project has not been initialized or connected for its first push; use `s-repo`.
 - History needs rebasing, merging, resetting, amending, or force-updating; handle that as an explicit history operation.
 - The user only wants a review or a local commit with no push; follow that narrower request directly.
 

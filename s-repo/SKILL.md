@@ -1,5 +1,5 @@
 ---
-name: setup-repo
+name: s-repo
 description: Safely initialize a local project on main, connect an existing remote repository, and make the first non-destructive push; use when publishing an unconfigured local project for the first time.
 metadata:
   treefolk-category: core
@@ -22,7 +22,7 @@ Produce a safely initialized Git repository on `main`, connected to the intended
 ## Do not use when
 
 - The remote repository still needs to be created or authentication configured; handle that separately first.
-- An established repository only needs routine changes committed and pushed; use `commit-push`.
+- An established repository only needs routine changes committed and pushed; use `c-push`.
 - Existing local and remote histories require a merge, rebase, reset, or migration; plan that reconciliation explicitly.
 
 ## Inputs

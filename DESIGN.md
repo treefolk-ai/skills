@@ -4,7 +4,7 @@
 
 Treefolk Skills is a small, portable collection of complete workflows for AI agents. It exists to turn recurring user intent into maintainable procedures with explicit outcomes, safety boundaries, and verification—not to collect isolated prompts or command aliases.
 
-The current public surface is intentionally limited to `setup-repo`, `commit-push`, `pr`, and `to-mmd`.
+The current public surface is intentionally limited to `s-repo`, `c-push`, `pr`, and `to-mmd`.
 
 ## Skill vs step vs script vs resource
 
@@ -49,6 +49,16 @@ An intermediate artifact can still justify a public skill when users also reques
 
 Any workflow that changes files, history, or remote state must define preconditions, stop conditions, safety rules, verification, and a concrete completion report. Inspect before acting, verify after acting, and report partial or no-op outcomes precisely. Never infer success from an exit code alone.
 
+## Invocation policy
+
+Treefolk uses invocation tiers as a maintainer convention, not as numeric Codex priority and not as taxonomy:
+
+- P0 skills require explicit invocation. Use the Codex adapter at `agents/openai.yaml` with `policy.allow_implicit_invocation: false` for workflows whose side effects or overlap require clear user intent.
+- P1 skills allow explicit or description-based implicit invocation. Reserve this default for focused, low-risk workflows with unambiguous triggering descriptions.
+- P2 skills are disabled through host configuration when they are low-frequency, temporarily unwanted, or too overlapping to expose safely.
+
+The current Git workflows `s-repo`, `c-push`, and `pr` are P0. `to-mmd` is P1. Keep `SKILL.md` as the only canonical workflow body; host-specific invocation policy belongs in a small adapter and must not duplicate those instructions. Repository validation must require every declared P0 adapter and its exact explicit-only policy. See `docs/skill-priority.md` for the user-facing Chinese guide.
+
 ## Taxonomy model
 
 Taxonomy is metadata, not an installation path. Installed skills remain flat, while each `SKILL.md` declares `treefolk-category`, `treefolk-domain`, and `treefolk-kind`.
@@ -58,7 +68,7 @@ Taxonomy is metadata, not an installation path. Installed skills remain flat, wh
 - The category for outward communication, distribution, adoption, and growth does not yet have a final English name.
 - Do not stabilize `market`, `reach`, or another candidate in directories, validation rules, or compatibility promises before that decision is made.
 
-Future taxonomy is not a stable API. The current skills use `core / git / workflow` for `setup-repo`, `commit-push`, and `pr`, and `core / format / transform` for `to-mmd`.
+Future taxonomy is not a stable API. The current skills use `core / git / workflow` for `s-repo`, `c-push`, and `pr`, and `core / format / transform` for `to-mmd`.
 
 ## Naming rules
 

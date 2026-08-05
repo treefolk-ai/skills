@@ -22,8 +22,8 @@ Produce exactly one open pull request from a safely published source branch to t
 
 ## Do not use when
 
-- The repository still needs initialization, remote setup, or its first push; use `setup-repo`.
-- The user only wants current changes committed and pushed without a pull request; use `commit-push`.
+- The repository still needs initialization, remote setup, or its first push; use `s-repo`.
+- The user only wants current changes committed and pushed without a pull request; use `c-push`.
 - The request is only to review, merge, close, or administratively manage an existing pull request; handle that narrower lifecycle action directly.
 - Local or remote history needs a merge, rebase, reset, amend, force update, or other reconciliation before it can be proposed.
 

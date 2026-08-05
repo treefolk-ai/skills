@@ -1,0 +1,7 @@
+interface:
+  display_name: "PR"
+  short_description: "Safely create and verify pull requests"
+  default_prompt: "Use $pr to publish the current work as a verified pull request."
+
+policy:
+  allow_implicit_invocation: false

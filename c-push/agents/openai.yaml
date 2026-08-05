@@ -1,0 +1,7 @@
+interface:
+  display_name: "Commit and Push"
+  short_description: "Review, commit, and push scoped changes safely"
+  default_prompt: "Use $c-push to review, commit, and push the current task safely."
+
+policy:
+  allow_implicit_invocation: false

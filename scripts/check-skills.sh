@@ -6,7 +6,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/check-skills.sh [--help]
 
-Validate every top-level */SKILL.md package in this repository.
+Validate every top-level */SKILL.md package and required Codex adapter in this repository.
 EOF
 }
 
@@ -42,6 +42,12 @@ required_sections=(
   "Safety"
   "Verification"
   "Completion report"
+)
+
+explicit_only_skills=(
+  "c-push"
+  "pr"
+  "s-repo"
 )
 
 report_error() {
@@ -267,6 +273,157 @@ section_count() {
   ' "$file"
 }
 
+requires_explicit_invocation() {
+  local skill_name=$1
+  local candidate
+
+  for candidate in "${explicit_only_skills[@]}"; do
+    if [ "$skill_name" = "$candidate" ]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+top_level_mapping_count() {
+  local file=$1
+  local mapping=$2
+
+  awk -v heading="$mapping:" '
+    {
+      sub(/\r$/, "")
+      if ($0 == heading) {
+        count++
+      }
+    }
+    END { print count + 0 }
+  ' "$file"
+}
+
+direct_nested_key_count() {
+  local file=$1
+  local mapping=$2
+  local key=$3
+
+  awk -v heading="$mapping:" -v prefix="  $key:" '
+    {
+      sub(/\r$/, "")
+    }
+    $0 == heading {
+      in_mapping = 1
+      next
+    }
+    in_mapping && $0 !~ /^[ \t]/ && $0 !~ /^$/ && $0 !~ /^#/ {
+      in_mapping = 0
+    }
+    in_mapping && index($0, prefix) == 1 {
+      count++
+    }
+    END { print count + 0 }
+  ' "$file"
+}
+
+direct_nested_raw_value() {
+  local file=$1
+  local mapping=$2
+  local key=$3
+
+  awk -v heading="$mapping:" -v prefix="  $key:" '
+    function trim(value) {
+      sub(/^[ \t]+/, "", value)
+      sub(/[ \t]+$/, "", value)
+      return value
+    }
+    {
+      sub(/\r$/, "")
+    }
+    $0 == heading {
+      in_mapping = 1
+      next
+    }
+    in_mapping && $0 !~ /^[ \t]/ && $0 !~ /^$/ && $0 !~ /^#/ {
+      exit
+    }
+    in_mapping && index($0, prefix) == 1 {
+      print trim(substr($0, length(prefix) + 1))
+      exit
+    }
+  ' "$file"
+}
+
+validate_explicit_only_adapter() {
+  local skill_name=$1
+  local package_dir=$2
+  local adapter_file="$package_dir/agents/openai.yaml"
+  local relative_adapter=${adapter_file#"$repo_root"/}
+  local mapping
+  local mapping_count
+  local key
+  local key_count
+  local raw_value
+  local scalar_value
+  local expected_mention
+
+  if [ ! -f "$adapter_file" ]; then
+    report_error "$relative_adapter" "P0 skill '$skill_name' requires a Codex adapter"
+    return
+  fi
+
+  for mapping in interface policy; do
+    mapping_count=$(top_level_mapping_count "$adapter_file" "$mapping")
+    if [ "$mapping_count" -ne 1 ]; then
+      report_error "$relative_adapter" "top-level mapping '$mapping' must appear exactly once"
+    fi
+  done
+
+  for key in display_name short_description default_prompt; do
+    key_count=$(direct_nested_key_count "$adapter_file" interface "$key")
+    if [ "$key_count" -ne 1 ]; then
+      report_error "$relative_adapter" "interface key '$key' must appear exactly once with two-space indentation"
+      continue
+    fi
+
+    raw_value=$(direct_nested_raw_value "$adapter_file" interface "$key")
+    case "$raw_value" in
+      \"*\")
+        scalar_value=${raw_value#\"}
+        scalar_value=${scalar_value%\"}
+        if [ -z "$scalar_value" ]; then
+          report_error "$relative_adapter" "interface key '$key' must not be empty"
+        fi
+        ;;
+      *)
+        report_error "$relative_adapter" "interface key '$key' must be a quoted string"
+        continue
+        ;;
+    esac
+
+    if [ "$key" = "short_description" ] && { [ "${#scalar_value}" -lt 25 ] || [ "${#scalar_value}" -gt 64 ]; }; then
+      report_error "$relative_adapter" "interface.short_description must contain 25-64 characters"
+    fi
+
+    if [ "$key" = "default_prompt" ]; then
+      expected_mention="\$$skill_name"
+      case "$scalar_value" in
+        *"$expected_mention") ;;
+        *"$expected_mention"[!a-z0-9-]*) ;;
+        *) report_error "$relative_adapter" "interface.default_prompt must mention '$expected_mention'" ;;
+      esac
+    fi
+  done
+
+  key_count=$(direct_nested_key_count "$adapter_file" policy allow_implicit_invocation)
+  if [ "$key_count" -ne 1 ]; then
+    report_error "$relative_adapter" "policy.allow_implicit_invocation must appear exactly once with two-space indentation"
+  else
+    raw_value=$(direct_nested_raw_value "$adapter_file" policy allow_implicit_invocation)
+    if [ "$raw_value" != "false" ]; then
+      report_error "$relative_adapter" "P0 skill '$skill_name' requires unquoted policy.allow_implicit_invocation: false"
+    fi
+  fi
+}
+
 shopt -s nullglob
 skill_files=("$repo_root"/*/SKILL.md)
 shopt -u nullglob
@@ -274,6 +431,12 @@ shopt -u nullglob
 if [ "${#skill_files[@]}" -eq 0 ]; then
   report_error "." "no top-level */SKILL.md files found"
 fi
+
+for explicit_only_skill in "${explicit_only_skills[@]}"; do
+  if [ ! -f "$repo_root/$explicit_only_skill/SKILL.md" ]; then
+    report_error "scripts/check-skills.sh" "P0 skill '$explicit_only_skill' does not name an existing top-level package"
+  fi
+done
 
 for skill_file in "${skill_files[@]}"; do
   checked_count=$((checked_count + 1))
@@ -364,6 +527,10 @@ for skill_file in "${skill_files[@]}"; do
       report_error "$relative_file" "H2 heading '## $required_section' appears $heading_count times"
     fi
   done
+
+  if requires_explicit_invocation "$package_dir"; then
+    validate_explicit_only_adapter "$package_dir" "$(dirname -- "$skill_file")"
+  fi
 done
 
 if [ "$error_count" -gt 0 ]; then
