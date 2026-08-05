@@ -1,0 +1,64 @@
+---
+name: skill-name
+description: Describe what the skill accomplishes and the situations in which it should be used.
+metadata:
+  treefolk-category: category
+  treefolk-domain: domain
+  treefolk-kind: kind
+---
+
+<!-- Delete every instructional comment and placeholder before publishing. -->
+
+# Human-readable skill name
+
+## Outcome
+
+<!-- State the independently verifiable result. -->
+
+## Use when
+
+<!-- List natural user requests that should trigger this workflow. -->
+
+## Do not use when
+
+<!-- Define nearby requests that need a different skill or direct handling. -->
+
+## Inputs
+
+<!-- Separate required inputs, optional inputs, and defaults. -->
+
+## Preconditions
+
+<!-- List checks that must happen before any modification. -->
+
+## Workflow
+
+<!-- Describe ordered decisions and branches, not only commands. Include no-op behavior. -->
+
+## Stop conditions
+
+<!-- Name conditions where the agent must stop rather than guess or force progress. -->
+
+## Safety
+
+<!-- State prohibited behavior and data-protection rules. -->
+
+## Verification
+
+<!-- Define the checks required before claiming completion. -->
+
+## Completion report
+
+<!-- Specify the concrete results, warnings, no-ops, and incomplete work to report. -->
+
+<!--
+Promotion test for a public skill:
+1. Would a user naturally request it directly?
+2. Does it produce an independent, verifiable outcome?
+3. Does it contain judgment, workflow, or safety rules worth preserving?
+4. Will it be invoked repeatedly?
+5. Is it only one internal step of an existing skill?
+
+If question 5 is yes while most of questions 1–4 are no, do not create a new public skill.
+Keep the capability as an internal step, script, or resource instead.
+-->

@@ -1,0 +1,252 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: setup --host codex [--dry-run]
+       setup --help
+
+Install the top-level skills in this repository for Codex.
+
+Options:
+  --host codex  Select the Codex host (required).
+  --dry-run     Print the plan without changing the filesystem.
+  --help, -h    Show this help message.
+
+Install target precedence:
+  1. TREEFOLK_SKILLS_DIR
+  2. CODEX_HOME/skills (when CODEX_HOME is set)
+  3. HOME/.codex/skills
+EOF
+}
+
+fail() {
+  printf 'setup: %s\n' "$1" >&2
+  exit 2
+}
+
+# Print PATH with its parent directory resolved physically. PATH itself need not
+# exist. This keeps repository discovery independent of the caller's cwd.
+physical_parent_path() {
+  local input_path parent leaf physical_parent
+
+  input_path=$1
+  case "$input_path" in
+    /*) ;;
+    *) input_path="$(pwd -P)/$input_path" ;;
+  esac
+
+  parent=${input_path%/*}
+  leaf=${input_path##*/}
+  if [ -z "$parent" ]; then
+    parent=/
+  fi
+
+  physical_parent=$(CDPATH= cd -P "$parent" && pwd)
+  printf '%s/%s\n' "${physical_parent%/}" "$leaf"
+}
+
+repository_root() {
+  local source_path command_path link_target source_parent
+
+  source_path=${BASH_SOURCE[0]}
+  case "$source_path" in
+    */*) ;;
+    *)
+      command_path=$(command -v "$source_path") || return 1
+      source_path=$command_path
+      ;;
+  esac
+
+  source_path=$(physical_parent_path "$source_path")
+  while [ -L "$source_path" ]; do
+    link_target=$(readlink "$source_path")
+    case "$link_target" in
+      /*) source_path=$link_target ;;
+      *)
+        source_parent=${source_path%/*}
+        source_path="$source_parent/$link_target"
+        ;;
+    esac
+    source_path=$(physical_parent_path "$source_path")
+  done
+
+  source_parent=${source_path%/*}
+  CDPATH= cd -P "$source_parent" && pwd
+}
+
+resolve_target() {
+  local selected
+
+  if [ "${TREEFOLK_SKILLS_DIR+x}" = x ]; then
+    [ -n "$TREEFOLK_SKILLS_DIR" ] || fail 'TREEFOLK_SKILLS_DIR is set but empty'
+    selected=$TREEFOLK_SKILLS_DIR
+  elif [ "${CODEX_HOME+x}" = x ]; then
+    [ -n "$CODEX_HOME" ] || fail 'CODEX_HOME is set but empty'
+    selected="${CODEX_HOME%/}/skills"
+  else
+    [ "${HOME+x}" = x ] && [ -n "$HOME" ] || fail 'HOME is not set'
+    selected="${HOME%/}/.codex/skills"
+  fi
+
+  case "$selected" in
+    /*) ;;
+    *) selected="$(pwd -P)/$selected" ;;
+  esac
+
+  while [ "$selected" != / ] && [ "${selected%/}" != "$selected" ]; do
+    selected=${selected%/}
+  done
+  printf '%s\n' "$selected"
+}
+
+physical_directory() {
+  CDPATH= cd -P "$1" 2>/dev/null && pwd
+}
+
+link_resolves_to() {
+  local candidate expected resolved
+
+  candidate=$1
+  expected=$2
+  [ -L "$candidate" ] || return 1
+  resolved=$(physical_directory "$candidate") || return 1
+  [ "$resolved" = "$expected" ]
+}
+
+host=
+dry_run=0
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --host)
+      [ "$#" -ge 2 ] || fail '--host requires a value'
+      [ -z "$host" ] || fail '--host may be specified only once'
+      host=$2
+      shift 2
+      ;;
+    --host=*)
+      [ -z "$host" ] || fail '--host may be specified only once'
+      host=${1#--host=}
+      shift
+      ;;
+    --dry-run)
+      dry_run=1
+      shift
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      fail "unknown argument: $1"
+      ;;
+  esac
+done
+
+[ -n "$host" ] || fail '--host codex is required'
+[ "$host" = codex ] || fail "unsupported host: $host (expected codex)"
+
+REPOSITORY_ROOT=$(repository_root) || fail 'could not resolve the repository root'
+TARGET_DIR=$(resolve_target)
+
+printf 'Repository: %s\n' "$REPOSITORY_ROOT"
+printf 'Target: %s\n' "$TARGET_DIR"
+printf 'Host: %s\n' "$host"
+if [ "$dry_run" -eq 1 ]; then
+  printf 'Mode: dry-run\n'
+else
+  printf 'Mode: install\n'
+fi
+printf 'Plan:\n'
+
+planned_count=0
+installed_count=0
+skipped_count=0
+conflict_count=0
+skill_count=0
+
+if { [ -L "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; } ||
+   { [ -e "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; }; then
+  printf '  conflict  target is not a directory: %s\n' "$TARGET_DIR"
+  conflict_count=$((conflict_count + 1))
+else
+  shopt -s nullglob dotglob
+  for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
+    [ -f "$skill_file" ] || continue
+    skill_dir=${skill_file%/SKILL.md}
+    [ -d "$skill_dir" ] || continue
+
+    skill_count=$((skill_count + 1))
+    skill_name=${skill_dir##*/}
+    skill_physical=$(physical_directory "$skill_dir")
+    destination="$TARGET_DIR/$skill_name"
+
+    if link_resolves_to "$destination" "$skill_physical"; then
+      printf '  skip      %s (already linked)\n' "$skill_name"
+      skipped_count=$((skipped_count + 1))
+    elif [ -L "$destination" ]; then
+      printf '  conflict  %s (wrong symlink at %s)\n' "$skill_name" "$destination"
+      conflict_count=$((conflict_count + 1))
+    elif [ -e "$destination" ]; then
+      if [ -d "$destination" ]; then
+        printf '  conflict  %s (directory exists at %s)\n' "$skill_name" "$destination"
+      else
+        printf '  conflict  %s (non-symlink exists at %s)\n' "$skill_name" "$destination"
+      fi
+      conflict_count=$((conflict_count + 1))
+    else
+      printf '  install   %s -> %s\n' "$skill_name" "$destination"
+      planned_count=$((planned_count + 1))
+    fi
+  done
+fi
+
+if [ "$skill_count" -eq 0 ] && [ "$conflict_count" -eq 0 ]; then
+  printf '  (no top-level skills found)\n'
+fi
+
+if [ "$conflict_count" -gt 0 ]; then
+  printf 'Installed: %d\n' "$installed_count"
+  printf 'Skipped: %d\n' "$skipped_count"
+  printf 'Conflicts: %d\n' "$conflict_count"
+  exit 1
+fi
+
+if [ "$dry_run" -eq 0 ] && [ "$planned_count" -gt 0 ]; then
+  mkdir -p "$TARGET_DIR"
+
+  for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
+    [ -f "$skill_file" ] || continue
+    skill_dir=${skill_file%/SKILL.md}
+    [ -d "$skill_dir" ] || continue
+
+    skill_name=${skill_dir##*/}
+    skill_physical=$(physical_directory "$skill_dir")
+    destination="$TARGET_DIR/$skill_name"
+
+    if link_resolves_to "$destination" "$skill_physical"; then
+      continue
+    fi
+    if [ -L "$destination" ] || [ -e "$destination" ]; then
+      printf 'setup: destination changed after planning: %s\n' "$destination" >&2
+      conflict_count=$((conflict_count + 1))
+      break
+    fi
+
+    if ln -s "$skill_dir" "$destination"; then
+      installed_count=$((installed_count + 1))
+    else
+      printf 'setup: could not create symlink: %s\n' "$destination" >&2
+      conflict_count=$((conflict_count + 1))
+      break
+    fi
+  done
+fi
+
+printf 'Installed: %d\n' "$installed_count"
+printf 'Skipped: %d\n' "$skipped_count"
+printf 'Conflicts: %d\n' "$conflict_count"
+
+[ "$conflict_count" -eq 0 ]

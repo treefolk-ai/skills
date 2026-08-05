@@ -1,0 +1,36 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check Bash syntax
+        run: |
+          /bin/bash -n install.sh
+          /bin/bash -n setup
+          /bin/bash -n uninstall
+          /bin/bash -n scripts/check-skills.sh
+
+      - name: Validate skill packages
+        run: ./scripts/check-skills.sh
+
+      - name: Dry-run curl bootstrap
+        run: ./install.sh --host codex --dry-run
+
+      - name: Dry-run Codex setup
+        run: ./setup --host codex --dry-run
+
+      - name: Dry-run Codex uninstall
+        run: ./uninstall --host codex --dry-run
