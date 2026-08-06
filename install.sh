@@ -198,7 +198,7 @@ fi
 printf 'Plan:\n'
 printf '  1. Download the selected source archive over HTTPS.\n'
 printf '  2. Extract it in a private temporary directory.\n'
-printf '  3. Check Bash syntax and validate every top-level skill package.\n'
+printf '  3. Check Bash syntax, skill packages, and setup behavior in a private temporary target.\n'
 printf '  4. Create the new source install directory without overwriting anything.\n'
 printf '  5. Delegate Codex activation to the downloaded setup script.\n'
 
@@ -242,13 +242,14 @@ if ! tar -xzf "$archive_file" -C "$extracted_dir" --strip-components=1; then
   fail 'archive extraction failed; no source was installed or activated'
 fi
 
-for required_file in install.sh setup uninstall scripts/check-skills.sh; do
+for required_file in install.sh setup uninstall scripts/check-setup.sh scripts/check-skills.sh; do
   [ -f "$extracted_dir/$required_file" ] || fail "downloaded source is missing required file: $required_file"
 done
 
 if ! /bin/bash -n "$extracted_dir/install.sh" ||
    ! /bin/bash -n "$extracted_dir/setup" ||
    ! /bin/bash -n "$extracted_dir/uninstall" ||
+   ! /bin/bash -n "$extracted_dir/scripts/check-setup.sh" ||
    ! /bin/bash -n "$extracted_dir/scripts/check-skills.sh"; then
   fail 'downloaded source failed Bash syntax validation'
 fi
@@ -260,6 +261,10 @@ shopt -u nullglob
 
 if ! /bin/bash "$extracted_dir/scripts/check-skills.sh"; then
   fail 'downloaded source failed skill-package validation'
+fi
+
+if ! /bin/bash "$extracted_dir/scripts/check-setup.sh"; then
+  fail 'downloaded source failed setup behavior validation'
 fi
 
 if [ -e "$install_dir" ] || [ -L "$install_dir" ]; then

@@ -59,7 +59,8 @@ repository_root() {
 
   source_path=$(physical_parent_path "$source_path")
   while [ -L "$source_path" ]; do
-    link_target=$(readlink "$source_path")
+    link_target=$(readlink -n "$source_path" && printf '.') || return 1
+    link_target=${link_target%.}
     case "$link_target" in
       /*) source_path=$link_target ;;
       *)
@@ -113,8 +114,37 @@ link_resolves_to() {
   [ "$resolved" = "$expected" ]
 }
 
+# Compare a symlink's target with an expected path without requiring the target
+# itself to exist. Renamed skill directories no longer exist, so resolving the
+# symlink as a directory would not prove ownership for these legacy names.
+link_points_to_path() {
+  local candidate expected raw_output raw_target
+
+  candidate=$1
+  expected=$2
+  [ -L "$candidate" ] || return 1
+
+  # Command substitution strips trailing newlines, which are valid symlink
+  # target bytes. Suppress readlink's delimiter and append a sentinel so a
+  # lookalike target ending in a newline can never compare equal.
+  raw_output=$(readlink -n "$candidate" && printf '.') || return 1
+  raw_target=${raw_output%.}
+
+  # Historical setup versions created absolute links from the physical
+  # repository root. Exact byte equality is therefore both sufficient proof
+  # of ownership and safer than normalizing an arbitrary lookalike path.
+  [ "$raw_target" = "$expected" ]
+}
+
 host=
 dry_run=0
+
+legacy_skill_names=(
+  commit-push
+  c-push
+  setup-repo
+  s-repo
+)
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -210,6 +240,36 @@ else
     else
       printf '  skip      %s (not installed)\n' "$skill_name"
       skipped_count=$((skipped_count + 1))
+    fi
+  done
+
+  # Remove historical names only when the symlink still points to the exact
+  # package path that used to exist in this checkout. Unrelated same-named
+  # entries are outside this repository's ownership and are left untouched.
+  for legacy_name in "${legacy_skill_names[@]}"; do
+    legacy_source="$REPOSITORY_ROOT/$legacy_name"
+    legacy_destination="$TARGET_DIR/$legacy_name"
+
+    # A legacy name that exists again in the checkout may have been
+    # intentionally repurposed; the normal public-skill loop owns that case.
+    { [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ]; } || continue
+    if link_points_to_path "$legacy_destination" "$legacy_source"; then
+      printf '  remove    %s (owned legacy link at %s)\n' "$legacy_name" "$legacy_destination"
+      if [ "$dry_run" -eq 0 ]; then
+        # Re-check immediately before unlinking so only a verified repository
+        # symlink can ever be removed.
+        if link_points_to_path "$legacy_destination" "$legacy_source"; then
+          if unlink "$legacy_destination"; then
+            removed_count=$((removed_count + 1))
+          else
+            printf 'uninstall: could not unlink owned legacy link: %s\n' "$legacy_destination" >&2
+            conflict_count=$((conflict_count + 1))
+          fi
+        else
+          printf 'uninstall: legacy destination changed after planning: %s\n' "$legacy_destination" >&2
+          conflict_count=$((conflict_count + 1))
+        fi
+      fi
     fi
   done
 fi

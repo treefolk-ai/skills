@@ -4,13 +4,13 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: setup --host codex [--dry-run]
+Usage: setup [--host codex] [--dry-run]
        setup --help
 
 Install the top-level skills in this repository for Codex.
 
 Options:
-  --host codex  Select the Codex host (required).
+  --host codex  Select the host (default: codex).
   --dry-run     Print the plan without changing the filesystem.
   --help, -h    Show this help message.
 
@@ -61,7 +61,8 @@ repository_root() {
 
   source_path=$(physical_parent_path "$source_path")
   while [ -L "$source_path" ]; do
-    link_target=$(readlink "$source_path")
+    link_target=$(readlink -n "$source_path" && printf '.') || return 1
+    link_target=${link_target%.}
     case "$link_target" in
       /*) source_path=$link_target ;;
       *)
@@ -115,20 +116,52 @@ link_resolves_to() {
   [ "$resolved" = "$expected" ]
 }
 
-host=
+# Compare a symlink's target with an expected path without requiring the target
+# itself to exist. This is used only for narrowly owned legacy links whose
+# source directories disappeared after a public skill rename.
+link_points_to_path() {
+  local candidate expected raw_output raw_target
+
+  candidate=$1
+  expected=$2
+  [ -L "$candidate" ] || return 1
+
+  # Command substitution strips trailing newlines, which are valid symlink
+  # target bytes. Suppress readlink's delimiter and append a sentinel so a
+  # lookalike target ending in a newline can never compare equal.
+  raw_output=$(readlink -n "$candidate" && printf '.') || return 1
+  raw_target=${raw_output%.}
+
+  # Historical setup versions created absolute links from the physical
+  # repository root. Exact byte equality is therefore both sufficient proof
+  # of ownership and safer than normalizing an arbitrary lookalike path.
+  [ "$raw_target" = "$expected" ]
+}
+
+host=codex
+host_option_seen=0
 dry_run=0
+
+legacy_skill_migrations=(
+  "commit-push push"
+  "c-push push"
+  "setup-repo repo"
+  "s-repo repo"
+)
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --host)
       [ "$#" -ge 2 ] || fail '--host requires a value'
-      [ -z "$host" ] || fail '--host may be specified only once'
+      [ "$host_option_seen" -eq 0 ] || fail '--host may be specified only once'
       host=$2
+      host_option_seen=1
       shift 2
       ;;
     --host=*)
-      [ -z "$host" ] || fail '--host may be specified only once'
+      [ "$host_option_seen" -eq 0 ] || fail '--host may be specified only once'
       host=${1#--host=}
+      host_option_seen=1
       shift
       ;;
     --dry-run)
@@ -145,7 +178,6 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-[ -n "$host" ] || fail '--host codex is required'
 [ "$host" = codex ] || fail "unsupported host: $host (expected codex)"
 
 REPOSITORY_ROOT=$(repository_root) || fail 'could not resolve the repository root'
@@ -166,12 +198,32 @@ installed_count=0
 skipped_count=0
 conflict_count=0
 skill_count=0
+migration_count=0
+migrated_count=0
+planned_legacy_names=()
 
 if { [ -L "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; } ||
    { [ -e "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; }; then
   printf '  conflict  target is not a directory: %s\n' "$TARGET_DIR"
   conflict_count=$((conflict_count + 1))
 else
+  for legacy_migration in "${legacy_skill_migrations[@]}"; do
+    legacy_name=${legacy_migration%% *}
+    replacement_name=${legacy_migration#* }
+    legacy_source="$REPOSITORY_ROOT/$legacy_name"
+    legacy_destination="$TARGET_DIR/$legacy_name"
+
+    [ -f "$REPOSITORY_ROOT/$replacement_name/SKILL.md" ] || continue
+    # A legacy name that exists again in the checkout may have been
+    # intentionally repurposed; never treat that live path as migration state.
+    { [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ]; } || continue
+    if link_points_to_path "$legacy_destination" "$legacy_source"; then
+      printf '  migrate   %s -> %s (remove owned legacy link)\n' "$legacy_name" "$replacement_name"
+      planned_legacy_names[${#planned_legacy_names[@]}]=$legacy_name
+      migration_count=$((migration_count + 1))
+    fi
+  done
+
   shopt -s nullglob dotglob
   for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
     [ -f "$skill_file" ] || continue
@@ -209,12 +261,13 @@ fi
 
 if [ "$conflict_count" -gt 0 ]; then
   printf 'Installed: %d\n' "$installed_count"
+  printf 'Migrated: %d\n' "$migrated_count"
   printf 'Skipped: %d\n' "$skipped_count"
   printf 'Conflicts: %d\n' "$conflict_count"
   exit 1
 fi
 
-if [ "$dry_run" -eq 0 ] && [ "$planned_count" -gt 0 ]; then
+if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" -gt 0 ]; }; then
   mkdir -p "$TARGET_DIR"
 
   for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
@@ -243,9 +296,31 @@ if [ "$dry_run" -eq 0 ] && [ "$planned_count" -gt 0 ]; then
       break
     fi
   done
+
+  if [ "$conflict_count" -eq 0 ] && [ "$migration_count" -gt 0 ]; then
+    for legacy_name in "${planned_legacy_names[@]}"; do
+      legacy_source="$REPOSITORY_ROOT/$legacy_name"
+      legacy_destination="$TARGET_DIR/$legacy_name"
+
+      if link_points_to_path "$legacy_destination" "$legacy_source"; then
+        if unlink "$legacy_destination"; then
+          migrated_count=$((migrated_count + 1))
+        else
+          printf 'setup: could not remove owned legacy link: %s\n' "$legacy_destination" >&2
+          conflict_count=$((conflict_count + 1))
+          break
+        fi
+      elif [ -L "$legacy_destination" ]; then
+        printf 'setup: legacy link changed after planning: %s\n' "$legacy_destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
+    done
+  fi
 fi
 
 printf 'Installed: %d\n' "$installed_count"
+printf 'Migrated: %d\n' "$migrated_count"
 printf 'Skipped: %d\n' "$skipped_count"
 printf 'Conflicts: %d\n' "$conflict_count"
 
