@@ -4,20 +4,25 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: uninstall --host codex [--dry-run]
+Usage: uninstall --host codex|grok [--dry-run]
        uninstall --help
 
-Remove this repository's Codex skill symlinks from the install target.
+Remove this repository's shared and legacy Codex skill symlinks.
 
 Options:
-  --host codex  Select the Codex host (required).
-  --dry-run     Print the plan without changing the filesystem.
-  --help, -h    Show this help message.
+  --host HOST  Accept codex or grok (required). Both remove the same owned links.
+  --dry-run    Print the plan without changing the filesystem.
+  --help, -h   Show this help message.
 
-Install target precedence:
+Shared target precedence:
   1. TREEFOLK_SKILLS_DIR
-  2. CODEX_HOME/skills (when CODEX_HOME is set)
-  3. HOME/.codex/skills
+  2. HOME/.agents/skills
+
+Legacy Codex target:
+  1. CODEX_HOME/skills (when CODEX_HOME is set)
+  2. HOME/.codex/skills
+
+Only symlinks proven to point into this checkout are removed from either target.
 EOF
 }
 
@@ -81,7 +86,26 @@ resolve_target() {
   if [ "${TREEFOLK_SKILLS_DIR+x}" = x ]; then
     [ -n "$TREEFOLK_SKILLS_DIR" ] || fail 'TREEFOLK_SKILLS_DIR is set but empty'
     selected=$TREEFOLK_SKILLS_DIR
-  elif [ "${CODEX_HOME+x}" = x ]; then
+  else
+    [ "${HOME+x}" = x ] && [ -n "$HOME" ] || fail 'HOME is not set'
+    selected="${HOME%/}/.agents/skills"
+  fi
+
+  case "$selected" in
+    /*) ;;
+    *) selected="$(pwd -P)/$selected" ;;
+  esac
+
+  while [ "$selected" != / ] && [ "${selected%/}" != "$selected" ]; do
+    selected=${selected%/}
+  done
+  printf '%s\n' "$selected"
+}
+
+resolve_legacy_codex_target() {
+  local selected
+
+  if [ "${CODEX_HOME+x}" = x ]; then
     [ -n "$CODEX_HOME" ] || fail 'CODEX_HOME is set but empty'
     selected="${CODEX_HOME%/}/skills"
   else
@@ -173,14 +197,23 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-[ -n "$host" ] || fail '--host codex is required'
-[ "$host" = codex ] || fail "unsupported host: $host (expected codex)"
+[ -n "$host" ] || fail '--host codex or --host grok is required'
+case "$host" in
+  codex|grok) ;;
+  *) fail "unsupported host: $host (expected codex or grok)" ;;
+esac
 
 REPOSITORY_ROOT=$(repository_root) || fail 'could not resolve the repository root'
-TARGET_DIR=$(resolve_target)
+SHARED_TARGET_DIR=$(resolve_target)
+LEGACY_CODEX_TARGET_DIR=$(resolve_legacy_codex_target)
+TARGET_DIRS=("$SHARED_TARGET_DIR")
+if [ "$LEGACY_CODEX_TARGET_DIR" != "$SHARED_TARGET_DIR" ]; then
+  TARGET_DIRS[${#TARGET_DIRS[@]}]=$LEGACY_CODEX_TARGET_DIR
+fi
 
 printf 'Repository: %s\n' "$REPOSITORY_ROOT"
-printf 'Target: %s\n' "$TARGET_DIR"
+printf 'Shared target: %s\n' "$SHARED_TARGET_DIR"
+printf 'Legacy Codex target: %s\n' "$LEGACY_CODEX_TARGET_DIR"
 printf 'Host: %s\n' "$host"
 if [ "$dry_run" -eq 1 ]; then
   printf 'Mode: dry-run\n'
@@ -194,11 +227,15 @@ skipped_count=0
 conflict_count=0
 skill_count=0
 
-if { [ -L "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; } ||
-   { [ -e "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; }; then
-  printf '  conflict  target is not a directory: %s\n' "$TARGET_DIR"
-  conflict_count=$((conflict_count + 1))
-else
+for target_dir in "${TARGET_DIRS[@]}"; do
+  printf '  target    %s\n' "$target_dir"
+  if { [ -L "$target_dir" ] && [ ! -d "$target_dir" ]; } ||
+     { [ -e "$target_dir" ] && [ ! -d "$target_dir" ]; }; then
+    printf '  conflict  target is not a directory: %s\n' "$target_dir"
+    conflict_count=$((conflict_count + 1))
+    continue
+  fi
+
   shopt -s nullglob dotglob
   for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
     [ -f "$skill_file" ] || continue
@@ -208,7 +245,7 @@ else
     skill_count=$((skill_count + 1))
     skill_name=${skill_dir##*/}
     skill_physical=$(physical_directory "$skill_dir")
-    destination="$TARGET_DIR/$skill_name"
+    destination="$target_dir/$skill_name"
 
     if link_resolves_to "$destination" "$skill_physical"; then
       printf '  remove    %s (%s)\n' "$skill_name" "$destination"
@@ -238,7 +275,7 @@ else
       fi
       conflict_count=$((conflict_count + 1))
     else
-      printf '  skip      %s (not installed)\n' "$skill_name"
+      printf '  skip      %s (not installed at %s)\n' "$skill_name" "$target_dir"
       skipped_count=$((skipped_count + 1))
     fi
   done
@@ -248,7 +285,7 @@ else
   # entries are outside this repository's ownership and are left untouched.
   for legacy_name in "${legacy_skill_names[@]}"; do
     legacy_source="$REPOSITORY_ROOT/$legacy_name"
-    legacy_destination="$TARGET_DIR/$legacy_name"
+    legacy_destination="$target_dir/$legacy_name"
 
     # A legacy name that exists again in the checkout may have been
     # intentionally repurposed; the normal public-skill loop owns that case.
@@ -272,7 +309,7 @@ else
       fi
     fi
   done
-fi
+done
 
 if [ "$skill_count" -eq 0 ] && [ "$conflict_count" -eq 0 ]; then
   printf '  (no top-level skills found)\n'

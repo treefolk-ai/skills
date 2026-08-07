@@ -4,20 +4,24 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: setup [--host codex] [--dry-run]
+Usage: setup [--host codex|grok] [--dry-run]
        setup --help
 
-Install the top-level skills in this repository for Codex.
+Install the top-level skills in this repository into the shared user directory
+discovered by Codex and Grok.
 
 Options:
-  --host codex  Select the host (default: codex).
-  --dry-run     Print the plan without changing the filesystem.
-  --help, -h    Show this help message.
+  --host HOST  Accept codex or grok for host-specific automation. Both activate
+               the same shared directory. The default is codex for compatibility.
+  --dry-run    Print the plan without changing the filesystem.
+  --help, -h   Show this help message.
 
 Install target precedence:
   1. TREEFOLK_SKILLS_DIR
-  2. CODEX_HOME/skills (when CODEX_HOME is set)
-  3. HOME/.codex/skills
+  2. HOME/.agents/skills
+
+Existing links under CODEX_HOME/skills or HOME/.codex/skills are preserved as
+legacy Codex compatibility links. New links are created only in the shared target.
 EOF
 }
 
@@ -83,12 +87,9 @@ resolve_target() {
   if [ "${TREEFOLK_SKILLS_DIR+x}" = x ]; then
     [ -n "$TREEFOLK_SKILLS_DIR" ] || fail 'TREEFOLK_SKILLS_DIR is set but empty'
     selected=$TREEFOLK_SKILLS_DIR
-  elif [ "${CODEX_HOME+x}" = x ]; then
-    [ -n "$CODEX_HOME" ] || fail 'CODEX_HOME is set but empty'
-    selected="${CODEX_HOME%/}/skills"
   else
     [ "${HOME+x}" = x ] && [ -n "$HOME" ] || fail 'HOME is not set'
-    selected="${HOME%/}/.codex/skills"
+    selected="${HOME%/}/.agents/skills"
   fi
 
   case "$selected" in
@@ -178,7 +179,10 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-[ "$host" = codex ] || fail "unsupported host: $host (expected codex)"
+case "$host" in
+  codex|grok) ;;
+  *) fail "unsupported host: $host (expected codex or grok)" ;;
+esac
 
 REPOSITORY_ROOT=$(repository_root) || fail 'could not resolve the repository root'
 TARGET_DIR=$(resolve_target)

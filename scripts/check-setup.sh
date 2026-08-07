@@ -119,6 +119,32 @@ run_uninstall() {
   set -e
 }
 
+run_default_setup() {
+  local output_file=$1
+  shift
+
+  set +e
+  (
+    unset TREEFOLK_SKILLS_DIR CODEX_HOME
+    HOME="$test_home" "$setup_script" "$@"
+  ) >"$output_file" 2>&1
+  command_status=$?
+  set -e
+}
+
+run_default_uninstall() {
+  local output_file=$1
+  shift
+
+  set +e
+  (
+    unset TREEFOLK_SKILLS_DIR CODEX_HOME
+    HOME="$test_home" "$uninstall_script" "$@"
+  ) >"$output_file" 2>&1
+  command_status=$?
+  set -e
+}
+
 assert_status() {
   local expected=$1
   local label=$2
@@ -209,7 +235,8 @@ for migration_replacement in repo push; do
     fail "required migration replacement is unavailable: $migration_replacement"
 done
 
-# The host defaults to Codex, while both supported explicit syntaxes remain valid.
+# The host defaults to Codex for compatibility, while Codex and Grok both use
+# the same shared activation behavior.
 default_target="$test_root/default-target"
 default_output="$test_root/output-default.txt"
 run_setup "$default_output" "$default_target" --dry-run
@@ -232,11 +259,18 @@ assert_status 0 'explicit equals host' "$equals_output"
 assert_output_contains "$equals_output" 'Host: codex' 'explicit equals host'
 assert_absent "$equals_target" 'explicit equals host dry-run'
 
+grok_target="$test_root/grok-target"
+grok_output="$test_root/output-grok.txt"
+run_setup "$grok_output" "$grok_target" --host grok --dry-run
+assert_status 0 'explicit Grok host' "$grok_output"
+assert_output_contains "$grok_output" 'Host: grok' 'explicit Grok host'
+assert_absent "$grok_target" 'explicit Grok host dry-run'
+
 # Parser failures must be usage errors, including every duplicate-host spelling.
 expect_setup_exit_2 missing-host-value 'setup: --host requires a value' --host
-expect_setup_exit_2 empty-host-equals 'setup: unsupported host:  (expected codex)' --host=
-expect_setup_exit_2 empty-host-separated 'setup: unsupported host:  (expected codex)' --host ''
-expect_setup_exit_2 unsupported-host 'setup: unsupported host: claude (expected codex)' --host claude
+expect_setup_exit_2 empty-host-equals 'setup: unsupported host:  (expected codex or grok)' --host=
+expect_setup_exit_2 empty-host-separated 'setup: unsupported host:  (expected codex or grok)' --host ''
+expect_setup_exit_2 unsupported-host 'setup: unsupported host: claude (expected codex or grok)' --host claude
 expect_setup_exit_2 duplicate-host-separated 'setup: --host may be specified only once' --host codex --host codex
 expect_setup_exit_2 duplicate-host-equals 'setup: --host may be specified only once' --host=codex --host=codex
 expect_setup_exit_2 duplicate-host-mixed-a 'setup: --host may be specified only once' --host codex --host=codex
@@ -362,6 +396,67 @@ assert_raw_link \
   'newline-suffixed link after uninstall'
 for current_name in "${current_names[@]}"; do
   assert_absent "$safety_target/$current_name" "safety-target uninstall ($current_name)"
+done
+
+# The default setup installs into the shared user directory and preserves
+# existing Codex links. Uninstall must remove owned links from both locations.
+bridge_shared_target="$test_home/.agents/skills"
+bridge_legacy_target="$test_home/.codex/skills"
+mkdir -p "$bridge_legacy_target"
+for current_name in "${current_names[@]}"; do
+  ln -s "$repo_root/$current_name" "$bridge_legacy_target/$current_name"
+done
+
+bridge_setup_output="$test_root/output-bridge-setup.txt"
+run_default_setup "$bridge_setup_output" --host grok
+assert_status 0 'shared setup with legacy preservation' "$bridge_setup_output"
+assert_output_contains \
+  "$bridge_setup_output" \
+  "Target: $bridge_shared_target" \
+  'shared setup target'
+for current_name in "${current_names[@]}"; do
+  assert_link_resolves_to \
+    "$bridge_shared_target/$current_name" \
+    "$repo_root/$current_name" \
+    "shared activation ($current_name)"
+  assert_link_resolves_to \
+    "$bridge_legacy_target/$current_name" \
+    "$repo_root/$current_name" \
+    "legacy preservation ($current_name)"
+done
+
+bridge_uninstall_dry_output="$test_root/output-bridge-uninstall-dry.txt"
+run_default_uninstall "$bridge_uninstall_dry_output" --host grok --dry-run
+assert_status 0 'dual-target uninstall dry-run' "$bridge_uninstall_dry_output"
+assert_output_contains \
+  "$bridge_uninstall_dry_output" \
+  "Shared target: $bridge_shared_target" \
+  'dual-target uninstall shared target'
+assert_output_contains \
+  "$bridge_uninstall_dry_output" \
+  "Legacy Codex target: $bridge_legacy_target" \
+  'dual-target uninstall legacy target'
+for current_name in "${current_names[@]}"; do
+  assert_link_resolves_to \
+    "$bridge_shared_target/$current_name" \
+    "$repo_root/$current_name" \
+    "dual-target uninstall dry-run shared ($current_name)"
+  assert_link_resolves_to \
+    "$bridge_legacy_target/$current_name" \
+    "$repo_root/$current_name" \
+    "dual-target uninstall dry-run legacy ($current_name)"
+done
+
+bridge_uninstall_output="$test_root/output-bridge-uninstall.txt"
+run_default_uninstall "$bridge_uninstall_output" --host grok
+assert_status 0 'dual-target uninstall' "$bridge_uninstall_output"
+for current_name in "${current_names[@]}"; do
+  assert_absent \
+    "$bridge_shared_target/$current_name" \
+    "dual-target uninstall shared ($current_name)"
+  assert_absent \
+    "$bridge_legacy_target/$current_name" \
+    "dual-target uninstall legacy ($current_name)"
 done
 
 printf 'PASS: setup regression checks completed (%d assertions).\n' "$check_count"

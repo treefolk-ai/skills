@@ -37,6 +37,7 @@ Also inspect `README.md` and the validator before changing the public surface or
 
 - Treat taxonomy as user-facing explanation and maintainer classification only. Host activation must be category-agnostic and activate every top-level public skill; category metadata must never become an installation path or filter.
 - Keep acquisition separate from host activation. `install.sh` acquires source at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`; the acquired checkout's local `setup` is the sole implementation of host activation, even when the bootstrap invokes it.
+- Activate new user-level installations in `${HOME}/.agents/skills` so Codex and Grok share one flat discovery target. Preserve existing `${CODEX_HOME}/skills` or `${HOME}/.codex/skills` links during setup; uninstall must inspect both shared and legacy locations and remove only links whose ownership it proves.
 - Keep the curl bootstrap self-contained and compatible with the Bash 3.2 shipped by macOS. It must fetch only over HTTPS, never require `sudo`, and refuse to overwrite an existing source installation directory.
 - A downloaded `install.sh --dry-run` must perform no network access or filesystem mutation. Validate acquired source before invoking `setup`, and never activate source that fails validation.
 - Use pinned, immutable refs for release channels. Documentation and implementation must use the same release tag for acquiring `install.sh` and for its `--ref`; label `main` as a moving channel.
@@ -85,9 +86,12 @@ bash -n scripts/check-skills.sh
 ./scripts/check-setup.sh
 ./scripts/check-skills.sh
 ./install.sh --host codex --dry-run
+./install.sh --host grok --dry-run
 ./setup --dry-run
 ./setup --host codex --dry-run
+./setup --host grok --dry-run
 ./uninstall --host codex --dry-run
+./uninstall --host grok --dry-run
 ```
 
 If the current directory is a Git repository, also run:

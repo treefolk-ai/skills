@@ -34,21 +34,25 @@ Each skill defines its own inputs, stop conditions, safety rules, verification, 
 
 Treefolk uses P0, P1, and P2 as a maintainer convention rather than a numeric Codex priority. Side-effecting Git workflows are P0 and require an explicit `$skill-name`; focused, low-risk workflows may remain P1 and participate in description matching; P2 skills remain installable but are disabled by host configuration. Taxonomy metadata never controls invocation. See the Chinese guide [Skill 调用参与层级与启用策略](docs/skill-priority.md) for the decision flow, Mermaid diagram, and configuration examples.
 
-> **P0 user notice:** Activating a P0 skill does not make it eligible for automatic description-based matching. The model will not select it from an ordinary natural-language request; the user must invoke its exact command. P0 skills may still appear in the host's skill list or command completion. The current Codex adapter uses `$repo`, `$push`, and `$pr`. A future, separately implemented and tested Claude Code adapter would use `/repo`, `/push`, and `/pr`; the current `setup` does not yet support Claude Code.
+> **P0 user notice:** In Codex, activating a P0 skill does not make it eligible for automatic description-based matching. The Codex adapter requires the exact `$repo`, `$push`, or `$pr` invocation. Grok discovers the same shared packages and exposes user-invocable skills as slash commands, but the Codex-specific `agents/openai.yaml` policy is not presented as a Grok invocation-policy guarantee. A future, separately implemented and tested Claude Code adapter would use `/repo`, `/push`, and `/pr`; the current `setup` does not yet support Claude Code.
 
 P0 does not prohibit composition. One explicitly invoked P0 workflow may combine multiple internal steps, but it must own the authorization, safety checks, stop conditions, verification, and reporting for the complete outcome. It must not rely on automatic description matching to discover and chain another P0 workflow.
 
 ## Installation
 
-The first adapter supports Codex through symlinks. Installation has two layers: the bootstrap acquires a source checkout at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`, then that checkout's local `setup` activates every top-level public skill for the selected host with safe symlinks.
+The user-level adapter supports shared discovery by Codex and Grok through safe symlinks in `${HOME}/.agents/skills`. Installation has two layers: the bootstrap acquires a source checkout at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`, then that checkout's local `setup` activates every top-level public skill in the shared target. `--host codex` and `--host grok` are both accepted for automation and select the same shared activation behavior.
+
+For migration compatibility, `setup` preserves existing links under `${CODEX_HOME}/skills` when `CODEX_HOME` is set, otherwise `${HOME}/.codex/skills`; it does not create new legacy Codex links. `uninstall` checks both the shared and legacy locations and removes only links proven to belong to the same source checkout.
 
 ### Quick install
 
-For the published repository, this command installs the current `main` branch for Codex:
+For the published repository, this command installs the current `main` branch into the shared Codex and Grok skill directory:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh | bash -s -- --host codex
 ```
+
+`--host grok` is an equivalent selector for Grok-oriented automation; it activates the same shared directory.
 
 This is the moving-main channel: rerunning it at a later date may acquire different source. The command is provided for use once the repository is published at that location; it is not a claim that the URL is currently available.
 
@@ -77,7 +81,7 @@ From an existing local checkout, preview activation before making changes:
 ./setup
 ```
 
-The local `setup` command defaults to the Codex host; `--host codex` remains available for explicit automation. The activation destination is selected from `TREEFOLK_SKILLS_DIR`, then `${CODEX_HOME}/skills` when `CODEX_HOME` is set, then `${HOME}/.codex/skills`. `setup` activates every top-level directory containing `SKILL.md`, regardless of taxonomy. During a known command rename, it removes a legacy symlink only after proving that the link points to the renamed package in the same checkout. Existing files, directories, and unrelated links are never overwritten or removed.
+The local `setup` command defaults to the `codex` selector for command-line compatibility; `--host codex` and `--host grok` are both available for explicit automation. The shared activation destination is selected from `TREEFOLK_SKILLS_DIR`, then `${HOME}/.agents/skills`. `CODEX_HOME` no longer changes the new installation target. `setup` activates every top-level directory containing `SKILL.md`, regardless of taxonomy. During a known command rename, it removes a legacy symlink only after proving that the link points to the renamed package in the same shared target. Existing files, directories, unrelated links, and legacy Codex compatibility links are never overwritten or removed.
 
 ### Verify
 
@@ -95,7 +99,7 @@ The v0.1 bootstrap refuses to continue when its source installation directory al
 
 ### Uninstall
 
-Use the source checkout to preview and remove only the symlinks it owns:
+Use the source checkout to preview and remove only the symlinks it owns from both the shared target and the legacy Codex target:
 
 ```sh
 "${TREEFOLK_HOME:-$HOME/.treefolk}/skills/uninstall" --host codex --dry-run
@@ -111,7 +115,7 @@ From an existing local checkout, the equivalent preview and removal commands are
 ./uninstall --host codex
 ```
 
-No broad cross-agent compatibility claim is made yet. Additional hosts require an implemented and tested adapter.
+Shared user-level discovery is implemented for Codex and Grok. Host-specific invocation policy remains separate: `agents/openai.yaml` configures Codex, while no Grok-specific P0 policy adapter is claimed. Additional hosts require an implemented and tested adapter.
 
 ## Validation
 
@@ -126,9 +130,12 @@ bash -n scripts/check-skills.sh
 ./scripts/check-setup.sh
 ./scripts/check-skills.sh
 ./install.sh --host codex --dry-run
+./install.sh --host grok --dry-run
 ./setup --dry-run
 ./setup --host codex --dry-run
+./setup --host grok --dry-run
 ./uninstall --host codex --dry-run
+./uninstall --host grok --dry-run
 ```
 
 ## Adding a skill
@@ -141,7 +148,7 @@ Do not add a public skill when the capability is only an internal step, a determ
 
 The Git workflows inspect repository state and candidate diffs before changing history or remote state. They prohibit force pushes, implicit history reconciliation, remote replacement, automatic amend, global Git configuration changes, and committing suspected secrets. Automatic pull-request branch creation is limited to a verified base branch with coherent current-task work and a new, non-conflicting branch name. A workflow stops when it cannot prove that the next action is non-destructive.
 
-The bootstrap uses the network to acquire the installer and source over HTTPS. It refuses to overwrite its source installation directory and does not use `sudo` or edit Codex configuration. The local `setup` and `uninstall` adapters use safe symlinks, refuse conflicts, support true dry-runs, and do not access the network.
+The bootstrap uses the network to acquire the installer and source over HTTPS. It refuses to overwrite its source installation directory and does not use `sudo` or edit host configuration. The local `setup` and `uninstall` adapters use safe symlinks, refuse conflicts, support true dry-runs, and do not access the network. Uninstall verifies ownership independently in the shared and legacy Codex targets before removing anything.
 
 ## Project status
 

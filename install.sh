@@ -8,13 +8,14 @@ DEFAULT_REF=main
 
 usage() {
   cat <<'EOF'
-Usage: install.sh --host codex [options]
+Usage: install.sh --host codex|grok [options]
        install.sh --help
 
 Download Treefolk Skills, validate the source, and activate every public skill.
 
 Options:
-  --host codex       Select the Codex host (required).
+  --host HOST        Accept codex or grok (required). Both activate the shared
+                     user skill directory discovered by Codex and Grok.
   --ref REF          Download a branch, tag, or commit (default: main).
   --install-dir PATH Store source at PATH.
                      Default: ${TREEFOLK_HOME:-$HOME/.treefolk}/skills
@@ -63,12 +64,9 @@ resolve_activation_target() {
   if [ "${TREEFOLK_SKILLS_DIR+x}" = x ]; then
     [ -n "$TREEFOLK_SKILLS_DIR" ] || fail 'TREEFOLK_SKILLS_DIR is set but empty'
     target=$TREEFOLK_SKILLS_DIR
-  elif [ "${CODEX_HOME+x}" = x ]; then
-    [ -n "$CODEX_HOME" ] || fail 'CODEX_HOME is set but empty'
-    target="${CODEX_HOME%/}/skills"
   else
     [ "${HOME+x}" = x ] && [ -n "$HOME" ] || fail 'HOME is not set'
-    target="${HOME%/}/.codex/skills"
+    target="${HOME%/}/.agents/skills"
   fi
 
   normalize_absolute_path "$target"
@@ -165,8 +163,11 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-[ -n "$host" ] || argument_error '--host codex is required'
-[ "$host" = codex ] || argument_error "unsupported host: $host (expected codex)"
+[ -n "$host" ] || argument_error '--host codex or --host grok is required'
+case "$host" in
+  codex|grok) ;;
+  *) argument_error "unsupported host: $host (expected codex or grok)" ;;
+esac
 validate_ref "$ref"
 
 if [ -z "$install_dir" ]; then
@@ -200,7 +201,7 @@ printf '  1. Download the selected source archive over HTTPS.\n'
 printf '  2. Extract it in a private temporary directory.\n'
 printf '  3. Check Bash syntax, skill packages, and setup behavior in a private temporary target.\n'
 printf '  4. Create the new source install directory without overwriting anything.\n'
-printf '  5. Delegate Codex activation to the downloaded setup script.\n'
+printf '  5. Delegate shared user-skill activation to the downloaded setup script.\n'
 
 if [ "$dry_run" -eq 1 ]; then
   printf 'Mode: dry-run (no network or filesystem writes)\n'
