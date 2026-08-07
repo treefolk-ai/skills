@@ -45,9 +45,9 @@ required_sections=(
 )
 
 explicit_only_skills=(
-  "c-push"
   "pr"
-  "s-repo"
+  "push"
+  "repo"
 )
 
 report_error() {

@@ -16,8 +16,8 @@ Skill bodies live only in `SKILL.md`. Taxonomy lives in metadata and exists prim
 
 | Skill | Category | Domain | Kind | Invocation | Purpose |
 | --- | --- | --- | --- | --- | --- |
-| `s-repo` | core | git | workflow | P0: explicit only | Safely initialize and perform the first remote push |
-| `c-push` | core | git | workflow | P0: explicit only | Review, commit, and push daily changes |
+| `repo` | core | git | workflow | P0: explicit only | Safely initialize and perform the first remote push |
+| `push` | core | git | workflow | P0: explicit only | Review, commit, and push daily changes |
 | `pr` | core | git | workflow | P0: explicit only | Safely publish current work and open or reuse a pull request |
 | `to-mmd` | core | format | transform | P1: implicit allowed | Convert structured information into Mermaid |
 
@@ -34,7 +34,9 @@ Each skill defines its own inputs, stop conditions, safety rules, verification, 
 
 Treefolk uses P0, P1, and P2 as a maintainer convention rather than a numeric Codex priority. Side-effecting Git workflows are P0 and require an explicit `$skill-name`; focused, low-risk workflows may remain P1 and participate in description matching; P2 skills remain installable but are disabled by host configuration. Taxonomy metadata never controls invocation. See the Chinese guide [Skill 调用参与层级与启用策略](docs/skill-priority.md) for the decision flow, Mermaid diagram, and configuration examples.
 
-> **P0 user notice:** Activating a P0 skill does not make it eligible for automatic description-based matching. The model will not select it from an ordinary natural-language request; the user must invoke its exact command. P0 skills may still appear in the host's skill list or command completion. The current Codex adapter uses `$s-repo`, `$c-push`, and `$pr`. A future, separately implemented and tested Claude Code adapter would use `/s-repo`, `/c-push`, and `/pr`; the current `setup` does not yet support Claude Code.
+> **P0 user notice:** Activating a P0 skill does not make it eligible for automatic description-based matching. The model will not select it from an ordinary natural-language request; the user must invoke its exact command. P0 skills may still appear in the host's skill list or command completion. The current Codex adapter uses `$repo`, `$push`, and `$pr`. A future, separately implemented and tested Claude Code adapter would use `/repo`, `/push`, and `/pr`; the current `setup` does not yet support Claude Code.
+
+P0 does not prohibit composition. One explicitly invoked P0 workflow may combine multiple internal steps, but it must own the authorization, safety checks, stop conditions, verification, and reporting for the complete outcome. It must not rely on automatic description matching to discover and chain another P0 workflow.
 
 ## Installation
 
@@ -71,21 +73,21 @@ bash treefolk-install.sh --host codex
 From an existing local checkout, preview activation before making changes:
 
 ```sh
-./setup --host codex --dry-run
-./setup --host codex
+./setup --dry-run
+./setup
 ```
 
-The activation destination is selected from `TREEFOLK_SKILLS_DIR`, then `${CODEX_HOME}/skills` when `CODEX_HOME` is set, then `${HOME}/.codex/skills`. `setup` activates every top-level directory containing `SKILL.md`, regardless of taxonomy. Existing files, directories, and unrelated links are never overwritten.
+The local `setup` command defaults to the Codex host; `--host codex` remains available for explicit automation. The activation destination is selected from `TREEFOLK_SKILLS_DIR`, then `${CODEX_HOME}/skills` when `CODEX_HOME` is set, then `${HOME}/.codex/skills`. `setup` activates every top-level directory containing `SKILL.md`, regardless of taxonomy. During a known command rename, it removes a legacy symlink only after proving that the link points to the renamed package in the same checkout. Existing files, directories, and unrelated links are never overwritten or removed.
 
 ### Verify
 
 After a bootstrap install, verify the source checkout and activation with a non-mutating rerun:
 
 ```sh
-"${TREEFOLK_HOME:-$HOME/.treefolk}/skills/setup" --host codex --dry-run
+"${TREEFOLK_HOME:-$HOME/.treefolk}/skills/setup" --dry-run
 ```
 
-A fully activated checkout reports each public skill as already linked and reports no conflicts. For a local checkout, run the same command as `./setup --host codex --dry-run` from its root.
+A fully activated checkout reports each public skill as already linked and reports no conflicts. For a local checkout, run the same command as `./setup --dry-run` from its root.
 
 ### Update policy
 
@@ -100,7 +102,7 @@ Use the source checkout to preview and remove only the symlinks it owns:
 "${TREEFOLK_HOME:-$HOME/.treefolk}/skills/uninstall" --host codex
 ```
 
-Run `uninstall` before optionally removing the source checkout, because ownership is verified against that checkout.
+Run `uninstall` before optionally removing the source checkout, because ownership is verified against that checkout. It also recognizes known pre-rename links, but removes them only when their targets prove that this same checkout created them.
 
 From an existing local checkout, the equivalent preview and removal commands are:
 
@@ -119,9 +121,12 @@ Run the repository checks without installing anything:
 bash -n install.sh
 bash -n setup
 bash -n uninstall
+bash -n scripts/check-setup.sh
 bash -n scripts/check-skills.sh
+./scripts/check-setup.sh
 ./scripts/check-skills.sh
 ./install.sh --host codex --dry-run
+./setup --dry-run
 ./setup --host codex --dry-run
 ./uninstall --host codex --dry-run
 ```

@@ -80,9 +80,12 @@ After a change, run:
 bash -n install.sh
 bash -n setup
 bash -n uninstall
+bash -n scripts/check-setup.sh
 bash -n scripts/check-skills.sh
+./scripts/check-setup.sh
 ./scripts/check-skills.sh
 ./install.sh --host codex --dry-run
+./setup --dry-run
 ./setup --host codex --dry-run
 ./uninstall --host codex --dry-run
 ```
