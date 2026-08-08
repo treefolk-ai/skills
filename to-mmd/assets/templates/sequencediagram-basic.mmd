@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor User as 👤 用户
+    participant App as 🖥️ 上传界面
+    participant Storage as 📦 文件存储
+
+    Note over User,Storage: 选择和校验文件
+    User->>App: 选择要上传的文件
+    App->>App: 检查类型和大小
+    alt 文件不符合规则
+        App-->>User: 显示校验原因
+    else 文件符合规则
+        App->>Storage: 请求上传会话
+        Storage-->>App: 返回临时上传标识
+        App->>Storage: 上传文件内容
+        Storage-->>App: 返回文件引用
+        App-->>User: 显示文件预览
+    end
+
+    Note over User,Storage: 确认和保存说明
+    User->>App: 填写说明并确认保存
+    App->>App: 检查文件引用和说明
+    App->>Storage: 保存文件元数据
+    alt 保存成功
+        Storage-->>App: 返回最终文件标识
+        App-->>User: ✅ 显示保存完成
+    else 保存失败
+        Storage-->>App: 返回可重试错误
+        App-->>User: ❌ 保留输入并显示重试入口
+    end

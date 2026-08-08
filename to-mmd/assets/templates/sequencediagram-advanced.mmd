@@ -1,0 +1,50 @@
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant Dashboard as 报告界面
+    participant Report as 报告服务
+    participant Queue as 任务队列
+    participant Worker as 生成任务
+    participant Store as 产物存储
+
+    User->>Dashboard: 选择时间范围和输出格式[🟢用户操作]
+    Dashboard->>Dashboard: 校验筛选条件[🔷条件判断]
+
+    alt 条件无效
+        Dashboard-->>User: 显示需要修正的条件[🔵状态显示]
+    else 条件有效
+        Dashboard->>Report: 请求生成报告[🔸接口调用]
+        Report->>Store: 查询相同条件的可用产物[🔸接口调用]
+
+        alt 存在有效产物
+            Store-->>Report: 返回已有产物引用[🔵状态显示]
+            Report-->>Dashboard: 返回可下载结果[🟣数据展示]
+        else 需要重新生成
+            Store-->>Report: 返回未命中[🔵状态显示]
+            Report->>Queue: 创建生成任务[🔸接口调用]
+            Queue-->>Report: 返回任务标识[🔵状态显示]
+            Report-->>Dashboard: 返回排队状态[🟣数据展示]
+
+            Queue->>Worker: 分派生成任务[🔸接口调用]
+            Worker->>Worker: 汇总并格式化数据
+            Worker->>Store: 写入报告产物[🔸接口调用]
+            alt 写入成功
+                Store-->>Worker: 返回产物引用[🔵状态显示]
+                Worker->>Queue: 标记任务完成[🔸接口调用]
+            else 写入失败
+                Store-->>Worker: 返回失败原因[🔵状态显示]
+                Worker->>Queue: 标记任务失败[🔸接口调用]
+            end
+
+            loop 直到任务结束
+                Dashboard->>Report: 查询任务状态[🔸接口调用]
+                Report->>Queue: 读取任务状态[🔸接口调用]
+                Queue-->>Report: 返回运行结果[🔵状态显示]
+                Report-->>Dashboard: 更新进度或失败原因[🟣数据展示]
+            end
+        end
+    end
+
+    opt 用户开启完成提醒
+        Dashboard-->>User: 显示完成通知[🔵状态显示]
+    end

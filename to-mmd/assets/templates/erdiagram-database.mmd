@@ -1,0 +1,53 @@
+%%{init: {
+    'theme': 'base',
+    'themeVariables': {
+        'lineColor': '#FF5722',
+        'relationLabelColor': '#D32F2F',
+        'relationLabelBackground': '#FFEBEE',
+        'relationLabelBorderColor': '#F44336',
+        'entityBkgColor': '#FFFFFF',
+        'entityTextColor': '#212121'
+    }
+}}%%
+erDiagram
+    PROJECT {
+        string project_id PK "项目标识"
+        string name "项目名称"
+        string status "项目状态"
+        datetime created_at "创建时间"
+    }
+
+    TASK {
+        string task_id PK "任务标识"
+        string project_id FK "所属项目"
+        string title "任务标题"
+        string priority "优先级"
+        string status "任务状态"
+        datetime due_at "截止时间"
+    }
+
+    TAG {
+        string tag_id PK "标签标识"
+        string name "标签名称"
+        string color "展示颜色"
+    }
+
+    TASK_TAG {
+        string task_id FK "任务标识"
+        string tag_id FK "标签标识"
+        datetime added_at "添加时间"
+    }
+
+    PROJECT ||--o{ TASK : "包含"
+    TASK ||--o{ TASK_TAG : "分配"
+    TAG ||--o{ TASK_TAG : "关联"
+
+    PROJECT:::projectStyle
+    TASK:::taskStyle
+    TAG:::tagStyle
+    TASK_TAG:::recordStyle
+
+    classDef projectStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:3px,color:#E65100
+    classDef taskStyle fill:#E8F5E8,stroke:#2E7D32,stroke-width:3px,color:#1B5E20
+    classDef tagStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:3px,color:#4A148C
+    classDef recordStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#0D47A1

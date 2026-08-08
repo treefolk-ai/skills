@@ -1,0 +1,37 @@
+sequenceDiagram
+    autonumber
+    actor Operator as 操作者
+    participant Backup as 备份服务
+    participant Storage as 备份存储
+    participant Monitor as 监控服务
+
+    Note over Operator,Monitor: ⚫️配置阶段
+    Operator->>Backup: 创建备份计划并设置保留周期
+    Backup-->>Operator: 返回计划状态
+
+    Note over Backup,Monitor: ⚫️执行阶段
+    Backup->>Backup: 到达计划时间并创建快照
+    Backup->>Storage: 写入新的备份版本
+
+    alt 写入失败
+        Storage-->>Backup: 返回存储错误
+        Backup->>Monitor: 上报备份失败
+        Monitor-->>Operator: 发送失败提醒和重试建议
+    else 写入成功
+        Storage-->>Backup: 返回版本标识和校验摘要
+        Backup->>Backup: 验证快照完整性
+
+        alt 完整性检查失败
+            Backup->>Storage: 标记版本不可用
+            Backup->>Monitor: 上报校验失败
+            Monitor-->>Operator: 发送异常提醒
+        else 完整性检查通过
+            Backup->>Backup: 记录成功并执行保留策略
+            Backup->>Storage: 删除明确过期的版本
+            Storage-->>Backup: 返回清理结果
+            Backup->>Monitor: 上报备份和清理摘要
+            Monitor-->>Operator: 显示最新可恢复版本
+        end
+    end
+
+    Note over Operator,Monitor: ⚫️本次计划执行结束

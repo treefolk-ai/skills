@@ -1,0 +1,46 @@
+flowchart LR
+    subgraph Legend["图例说明"]
+        direction TB
+        LegendModified["🟡 原有能力调整"]:::modified
+        LegendOriginal["🔵 原有能力保留"]:::original
+        LegendDependency["🟢 支撑依赖"]:::dependency
+    end
+
+    subgraph System["通用信息处理系统"]
+        direction LR
+
+        subgraph Inputs["输入能力"]
+            ManualInput["手动录入"]:::modified
+            FileImport["文件导入"]:::original
+            EventInput["事件接收"]:::original
+        end
+
+        subgraph Processing["处理能力"]
+            Validate["内容校验"]:::modified
+            Transform["格式转换"]:::modified
+            Dispatch["任务调度"]:::original
+        end
+
+        subgraph Outputs["输出能力"]
+            Preview["结果预览"]:::original
+            Export["文件导出"]:::modified
+            Notify["状态通知"]:::original
+        end
+
+        subgraph Support["支撑能力"]
+            Storage["数据存储"]:::dependency
+            Search["查询索引"]:::dependency
+            Audit["操作记录"]:::dependency
+        end
+
+        Inputs --> Processing --> Outputs
+        Storage -.-> Processing
+        Search -.-> Outputs
+        Audit -.-> Processing
+    end
+
+    Legend -.-> System
+
+    classDef modified fill:#FFD54F,stroke:#F57C00,stroke-width:3px,color:#000000
+    classDef original fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef dependency fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#000000

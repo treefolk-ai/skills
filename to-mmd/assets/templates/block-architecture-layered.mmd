@@ -1,0 +1,73 @@
+block-beta
+    columns 3
+
+    block:capture
+        columns 1
+        capture_title["🔵 输入模块<br/>接收多种来源"]
+        source_form["表单输入"]
+        source_file["文件导入"]
+        source_event["事件触发"]
+        capture_queue["输入缓冲区"]
+    end
+
+    block:coordinate
+        columns 1
+        coordinate_title["🟢 协调模块<br/>校验与编排"]
+        block:coordinate_rules
+            columns 2
+            validate["规则校验"]
+            route["任务路由"]
+        end
+        block:coordinate_state
+            columns 2
+            state["状态跟踪"]
+            audit["处理记录"]
+        end
+    end
+
+    block:deliver
+        columns 1
+        deliver_title["🟡 输出模块<br/>生成与分发"]
+        preview["结果预览"]
+        export["文件导出"]
+        notify["状态通知"]
+        archive["结果归档"]
+    end
+
+    source_form --> capture_queue
+    source_file --> capture_queue
+    source_event --> capture_queue
+    capture_queue --> validate
+    validate --> route
+    route --> state
+    route --> audit
+    state --> preview
+    state --> export
+    audit --> notify
+    audit --> archive
+
+    %% Input module palette
+    style capture fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
+    style capture_title fill:#1976D2,stroke:#1976D2,color:#FFFFFF
+    style source_form fill:#E3F2FD,stroke:#2196F3
+    style source_file fill:#E3F2FD,stroke:#2196F3
+    style source_event fill:#E3F2FD,stroke:#2196F3
+    style capture_queue fill:#BBDEFB,stroke:#2196F3
+
+    %% Coordination module palette
+    style coordinate fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style coordinate_title fill:#388E3C,stroke:#388E3C,color:#FFFFFF
+    style coordinate_rules fill:#C8E6C9,stroke:#4CAF50
+    style coordinate_state fill:#C8E6C9,stroke:#4CAF50
+    style validate fill:#E8F5E9,stroke:#4CAF50
+    style route fill:#E8F5E9,stroke:#4CAF50
+    style state fill:#E8F5E9,stroke:#4CAF50
+    style audit fill:#E8F5E9,stroke:#4CAF50
+
+    %% Output module palette
+    style deliver fill:#FFF9E6,stroke:#FFB300,stroke-width:2px
+    style deliver_title fill:#F57C00,stroke:#F57C00,color:#FFFFFF
+    style preview fill:#FFF9E6,stroke:#FFB300
+    style export fill:#FFF9E6,stroke:#FFB300
+    style notify fill:#FFF9E6,stroke:#FFB300
+    style archive fill:#FFF9E6,stroke:#FFB300

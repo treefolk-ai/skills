@@ -1,0 +1,60 @@
+block-beta
+  columns 1
+
+  block:access
+    columns 3
+    web_entry["Web 入口"]
+    cli_entry["命令行入口"]
+    automation_entry["自动化入口"]
+  end
+
+  block:services
+    columns 4
+    intake["请求接收"]
+    orchestration["流程编排"]
+    query["查询服务"]
+    notification["通知服务"]
+  end
+
+  block:platform
+    columns 4
+    models["领域模型"]
+    storage["数据存储"]
+    search["搜索索引"]
+    events["事件通道"]
+  end
+
+  block:operations
+    columns 4
+    scheduler["计划任务"]
+    logs["日志"]
+    metrics["指标"]
+    backups["备份"]
+  end
+
+  %% Channel palette
+  style web_entry fill:#AFECB7,stroke:#278358
+  style cli_entry fill:#AFECB7,stroke:#278358
+  style automation_entry fill:#AFECB7,stroke:#278358
+  style access fill:#85E085,stroke:#278358,stroke-width:2px
+
+  %% Application palette
+  style intake fill:#B4D8F8,stroke:#20538C
+  style orchestration fill:#B4D8F8,stroke:#20538C
+  style query fill:#B4D8F8,stroke:#20538C
+  style notification fill:#B4D8F8,stroke:#20538C
+  style services fill:#7FCDF5,stroke:#20538C,stroke-width:2px
+
+  %% Platform palette
+  style models fill:#E4E6EB,stroke:#737373
+  style storage fill:#E4E6EB,stroke:#737373
+  style search fill:#E4E6EB,stroke:#737373
+  style events fill:#E4E6EB,stroke:#737373
+  style platform fill:#D6DADD,stroke:#737373,stroke-width:2px
+
+  %% Operations palette
+  style scheduler fill:#FFD59A,stroke:#A05E03
+  style logs fill:#FFD59A,stroke:#A05E03
+  style metrics fill:#FFD59A,stroke:#A05E03
+  style backups fill:#FFD59A,stroke:#A05E03
+  style operations fill:#FFE7C2,stroke:#A05E03,stroke-width:2px

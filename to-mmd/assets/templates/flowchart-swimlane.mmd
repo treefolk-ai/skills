@@ -1,0 +1,73 @@
+flowchart TB
+    subgraph Workspace["📝 文档发布协作流程"]
+        direction TB
+
+        subgraph LaneAuthor["✍️ 撰写阶段"]
+            direction LR
+            Draft["编写草稿"]:::userAction
+            AddContext["补充说明和附件"]:::userAction
+            SubmitReview["提交审核"]:::userAction
+            Draft ==> AddContext ==> SubmitReview
+        end
+
+        subgraph LaneChecks["🔍 自动检查阶段"]
+            direction LR
+            subgraph ParallelChecks["⚡ 并行执行检查"]
+                direction LR
+                CheckContent["内容完整性"]:::highlight
+                CheckLinks["链接有效性"]:::highlight
+                CheckFormat["格式一致性"]:::highlight
+            end
+            CheckResult{"检查是否通过"}:::condition
+            ShowIssues["汇总待修正项"]:::statusDisplay
+            ParallelChecks ==> CheckResult
+            CheckResult -->|未通过| ShowIssues
+        end
+
+        subgraph LaneReview["👀 人工审核阶段"]
+            direction LR
+            OpenReview["查看变更内容"]:::dataDisplay
+            ReviewDecision{"给出审核结论"}:::condition
+            RequestChanges["说明修改建议"]:::statusDisplay
+            Approve["确认可以发布"]:::statusDisplay
+            OpenReview ==> ReviewDecision
+            ReviewDecision -->|需修改| RequestChanges
+            ReviewDecision -->|通过| Approve
+        end
+
+        subgraph LanePublish["🚀 发布阶段"]
+            direction TB
+            BuildOutput["生成发布内容"]:::apiCall
+            Publish["写入发布位置"]:::apiCall
+            PublishResult{"发布是否成功"}:::condition
+            RetryPublish["保留产物并重试"]:::statusDisplay
+            VerifyOutput["验证访问结果"]:::dataDisplay
+            NotifyTeam["发送更新通知"]:::apiCall
+            ArchiveVersion["归档发布版本"]:::apiCall
+            Done(["流程完成"]):::endNode
+            BuildOutput ==> Publish ==> PublishResult
+            PublishResult -->|失败| RetryPublish --> Publish
+            PublishResult -->|成功| VerifyOutput ==> NotifyTeam ==> ArchiveVersion ==> Done
+        end
+
+        SubmitReview ==> ParallelChecks
+        ShowIssues -.-> Draft
+        CheckResult ==>|通过| OpenReview
+        RequestChanges -.-> Draft
+        Approve ==> BuildOutput
+    end
+
+    classDef apiCall fill:#FFF9C4,stroke:#FFB300,stroke-width:2px,color:#000000
+    classDef dataDisplay fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px,color:#000000
+    classDef userAction fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#000000
+    classDef statusDisplay fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef condition fill:#BBDEFB,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef endNode fill:#CBE8B2,stroke:#000000,stroke-width:2px,color:#000000
+    classDef highlight fill:#FFF9C4,stroke:#FF6F00,stroke-width:5px,color:#000000
+
+    style Workspace fill:#FAFAFA,stroke:#8D6E63,stroke-width:3px,color:#111111
+    style LaneAuthor fill:#FFFEF5,stroke:#8D6E63,stroke-width:2px,color:#111111
+    style LaneChecks fill:#FFFBEA,stroke:#8D6E63,stroke-width:2px,color:#111111
+    style LaneReview fill:#FFF9E6,stroke:#8D6E63,stroke-width:2px,color:#111111
+    style LanePublish fill:#FFF8E1,stroke:#8D6E63,stroke-width:2px,color:#111111
+    style ParallelChecks fill:#FFECB3,stroke:#FF6F00,stroke-width:6px,color:#111111

@@ -1,0 +1,56 @@
+flowchart LR
+    subgraph Intake["输入阶段"]
+        direction TB
+        SelectFile["🔵 选择数据文件"]:::userAction
+        ReadHeader["⏳ 读取文件头"]:::apiCall
+        Supported{"🔷 格式受支持"}:::condition
+        FormatError["🔶 显示格式说明"]:::statusDisplay
+        SelectFile --> ReadHeader --> Supported
+        Supported -->|否| FormatError --> SelectFile
+    end
+
+    subgraph Validation["校验阶段"]
+        direction TB
+        ParseRows["⏳ 解析数据记录"]:::apiCall
+        FieldsValid{"🔷 必填字段完整"}:::condition
+        ValidationReport["🟨 生成校验报告"]:::dataDisplay
+        CorrectSource["🔵 修正源文件"]:::userAction
+        Normalize["⏳ 标准化字段"]:::apiCall
+        Deduplicate["⏳ 去除重复记录"]:::apiCall
+        ParseRows --> FieldsValid
+        FieldsValid -->|否| ValidationReport --> CorrectSource
+        FieldsValid -->|是| Normalize --> Deduplicate
+    end
+
+    subgraph Review["确认阶段"]
+        direction TB
+        BuildPreview["🟨 生成导入预览"]:::dataDisplay
+        ConfirmImport{"🔷 确认导入"}:::condition
+        BuildPreview --> ConfirmImport
+    end
+
+    subgraph Commit["写入阶段"]
+        direction TB
+        StageData["⏳ 写入临时区域"]:::apiCall
+        CommitData{"🔷 正式写入成功"}:::condition
+        Rollback["⏳ 回滚临时数据"]:::apiCall
+        FailureSummary["🔶 显示失败摘要"]:::statusDisplay
+        UpdateIndex["⏳ 更新查询索引"]:::apiCall
+        ImportSummary["🟨 生成导入摘要"]:::dataDisplay
+        NotifyDone["🔶 显示导入完成"]:::statusDisplay
+        StageData --> CommitData
+        CommitData -->|否| Rollback --> FailureSummary
+        CommitData -->|是| UpdateIndex --> ImportSummary --> NotifyDone
+    end
+
+    Supported -->|是| ParseRows
+    CorrectSource --> SelectFile
+    Deduplicate --> BuildPreview
+    ConfirmImport -->|返回修正| CorrectSource
+    ConfirmImport -->|确认| StageData
+
+    classDef apiCall fill:#FFF9C4,stroke:#FFB300,stroke-width:2px,color:#000000
+    classDef dataDisplay fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px,color:#000000
+    classDef userAction fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#000000
+    classDef statusDisplay fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef condition fill:#BBDEFB,stroke:#2196F3,stroke-width:2px,color:#000000

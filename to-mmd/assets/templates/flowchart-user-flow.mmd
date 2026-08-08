@@ -1,0 +1,44 @@
+flowchart TD
+    Start(["🔴 打开反馈编辑器"]):::startNode
+    ChooseMode{"🔷 选择创建方式"}:::condition
+    Blank["🔵 新建空白反馈"]:::userAction
+    Template["🔵 选择通用模板"]:::userAction
+    Edit["🔵 填写主题和说明"]:::userAction
+    NeedAttachment{"🔷 是否需要附件"}:::condition
+    AddAttachment["🔵 添加附件"]:::userAction
+    Validate{"🔷 必填内容完整"}:::condition
+    ShowErrors["🔶 显示缺失项"]:::statusDisplay
+    Preview["🟨 显示提交预览"]:::dataDisplay
+    Confirm{"🔷 确认提交"}:::condition
+    Submit["⏳ 保存反馈"]:::apiCall
+    SaveResult{"🔷 保存结果"}:::condition
+    Retry{"🔷 是否重试"}:::condition
+    KeepDraft["🔶 保留本地草稿"]:::statusDisplay
+    Success["🔶 显示保存成功"]:::statusDisplay
+    Notify["⏳ 发送完成通知"]:::apiCall
+    End(["🟢 流程结束"]):::endNode
+
+    Start --> ChooseMode
+    ChooseMode -->|空白| Blank
+    ChooseMode -->|模板| Template
+    Blank --> Edit
+    Template --> Edit
+    Edit --> NeedAttachment
+    NeedAttachment -->|需要| AddAttachment --> Validate
+    NeedAttachment -->|不需要| Validate
+    Validate -->|否| ShowErrors --> Edit
+    Validate -->|是| Preview --> Confirm
+    Confirm -->|返回修改| Edit
+    Confirm -->|提交| Submit --> SaveResult
+    SaveResult -->|成功| Success --> Notify --> End
+    SaveResult -->|失败| Retry
+    Retry -->|重试| Submit
+    Retry -->|稍后处理| KeepDraft --> End
+
+    classDef apiCall fill:#FFF9C4,stroke:#FFB300,stroke-width:2px,color:#000000
+    classDef dataDisplay fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px,color:#000000
+    classDef userAction fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#000000
+    classDef statusDisplay fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef condition fill:#BBDEFB,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef startNode fill:#CBE8B2,stroke:#000000,stroke-width:2px,color:#000000
+    classDef endNode fill:#CBE8B2,stroke:#000000,stroke-width:2px,color:#000000

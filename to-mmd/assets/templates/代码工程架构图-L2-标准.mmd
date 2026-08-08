@@ -1,0 +1,52 @@
+flowchart TB
+    subgraph Legend["图例说明"]
+        direction LR
+        LegendAdded["🟢 新增"]:::added
+        LegendModified["🟡 修改"]:::modified
+        LegendDependency["🔵 依赖"]:::dependency
+        LegendDeleted["🔴 删除"]:::deleted
+    end
+
+    subgraph Repository["示例应用 - Level 2 标准视图"]
+        direction LR
+
+        subgraph Domains["domains/ 核心领域"]
+            direction TB
+            subgraph Notes["notes/ 笔记能力"]
+                NoteEditor["🟡 editor.ts<br/>编辑逻辑"]:::modified
+                NotePreview["🟢 preview.ts<br/>预览逻辑"]:::added
+            end
+            subgraph Tasks["tasks/ 任务能力"]
+                TaskList["🟡 task-list.ts<br/>任务列表"]:::modified
+            end
+        end
+
+        subgraph UI["ui/ 交互层"]
+            direction TB
+            NoteScreen["🟡 note-screen.ts<br/>笔记页面"]:::modified
+            Components["components/ 通用组件"]:::dependency
+        end
+
+        subgraph Adapters["adapters/ 外部适配"]
+            direction TB
+            StorageAdapter["🟡 storage.ts<br/>存储适配"]:::modified
+            NotifyAdapter["notifier.ts<br/>通知适配"]:::dependency
+        end
+
+        Shared["shared/ 共享校验"]:::keyDependency
+        FlowTest["🟢 tests/note-flow.test.ts<br/>流程验证"]:::added
+    end
+
+    NoteScreen --> NoteEditor
+    NoteEditor --> NotePreview
+    NoteEditor --> StorageAdapter
+    TaskList -.-> NotifyAdapter
+    NoteEditor -.-> Shared
+    FlowTest -.-> NoteEditor
+    Legend -.-> Repository
+
+    classDef added fill:#C8E6C9,stroke:#4CAF50,stroke-width:3px,color:#000000
+    classDef modified fill:#FFD54F,stroke:#F57C00,stroke-width:4px,color:#000000
+    classDef dependency fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef keyDependency fill:#B3E5FC,stroke:#0277BD,stroke-width:3px,color:#000000
+    classDef deleted fill:#FFCDD2,stroke:#F44336,stroke-width:3px,color:#000000
