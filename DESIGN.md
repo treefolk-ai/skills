@@ -2,96 +2,60 @@
 
 ## Purpose
 
-Treefolk Skills is a small, portable collection of complete workflows for AI agents. It exists to turn recurring user intent into maintainable procedures with explicit outcomes, safety boundaries, and verification—not to collect isolated prompts or command aliases.
+Treefolk Skills turns recurring user goals into maintainable agent workflows with explicit outcomes, safety boundaries, and verification. It is not a collection of isolated prompts or command aliases.
 
-The current public surface is intentionally limited to `repo`, `push`, `pr`, and `to-mmd`.
+“Verifiable” means another observer can check the result from the produced artifact or authoritative state. It does not mean that merely having a `Verification` section, passing package validation, or receiving a successful command exit proves the workflow correct.
 
-## Skill vs step vs script vs resource
+## Capability boundaries
 
-| Concept | Meaning |
+| Concept | Role |
 | --- | --- |
-| Skill | A user-invokable, repeatable workflow with an independently verifiable outcome |
+| Skill | A user-invokable workflow that owns a complete, observable outcome |
 | Step | One operation inside a workflow |
-| Script | Deterministic implementation support |
-| Resource | Template, reference, schema, or example used by a skill |
+| Script | Deterministic implementation or verification support |
+| Resource | A template, reference, schema, or example used by a workflow |
 
-A command such as `git add` is normally a step. A small shell program that performs a stable mechanical check is a script. Neither becomes a public skill merely because it is reusable.
+For example, `git add` is a step; “review, commit, push, and verify this change” may be a skill. Reuse alone does not make a step, script, or resource a public skill.
 
-## User intent over command wrappers
+## Public skill admission
 
-Name and design a skill around a goal a user would naturally request. “Commit and push these changes” is a workflow: it includes scope review, secret checks, message selection, push decisions, and verification. “Run `git push`” is an implementation instruction and does not justify a separate skill.
+Before adding a public skill, require clear answers to all of these questions:
 
-## Granularity test
+1. Would a user naturally request this outcome directly?
+2. Can the result be checked independently of the agent's completion claim?
+3. Does the workflow contain meaningful judgment, safety boundaries, or branching?
+4. Is there evidence that the workflow will be used repeatedly?
+5. Is its short, unambiguous name worth adding to the user's mental model?
 
-Before exposing a skill, ask:
+If the capability is mainly part of another workflow, speculative, or weakly supported by demand, keep it as a step, script, resource, or private implementation detail.
 
-1. Would a user naturally request it directly?
-2. Does it produce an independent, verifiable outcome?
-3. Does it contain non-trivial judgment, workflow, or safety rules?
-4. Will it be reused?
-5. Is its name worth adding to the user's mental model?
+## Composition
 
-Most answers should be yes. If the capability is mainly one step of an existing workflow, keep it internal.
+Compose capabilities inside the natural user outcome before splitting them into public entries. A selected skill may use commands, scripts, resources, or other host capabilities, but it remains responsible for the complete outcome.
 
-## Public surface minimization
+An intermediate artifact can qualify as a skill when users request it directly, producing it requires semantic judgment, and it passes the same admission test. Do not split a workflow merely to make its implementation appear modular.
 
-Every public name is cognitive and maintenance cost. Add only workflows with demonstrated value. Do not create placeholder skills, speculative category directories, or separate skills for each command in a workflow.
+## Safety and evidence
 
-## Composition model
+Any workflow that changes files, history, remote state, or external systems must define preconditions, stop conditions, prohibited actions, post-action verification, and a concrete completion report.
 
-Skills may use shell commands, repository scripts, templates, references, or other real capabilities. Composition should happen inside a natural workflow first. Do not split a coherent outcome solely to make the implementation appear modular.
+Inspect before acting and verify against authoritative state afterward. Treat successful no-ops and honest partial outcomes as first-class results. Never infer success from an exit code alone.
 
-## Intermediate artifacts
+Keep these evidence levels distinct:
 
-An intermediate artifact can still justify a public skill when users also request it directly and producing it requires semantic judgment. `to-mmd` qualifies because selecting a diagram model and preserving relationships is more than changing a file format.
+- Package validation proves structure and required metadata.
+- Installer tests prove the scenarios they exercise in temporary filesystems.
+- Per-run verification proves the observed result of that execution.
+- End-to-end or live-host compatibility requires separate behavioral evidence.
 
-## Safety and verification
+## Invocation ownership
 
-Any workflow that changes files, history, or remote state must define preconditions, stop conditions, safety rules, verification, and a concrete completion report. Inspect before acting, verify after acting, and report partial or no-op outcomes precisely. Never infer success from an exit code alone.
+Require explicit invocation for workflows with consequential side effects or substantial overlap. Allow implicit matching only when the workflow is low-risk and its triggering description is unambiguous. Host-specific policy belongs in a small adapter; the current tier convention is documented in `docs/skill-priority.md`.
 
-## Invocation policy
+Invocation policy decides how a skill is selected, not how much work it may own. Once selected, one entry point must own authorization, safety checks, stopping, verification, and reporting for its complete outcome; it must not rely on implicit chaining to another side-effecting skill.
 
-Treefolk uses invocation tiers as a maintainer convention, not as numeric Codex priority and not as taxonomy:
+## Taxonomy and naming
 
-- P0 skills require explicit invocation. Use the Codex adapter at `agents/openai.yaml` with `policy.allow_implicit_invocation: false` for workflows whose side effects or overlap require clear user intent.
-- P1 skills allow explicit or description-based implicit invocation. Reserve this default for focused, low-risk workflows with unambiguous triggering descriptions.
-- P2 skills are disabled through host configuration when they are low-frequency, temporarily unwanted, or too overlapping to expose safely.
+Taxonomy explains and classifies skills. It must not select installation paths, filter activation, or define invocation behavior; installed public skills remain flat.
 
-The current Git workflows `repo`, `push`, and `pr` are P0. `to-mmd` is P1. Keep `SKILL.md` as the only canonical workflow body; host-specific invocation policy belongs in a small adapter and must not duplicate those instructions. Repository validation must require every declared P0 adapter and its exact explicit-only policy. See `docs/skill-priority.md` for the user-facing Chinese guide.
-
-P0 controls how a workflow is selected, not whether it may compose multiple steps. One explicitly invoked P0 entry point may own a complete, auditable workflow such as branch creation, commit, push, and pull-request creation. It must not depend on the host implicitly discovering and chaining another P0; the entry point itself owns authorization, safety checks, stop conditions, verification, and reporting for the whole composition.
-
-## Taxonomy model
-
-Taxonomy is metadata, not an installation path. Installed skills remain flat, while each `SKILL.md` declares `treefolk-category`, `treefolk-domain`, and `treefolk-kind`.
-
-- `core` is the only stable category today.
-- `make` is planned for creating products and works, but is not active yet.
-- The category for outward communication, distribution, adoption, and growth does not yet have a final English name.
-- Do not stabilize `market`, `reach`, or another candidate in directories, validation rules, or compatibility promises before that decision is made.
-
-Future taxonomy is not a stable API. The current skills use `core / git / workflow` for `repo`, `push`, and `pr`, and `core / format / transform` for `to-mmd`.
-
-## Naming rules
-
-- Use lowercase kebab-case.
-- Keep names short, verb-led when practical, and unambiguous.
-- Describe user intent, not every internal operation.
-- Match the directory name and frontmatter `name` exactly.
-
-## Promotion rule
-
-Repeated internal steps may become skills only after they prove independent user demand.
-
-Promotion also requires an independently verifiable result, meaningful judgment or safety value, repeated use, and a name users should reasonably remember. When evidence is weak, retain the capability as a step, script, or resource.
-
-## Anti-patterns
-
-- Thin command wrappers such as separate `init-repo`, `commit`, or `push` skills.
-- Excessive atomicity that forces users to orchestrate implementation details.
-- Empty categories, speculative skills, or placeholder resource trees.
-- Copies of the same skill body for different agent hosts.
-- Taxonomy encoded as nested installation directories.
-- Side effects without preflight checks, stop conditions, and post-action verification.
-- Empty commits, forced work for an already-correct state, or no-op results reported as failures.
-- Claims of compatibility, validation, or successful delivery that were not actually verified.
+Names describe the user's goal rather than an implementation command. Keep them short and unambiguous. Mechanical package naming and schema rules belong to `AGENTS.md`, the template, and the validator.

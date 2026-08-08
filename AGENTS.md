@@ -1,81 +1,58 @@
 # Repository guidance
 
-## Repository purpose
+## Scope and source ownership
 
-This is Treefolk AI's portable repository of reusable agent skills. Maintain it as a small system of complete, verifiable workflows for multiple AI-agent environments, without claiming host compatibility that has not been implemented and tested.
+This repository contains Treefolk AI's reusable agent skills. Every public skill must define an observable outcome, safety boundaries, and the checks required before reporting success. This is a design requirement, not a claim that every workflow has an automated end-to-end test.
 
-## Canonical sources
+Keep each kind of truth in one place:
 
 - `AGENTS.md` defines repository maintenance rules.
-- `DESIGN.md` defines skill design principles and granularity.
-- Each skill's `SKILL.md` is the only canonical body for that skill.
-- `README.md` is the user-facing entry point.
+- `DESIGN.md` defines stable skill-design and granularity decisions.
+- Each skill's `SKILL.md` is its only complete workflow.
+- `README.md` describes the current public surface and user workflows.
+- `templates/SKILL.md.tmpl` defines the public package skeleton; `scripts/check-skills.sh` enforces it. Keep them synchronized.
+- `docs/skill-priority.md` explains the current invocation-tier convention and host configuration.
 
-Do not duplicate skill bodies into `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, `PI.md`, or other host-specific versions. Keep host differences in installers or small adapters.
+Host adapters may contain installation, discovery, invocation-policy, or metadata differences, but must not duplicate a skill workflow.
 
-## Required reading
+## Before editing
 
-Before adding or changing a skill, read:
+- Inspect `git status --short` and preserve unrelated user changes.
+- Before adding or changing a skill, read `DESIGN.md`, the affected `SKILL.md`, `templates/SKILL.md.tmpl`, and `scripts/check-skills.sh`.
+- Before changing installation or host activation, inspect `install.sh`, `setup`, `uninstall`, `scripts/check-setup.sh`, and the corresponding README sections.
+- Update `README.md` whenever the public skill set or user workflow changes. Update `DESIGN.md` only when a stable design, granularity, invocation, or taxonomy decision changes.
 
-1. `DESIGN.md`
-2. The affected `SKILL.md`, when it exists
-3. `templates/SKILL.md.tmpl`
+## Public package contract
 
-Also inspect `README.md` and the validator before changing the public surface or schema.
-
-## Public skill rules
-
-- Represent a natural user goal with an independently verifiable outcome; do not wrap a single command as a public skill.
-- Apply the granularity test in `DESIGN.md`. Do not split workflows without evidence of independent user demand.
+- Apply the admission and naming rules in `DESIGN.md`; do not expose a single command or speculative capability as a skill.
+- Keep public skill directories at the repository root, use lowercase kebab-case, and make the directory name equal the frontmatter `name`.
+- Start new skills from `templates/SKILL.md.tmpl` and make every package pass `scripts/check-skills.sh`.
+- Include explicit inputs, defaults, decision branches, no-op behavior, stop conditions, verification, and honest partial outcomes where relevant.
+- Keep scripts, templates, references, and implementation steps inside an existing skill or repository-support directory. Promote them to a top-level skill only when they independently pass the admission test.
 - Do not add empty skill or category directories.
-- Keep public skill directories at the repository root; store taxonomy in metadata, not paths.
-- Do not copy a skill for different hosts.
-- Update both `README.md` and `DESIGN.md` when adding or removing a public skill.
-- Keep implementation steps, private scripts, templates, and references non-public unless they independently earn promotion.
 
-## Installation architecture
+## Installer and host contract
 
-- Treat taxonomy as user-facing explanation and maintainer classification only. Host activation must be category-agnostic and activate every top-level public skill; category metadata must never become an installation path or filter.
-- Keep acquisition separate from host activation. `install.sh` acquires source at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`; the acquired checkout's local `setup` is the sole implementation of host activation, even when the bootstrap invokes it.
-- Activate new user-level installations in `${HOME}/.agents/skills` so Codex and Grok share one flat discovery target. Preserve existing `${CODEX_HOME}/skills` or `${HOME}/.codex/skills` links during setup; uninstall must inspect both shared and legacy locations and remove only links whose ownership it proves.
-- Keep the curl bootstrap self-contained and compatible with the Bash 3.2 shipped by macOS. It must fetch only over HTTPS, never require `sudo`, and refuse to overwrite an existing source installation directory.
-- A downloaded `install.sh --dry-run` must perform no network access or filesystem mutation. Validate acquired source before invoking `setup`, and never activate source that fails validation.
-- Use pinned, immutable refs for release channels. Documentation and implementation must use the same release tag for acquiring `install.sh` and for its `--ref`; label `main` as a moving channel.
-- Maintenance tests must exercise a local installer and must never execute a `curl | bash` pipeline.
+- `setup` and `uninstall` must discover every top-level `*/SKILL.md` package independently of category metadata.
+- Keep source acquisition separate from activation. `install.sh` acquires source at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`; the acquired checkout's `setup` is the only activation implementation.
+- New user-level installations activate in `${HOME}/.agents/skills`. Preserve existing `${CODEX_HOME}/skills` or `${HOME}/.codex/skills` links; uninstall may remove shared or legacy links only after proving ownership.
+- Keep the curl bootstrap self-contained and compatible with macOS Bash 3.2. It must use HTTPS, require no `sudo`, and refuse to overwrite an existing source directory.
+- A downloaded `install.sh --dry-run` must perform no network access or filesystem mutation. Validate acquired source before activation.
+- Use immutable refs for release channels. Documentation and implementation must use the same release tag for the installer URL and `--ref`; identify `main` as a moving channel.
+- Maintenance tests must exercise the local installer and must never execute a `curl | bash` pipeline.
+- Describe host compatibility by capability: acquisition, activation, discovery, invocation policy, and uninstall. Claim only capabilities that have been implemented and tested, and label partial support explicitly.
 
-## Naming
+## Safety and change discipline
 
-- Use lowercase kebab-case.
-- Make the directory name equal the frontmatter `name`.
-- Prefer a short but unambiguous name.
-- Describe user intent rather than implementation commands.
-
-## Required sections
-
-Every public `SKILL.md` must have YAML frontmatter with `name`, a clear triggering `description`, and `metadata` values for `treefolk-category`, `treefolk-domain`, and `treefolk-kind`. Its body must contain:
-
-- `Outcome`
-- `Use when`
-- `Do not use when`
-- `Inputs`
-- `Preconditions`
-- `Workflow`
-- `Stop conditions`
-- `Safety`
-- `Verification`
-- `Completion report`
-
-Keep instructions concise and include defaults, branches, no-op behavior, and honest partial outcomes where relevant.
-
-## Safety
-
-Git skills must never force push, delete or rebuild `.git`, overwrite a remote, overwrite remote history, amend automatically, change global Git configuration, stage an unreviewed working tree, commit suspected secrets or `.env` data, or claim success without checking the resulting commit and remote state. Preserve user work and stop on ambiguity or overwrite risk.
-
-Repository maintenance must not perform a real skill installation, modify remotes, create hosted repositories, commit, push, or access the network unless a later user request explicitly authorizes that exact action.
+- Keep patches focused and review generated files and executable modes.
+- Git skills must never force push, delete or rebuild `.git`, overwrite a remote or its history, amend automatically, change global Git configuration, stage an unreviewed worktree, commit suspected secrets or `.env` data, or claim success without checking the resulting commit and remote state.
+- Preserve user work and stop on ambiguity, suspected secrets, or overwrite risk.
+- Do not install skills, access the network, change remotes, create hosted repositories, commit, or push unless the user explicitly authorizes that specific action in the current task.
+- Do not weaken checks merely to make validation pass.
 
 ## Validation
 
-After a change, run:
+After any change, run the complete local validation set:
 
 ```sh
 bash -n install.sh
@@ -92,22 +69,8 @@ bash -n scripts/check-skills.sh
 ./setup --host grok --dry-run
 ./uninstall --host codex --dry-run
 ./uninstall --host grok --dry-run
-```
-
-If the current directory is a Git repository, also run:
-
-```sh
 git diff --check
 git status --short
 ```
 
-Fix failures and rerun the complete set. Report what actually ran and distinguish parser validation, static checks, dry-runs, and real side effects.
-
-## Change discipline
-
-- Inspect the working tree before editing and preserve unrelated user changes.
-- Keep patches focused and review generated files and executable modes.
-- Do not commit or push automatically.
-- Do not add, remove, or rewrite remotes during repository maintenance.
-- Do not silently weaken checks to make validation pass.
-- Report every validation honestly, including no-ops, skipped checks, warnings, and remaining decisions.
+Fix failures and rerun the complete set. Report parser checks, static package checks, installer regression tests, dry-runs, and real side effects as separate evidence. Never describe these repository checks as end-to-end proof of every skill or live host runtime.
