@@ -1,39 +1,43 @@
 # Treefolk Skills
 
-Reusable agent workflows with explicit outcomes, safety boundaries, and per-run verification steps.
+Treefolk Skills is Treefolk AI's evolving system for building a personal AI workflow. It turns recurring jobs into reusable skills with clear outcomes, useful defaults, safety boundaries, and checks that make the result inspectable.
 
-## Skills
+The goal is simple: tell an AI agent what you want to accomplish, reuse a well-designed workflow, and improve that workflow in one place instead of rebuilding the process in every conversation.
 
-| Invoke | Use for | Important boundary |
+## What lives here
+
+A Treefolk skill is more than a prompt snippet or command alias. It owns a complete user goal: when to use it, what information it needs, which decisions it may make, when it must stop, and how to verify the outcome.
+
+The repository currently contains a small `core` set for common development work:
+
+| Skill | Helps you | Stops short of |
 | --- | --- | --- |
-| `$repo` | Initialize a local Git repository on `main`, connect an existing remote, and make the first safe push | Does not create a hosted repository or configure authentication |
-| `$push` | Review, commit, and safely push one coherent change | Does not initialize repositories, rewrite history, or create pull requests |
-| `$pr` | Publish current work on a safe source branch and create or reuse one pull request | Stops when branch, remote, provider, or existing-PR state is ambiguous |
-| `$to-mmd` | Convert text, processes, or relationships into editable Mermaid source | Produces Mermaid text, not a rendered image |
+| `$repo` | Prepare a local project on `main`, connect an existing remote, and make the first safe push | Creating a hosted repository or configuring authentication |
+| `$push` | Review, commit, and safely push one coherent change | Initializing a repository, rewriting history, or opening a pull request |
+| `$pr` | Publish the intended work and create or reuse one verified pull request | Guessing through ambiguous branch, remote, provider, or pull-request state |
+| `$to-mmd` | Turn text, processes, or relationships into editable Mermaid source | Rendering PNG or SVG output |
 
-In Codex, select or mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$to-mmd` may also be selected from its description. See [Skill 调用参与层级与启用策略](docs/skill-priority.md) for the current invocation convention.
+A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. `$to-mmd` is a reusable utility whenever an idea or system needs a diagram that remains easy to inspect and edit.
 
-Each `SKILL.md` is the authoritative workflow for its skill.
+The library will grow around recurring parts of the personal AI workflow, not around every available command. See [DESIGN.md](DESIGN.md) for the product map and classification model.
 
-## Host capability status
+## Use a skill
 
-`install.sh`, `setup`, and `uninstall` accept `codex` and `grok` as selectors. Both selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior.
+In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$to-mmd` may be invoked explicitly or selected from its description. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
 
-The repository includes and statically validates Codex invocation-policy metadata for the side-effecting Git skills. It does not include a Grok-specific invocation-policy adapter or a live-host test suite. Filesystem activation tests therefore do not, by themselves, prove that a host discovered or successfully invoked a skill.
-
-Other hosts are not currently claimed as supported.
+Each skill's `SKILL.md` is its complete workflow and source of truth.
 
 ## Install
 
-The bootstrap installs source into `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`, validates it, and delegates activation to that checkout's `setup`.
+The bootstrap stores the source checkout at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`, validates it, and then activates its public skills.
 
-Install the moving `main` channel for Codex-oriented automation:
+Install the moving `main` channel for Codex-oriented use:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh | bash -s -- --host codex
 ```
 
-Use `--host grok` for Grok-oriented automation. Both selectors activate the same shared directory. Because `main` moves, use an existing immutable release tag in both the installer URL and `--ref` when reproducibility matters.
+Use `--host grok` for Grok-oriented use. For a reproducible release, replace `main` in the URL with an existing immutable tag and pass the same tag through `--ref`.
 
 To review the installer before running it:
 
@@ -43,49 +47,51 @@ less treefolk-install.sh
 bash treefolk-install.sh --host codex
 ```
 
-From an existing checkout, preview before activating:
+From an existing checkout, preview activation before changing anything:
 
 ```sh
 ./setup --host codex --dry-run
 ./setup --host codex
 ```
 
-`setup` refuses existing files, directories, and unrelated links instead of overwriting them. New links are created only in the shared target; existing legacy Codex links are preserved.
+`setup` refuses to overwrite existing files, directories, or unrelated links.
 
 ## Verify activation
 
-For a bootstrap installation, rerun the acquired setup without mutation:
+For a bootstrap installation, rerun the acquired setup as a dry-run:
 
 ```sh
 "${TREEFOLK_HOME:-$HOME/.treefolk}/skills/setup" --host codex --dry-run
 ```
 
-A successful activation check reports every public skill as already linked and no conflicts. This verifies the checkout's link state, not live host discovery or the behavior of every skill.
+A clean result reports every public skill as already linked with no conflicts. This verifies filesystem activation, not whether a host has discovered or successfully invoked every workflow.
+
+## Host support
+
+The `codex` and `grok` selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior. The repository includes statically checked Codex invocation metadata for the Git skills; it does not yet include a Grok-specific invocation-policy adapter or live-host compatibility tests. Other hosts are not currently claimed as supported.
 
 ## Update and uninstall
 
 The bootstrap is first-install only and refuses an existing source directory. Until a reviewed updater exists, update the source checkout explicitly rather than rerunning the bootstrap as an in-place update.
 
-Use the same source checkout to preview and remove only links it can prove it owns:
+Preview and remove only links owned by that checkout:
 
 ```sh
 "${TREEFOLK_HOME:-$HOME/.treefolk}/skills/uninstall" --host codex --dry-run
 "${TREEFOLK_HOME:-$HOME/.treefolk}/skills/uninstall" --host codex
 ```
 
-Run `uninstall` before deleting the source checkout. From a local checkout, use `./uninstall` with the same options. The `codex` and `grok` selectors remove the same owned shared and legacy links.
+Run `uninstall` before deleting the source checkout. From a local checkout, use `./uninstall` with the same options.
 
-## Safety
+## Safety and trust
 
-The bootstrap uses HTTPS, requires no `sudo`, validates downloaded source before activation, and refuses to overwrite an existing source installation. Local `setup` and `uninstall` do not access the network, support true dry-runs, refuse conflicts, and remove links only after verifying ownership.
+Installation uses HTTPS, requires no `sudo`, validates acquired source before activation, and refuses overwrite conflicts. Local setup and uninstall support true dry-runs, do not access the network, and remove links only after proving ownership.
 
-The Git skills inspect local and remote state, stop on ambiguity or overwrite risk, and prohibit force pushes, automatic history reconciliation, remote replacement, automatic amend, global Git configuration changes, and committing suspected secrets. Their complete rules live in their respective `SKILL.md` files.
+Side-effecting skills inspect state before acting, stop on ambiguity or overwrite risk, and verify authoritative state before reporting success. Repository checks validate package structure and installer behavior; they are not a substitute for per-run verification or live-host testing.
 
-## Contributing and validation
+## Shape the workflow
 
-Read [DESIGN.md](DESIGN.md), [AGENTS.md](AGENTS.md), and [templates/SKILL.md.tmpl](templates/SKILL.md.tmpl) before changing the public surface. `AGENTS.md` contains the canonical validation matrix.
-
-Repository validation covers Bash parsing, public-package structure, required Codex adapters, installer regression scenarios, and non-mutating install/setup/uninstall plans. It does not execute every skill against live remotes or providers, validate Mermaid semantics end to end, or prove Codex/Grok runtime compatibility.
+Want to improve an existing workflow or add a recurring one? Read [DESIGN.md](DESIGN.md) for the product and classification model, then [AGENTS.md](AGENTS.md) for the AI-assisted design and maintenance process.
 
 ## License
 
