@@ -1,0 +1,7 @@
+interface:
+  display_name: "UI to Description"
+  short_description: "Capture UI evidence as component design specs"
+  default_prompt: "Use $ui-to-desc to turn the UI evidence I provide into one reviewable component design description."
+
+policy:
+  allow_implicit_invocation: true

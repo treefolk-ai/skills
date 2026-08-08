@@ -8,7 +8,7 @@ The goal is simple: tell an AI agent what you want to accomplish, reuse a well-d
 
 A Treefolk skill is more than a prompt snippet or command alias. It owns a complete user goal: when to use it, what information it needs, which decisions it may make, when it must stop, and how to verify the outcome.
 
-The repository currently contains a small `core` set for common development work:
+The current library combines a small `core` foundation with the first `make` workflow for design knowledge:
 
 | Skill | Helps you | Stops short of |
 | --- | --- | --- |
@@ -16,14 +16,15 @@ The repository currently contains a small `core` set for common development work
 | `$push` | Review, commit, and safely push one coherent change | Initializing a repository, rewriting history, or opening a pull request |
 | `$pr` | Publish the intended work and create or reuse one verified pull request | Guessing through ambiguous branch, remote, provider, or pull-request state |
 | `$to-mmd` | Turn text, processes, or relationships into editable Mermaid source | Rendering PNG or SVG output |
+| `$ui-to-desc` | Accumulate UI evidence across multiple turns into one reviewable component design description | Implementing the component or inventing missing design values |
 
-A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. `$to-mmd` is a reusable utility whenever an idea or system needs a diagram that remains easy to inspect and edit.
+A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. `$to-mmd` turns an idea or system into an editable diagram. `$ui-to-desc` stays with a component across a multi-turn design handoff, then produces one specification when the user marks it complete.
 
 The library will grow around recurring parts of the personal AI workflow, not around every available command. See [DESIGN.md](DESIGN.md) for the product map and classification model.
 
 ## Use a skill
 
-In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$to-mmd` may be invoked explicitly or selected from its description. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
+In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$to-mmd` and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
 
 Each skill's `SKILL.md` is its complete workflow and source of truth.
 
