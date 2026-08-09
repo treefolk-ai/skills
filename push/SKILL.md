@@ -29,7 +29,21 @@ Deliver the current task's reviewed changes as a meaningful commit on the curren
 
 - Required: no value beyond access to the intended local repository.
 - Optional: target directory, task scope, explicit paths, and a commit message.
+- Optional mode: `fast`, invoked as `$push fast`.
 - Defaults: current directory, current branch, its configured upstream, task-related reviewed changes only, and a concise message derived from the actual diff in the repository's existing style.
+
+## Fast mode
+
+When the user invokes `$push fast`, start immediately without presenting a plan or asking for workflow confirmation when the scope and configured upstream are unambiguous.
+
+- Keep all Safety and Stop conditions.
+- Inspect repository state, candidate paths, and each selected diff once.
+- Stage only reviewed task paths and run `git diff --cached --check`.
+- Commit only when needed, then perform one normal non-force push.
+- Skip pre-push fetch/history comparison, commit-style lookup, identity preflight, repeated diff reads, and detailed commit metadata verification.
+- After pushing, confirm the remote branch SHA matches `HEAD`.
+- Keep the completion report brief.
+- If scope or destination is ambiguous, stop quickly and suggest normal `$push`.
 
 ## Preconditions
 
