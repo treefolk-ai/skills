@@ -105,8 +105,10 @@ bash -n setup
 bash -n uninstall
 bash -n scripts/check-setup.sh
 bash -n scripts/check-skills.sh
+bash -n scripts/check-warp-launcher.sh
 ./scripts/check-setup.sh
 ./scripts/check-skills.sh
+./scripts/check-warp-launcher.sh
 ./install.sh --host codex --dry-run
 ./install.sh --host grok --dry-run
 ./setup --dry-run

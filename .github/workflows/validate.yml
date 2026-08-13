@@ -23,12 +23,16 @@ jobs:
           /bin/bash -n uninstall
           /bin/bash -n scripts/check-setup.sh
           /bin/bash -n scripts/check-skills.sh
+          /bin/bash -n scripts/check-warp-launcher.sh
 
       - name: Test Codex setup behavior
         run: ./scripts/check-setup.sh
 
       - name: Validate skill packages
         run: ./scripts/check-skills.sh
+
+      - name: Test Warp launcher behavior
+        run: ./scripts/check-warp-launcher.sh
 
       - name: Dry-run curl bootstrap
         run: ./install.sh --host codex --dry-run

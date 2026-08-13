@@ -424,6 +424,57 @@ validate_explicit_only_adapter() {
   fi
 }
 
+validate_warp_push_launcher() {
+  local launcher_file="$repo_root/push/adapters/warp/push-fast.yaml"
+  local relative_launcher=${launcher_file#"$repo_root"/}
+  local required_line
+
+  if [ ! -f "$launcher_file" ]; then
+    report_error "$relative_launcher" "required Warp launcher for '\$push fast' is missing"
+    return
+  fi
+
+  for required_line in \
+    'name: Codex push fast' \
+    'command: |-' \
+    '  repo_root=$(git rev-parse --show-toplevel) &&' \
+    "    codex exec --sandbox workspace-write -C \"\$repo_root\" '\$push fast'" \
+    'shells: ["zsh", "bash"]'; do
+    if ! awk -v expected="$required_line" '
+      {
+        sub(/\r$/, "")
+        if ($0 == expected) {
+          found = 1
+          exit
+        }
+      }
+      END { exit(found ? 0 : 1) }
+    ' "$launcher_file"; then
+      report_error "$relative_launcher" "missing required launcher line: $required_line"
+    fi
+  done
+
+  if awk '
+    /--dangerously-bypass-approvals-and-sandbox|--yolo|--sandbox[ \t]+danger-full-access|--ask-for-approval[ \t]+never|approvals_reviewer[= \t]+["'\'' ]*auto_review/ {
+      found = 1
+      exit
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$launcher_file"; then
+    report_error "$relative_launcher" "launcher must inherit approval policy and preserve the workspace-sandbox boundary"
+  fi
+
+  if awk '
+    /(^|[ \t])(-m|--model)([ \t]|=)|model_reasoning_effort|service_tier|fast_mode/ {
+      found = 1
+      exit
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$launcher_file"; then
+    report_error "$relative_launcher" "launcher must inherit model, reasoning, and service tier from Codex configuration"
+  fi
+}
+
 shopt -s nullglob
 skill_files=("$repo_root"/*/SKILL.md)
 shopt -u nullglob
@@ -532,6 +583,8 @@ for skill_file in "${skill_files[@]}"; do
     validate_explicit_only_adapter "$package_dir" "$(dirname -- "$skill_file")"
   fi
 done
+
+validate_warp_push_launcher
 
 if [ "$error_count" -gt 0 ]; then
   printf 'Validation failed: checked %d skill package(s); found %d error(s).\n' "$checked_count" "$error_count" >&2

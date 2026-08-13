@@ -1,0 +1,8 @@
+name: Codex push fast
+command: |-
+  repo_root=$(git rev-parse --show-toplevel) &&
+    codex exec --sandbox workspace-write -C "$repo_root" '$push fast'
+description: Launch Codex in the current Git repository to run Treefolk's push fast workflow.
+tags: ["codex", "git", "push", "treefolk"]
+author: Treefolk AI
+shells: ["zsh", "bash"]

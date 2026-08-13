@@ -28,6 +28,33 @@ In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those sid
 
 Each skill's `SKILL.md` is its complete workflow and source of truth.
 
+### Optional Warp shortcut
+
+The repository includes a thin Warp Workflow for `$push fast`. It resolves the Git root from the active terminal, launches Codex non-interactively with the `workspace-write` sandbox, then passes the exact `$push fast` invocation to the installed skill. The shortcut inherits the model, reasoning effort, service tier, approval policy, and reviewed command rules from your Codex configuration.
+
+From this checkout's root, activate it as a personal Warp Workflow. This is an optional local filesystem change: it creates `~/.warp/workflows` when absent and adds one symbolic link. It does not start Codex or perform Git operations.
+
+```sh
+mkdir -p "$HOME/.warp/workflows"
+ln -s "$(pwd -P)/push/adapters/warp/push-fast.yaml" "$HOME/.warp/workflows/treefolk-push-fast.yaml"
+```
+
+Warp loads valid files from that directory automatically. In a Git repository, open Warp's Command Palette, search for `Codex push fast`, select it, inspect the command inserted into the active terminal, and press Enter. The command stops before starting Codex when the current directory is not inside a Git repository. After you press Enter, `$push fast` may stage reviewed changes, create a commit, and perform one normal push; those are the launcher's intended Git and network side effects.
+
+To deactivate it, remove only the owned symbolic link:
+
+```sh
+workflow_link="$HOME/.warp/workflows/treefolk-push-fast.yaml"
+expected_target="$(pwd -P)/push/adapters/warp/push-fast.yaml"
+[ "$(readlink "$workflow_link")" = "$expected_target" ] && rm "$workflow_link"
+```
+
+Leave the workflows directory in place unless you have separately confirmed that it is empty and no longer needed.
+
+Codex must already be installed, authenticated, and able to discover this repository's `push` skill. Because the workspace sandbox protects `.git` and gates command network access, unattended commit and push also require your Codex approval policy or narrowly reviewed Git command rules to authorize those exact boundary crossings.
+
+This is a launcher for Codex CLI, not a Warp Agent adapter, a new `push-fast` skill, or `--host warp` support. It deliberately does not use full-access, approval-bypass, or approval-policy override flags. The workflow stops if the inherited permissions cannot safely complete a boundary-crossing action.
+
 ## Install
 
 The bootstrap stores the source checkout at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`, validates it, and then activates its public skills.
@@ -69,7 +96,7 @@ A clean result reports every public skill as already linked with no conflicts. T
 
 ## Host support
 
-The `codex` and `grok` selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior. The repository includes statically checked Codex invocation metadata for the Git skills; it does not yet include a Grok-specific invocation-policy adapter or live-host compatibility tests. Other hosts are not currently claimed as supported.
+The `codex` and `grok` selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior. The repository includes statically checked Codex invocation metadata for the Git skills; it does not yet include a Grok-specific invocation-policy adapter or live-host compatibility tests. The optional Warp Workflow only launches Codex CLI and is activated separately. Other hosts are not currently claimed as supported.
 
 ## Update and uninstall
 

@@ -44,6 +44,7 @@ When the user invokes `$push fast`, start immediately without presenting a plan 
 - After pushing, confirm the remote branch SHA matches `HEAD`.
 - Keep the completion report brief.
 - If scope or destination is ambiguous, stop quickly and suggest normal `$push`.
+- A host shortcut may select this mode by passing the exact `$push fast` invocation and the repository root. It must preserve the host's sandbox and approval boundary and must not copy or replace this workflow.
 
 ## Preconditions
 

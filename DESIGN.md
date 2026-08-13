@@ -75,6 +75,7 @@ Convenience does not mean hiding consequential behavior. It means placing decisi
 | Step | One operation inside that workflow |
 | Script | Deterministic implementation or verification support |
 | Resource | A template, reference, schema, or example used by a workflow |
+| Launcher | A host or terminal shortcut that selects an existing workflow and supplies execution context without owning its decisions |
 
 For example, `git add` is a step; “review, commit, push, and verify this change” may be a skill. Reuse alone does not make a step, script, or resource a public product entry.
 
@@ -131,6 +132,8 @@ Invocation policy decides how a host may select a skill; it does not determine c
 The Git workflows `repo`, `push`, and `pr` are P0. `to-mmd` and `ui-to-desc` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
+
+A launcher may make an explicit skill or mode easier to reach, but it is not another public skill. It may resolve the current repository and select a documented sandbox; it must pass the exact invocation through, inherit model and approval choices from the host, and leave the complete workflow in the selected `SKILL.md`. The optional Warp launcher for `$push fast` follows this boundary and does not imply support for Warp Agent.
 
 ## Naming and evolution
 
