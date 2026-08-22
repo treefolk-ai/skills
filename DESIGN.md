@@ -27,7 +27,7 @@ Only `core` and `make` are active taxonomy today. Directional rows guide discove
 
 | Skill | Category | Domain | Kind | Primary user outcome |
 | --- | --- | --- | --- | --- |
-| `repo` | `core` | `git` | `workflow` | Initialize and publish a repository safely for the first time |
+| `repo` | `core` | `git` | `workflow` | Initialize and publish a repository safely, reusing or creating its intended remote |
 | `push` | `core` | `git` | `workflow` | Deliver one reviewed change to its intended remote |
 | `pr` | `core` | `git` | `workflow` | Publish work as exactly one verified pull request |
 | `to-mmd` | `core` | `format` | `transform` | Produce faithful, editable Mermaid source |
@@ -93,6 +93,8 @@ A new skill should normally pass questions 1–3 and 5, with question 4 answered
 ## Scope and composition
 
 Compose capabilities inside the natural user outcome before splitting them into public entries. A selected skill may use commands, scripts, resources, or host capabilities, but it remains responsible for authorization, stopping, verification, and reporting across the complete outcome.
+
+`repo` owns first publication end to end. After resolving one unambiguous hosted-repository identity, it queries the provider and may create exactly one empty repository when absence is confirmed. Creation defaults to private; public visibility requires an explicit instruction in the current invocation. Reusing an existing repository never changes its visibility implicitly.
 
 An intermediate artifact can qualify as a skill when users request it directly, producing it requires semantic judgment, and it passes the same admission test. `to-mmd` qualifies because selecting a diagram model and preserving relationships is more than renaming or mechanically converting a file.
 

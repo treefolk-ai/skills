@@ -92,7 +92,7 @@ Write a workflow once, in its `SKILL.md`. Host adapters may describe only how th
 - Keep patches focused and review generated files and executable modes.
 - Git skills must never force push, delete or rebuild `.git`, overwrite a remote or its history, amend automatically, change global Git configuration, stage an unreviewed worktree, commit suspected secrets or `.env` data, or claim success without checking the resulting commit and remote state.
 - Preserve user work and stop on ambiguity, suspected secrets, or overwrite risk.
-- Do not install skills, access the network, change remotes, create hosted repositories, commit, or push unless the user explicitly authorizes that specific action in the current task.
+- Do not install skills, access the network, change remotes, create hosted repositories, commit, or push unless the user explicitly authorizes that specific action in the current task. An explicitly invoked P0 skill supplies that authorization only for the side effects and safe defaults stated in its contract; each non-default option is authorized only when the user explicitly requests it in the same invocation. Discussion or implicit selection does not supply authorization.
 - Do not weaken checks merely to make validation pass.
 
 ## Validation

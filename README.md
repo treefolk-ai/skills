@@ -12,7 +12,7 @@ The current library combines a small `core` foundation with the first `make` wor
 
 | Skill | Helps you | Stops short of |
 | --- | --- | --- |
-| `$repo` | Prepare a local project on `main`, connect an existing remote, and make the first safe push | Creating a hosted repository or configuring authentication |
+| `$repo` | Prepare a local project on `main`, find or create its intended remote, and make the first safe push | Configuring authentication, guessing ambiguous ownership, or changing an existing repository's visibility |
 | `$push` | Review, commit, and safely push one coherent change | Initializing a repository, rewriting history, or opening a pull request |
 | `$pr` | Publish the intended work and create or reuse one verified pull request | Guessing through ambiguous branch, remote, provider, or pull-request state |
 | `$to-mmd` | Turn text, processes, or relationships into editable Mermaid source | Rendering PNG or SVG output |
@@ -25,6 +25,8 @@ The library will grow around recurring parts of the personal AI workflow, not ar
 ## Use a skill
 
 In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$to-mmd` and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
+
+`$repo` queries the exact hosted repository before publication and creates it only when the provider confirms that it is absent. A new repository is private by default; use `$repo public` when the new repository should be public. This modifier never changes the visibility of an existing repository.
 
 Each skill's `SKILL.md` is its complete workflow and source of truth.
 

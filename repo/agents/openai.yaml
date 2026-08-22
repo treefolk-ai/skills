@@ -1,7 +1,7 @@
 interface:
   display_name: "Setup Repo"
   short_description: "Safely initialize and publish a repository"
-  default_prompt: "Use $repo to initialize and publish this repository safely."
+  default_prompt: "Use $repo to initialize this project, find or create its remote, and publish it safely."
 
 policy:
   allow_implicit_invocation: false
