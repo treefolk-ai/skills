@@ -40,7 +40,7 @@ When the user invokes `$push fast`, start immediately without presenting a plan 
 - Inspect repository state, candidate paths, and each selected diff once.
 - Stage only reviewed task paths and run `git diff --cached --check`.
 - Commit only when needed, then perform one normal non-force push.
-- Skip pre-push fetch/history comparison, commit-style lookup, identity preflight, repeated diff reads, and detailed commit metadata verification.
+- Skip pre-push fetch/history comparison, commit-style lookup, identity preflight, repeated diff reads, and detailed commit metadata verification; use the structured fallback in Workflow step 4.
 - After pushing, confirm the remote branch SHA matches `HEAD`.
 - Keep the completion report brief.
 - If scope or destination is ambiguous, stop quickly and suggest normal `$push`.
@@ -62,7 +62,13 @@ When the user invokes `$push fast`, start immediately without presenting a plan 
    - **Worktree is clean, commits are ahead:** skip commit creation and continue to the push checks. With no upstream, an absent intended remote branch makes existing local commits pending as a new-branch push; do not misclassify that state as a no-op.
    - **Worktree is clean, no commits are ahead:** return a successful no-op stating that nothing needs committing or pushing.
 3. For a commit, stage only explicit, reviewed paths or safely selected hunks. Never use a blanket `git add .`. Re-read the staged diff and ensure it contains the complete intended change, no unrelated work, and no suspected secret.
-4. Derive a short, accurate message from the staged diff, preferring the repository's recent message style. Use a user-supplied message only when it still describes the staged content. Create a new commit without amending.
+4. Derive a short, accurate message from the staged diff. Prefer an established recent repository style when it was inspected. When no style lookup was performed or history is inconsistent, use:
+   ```text
+   <icon> <type>(<scope>): <summary>
+
+   <body>
+   ```
+   Choose a conventional icon/type pair for the dominant change, keep the type in English, omit the scope only for truly global work, and follow the user's language for the summary and body. Keep the title concise. For a non-trivial commit, include concise bullets covering every material change point; a trivial one-point change may omit the body. Use a user-supplied message only when it still describes the staged content. Create a new commit without amending.
 5. Verify the new commit by inspecting its hash, message, parent, and exact changed paths. Ensure any unstaged or untracked files remain as expected.
 6. Determine the push destination. Use the configured upstream when present. Without one, establish an upstream for the same current branch only when `origin` is the unique, clearly intended remote and the same-named remote branch is absent or safely related. Stop on multiple plausible remotes or branch ambiguity.
 7. Compare local and fetched remote history. Push only a new branch or fast-forward update. If the remote is ahead, divergent, inaccessible, or rejects the push, stop without force, merge, rebase, reset, branch switching, or repeated speculative pushes.
