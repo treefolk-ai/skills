@@ -8,23 +8,24 @@ The goal is simple: tell an AI agent what you want to accomplish, reuse a well-d
 
 A Treefolk skill is more than a prompt snippet or command alias. It owns a complete user goal: when to use it, what information it needs, which decisions it may make, when it must stop, and how to verify the outcome.
 
-The current library combines a small `core` foundation with the first `make` workflow for design knowledge:
+The current library combines a small `core` foundation with focused `think` and `make` workflows:
 
 | Skill | Helps you | Stops short of |
 | --- | --- | --- |
 | `$repo` | Prepare a local project on `main`, find or create its intended remote, and make the first safe push | Configuring authentication, guessing ambiguous ownership, or changing an existing repository's visibility |
 | `$push` | Review, commit, and safely push one coherent change | Initializing a repository, rewriting history, or opening a pull request |
 | `$pr` | Publish the intended work and create or reuse one verified pull request | Guessing through ambiguous branch, remote, provider, or pull-request state |
+| `$todo` | Read the current project's task documents and recommend one source-backed next action; `$todo adhd` reduces it to one tiny starting step | Editing task files, scanning source-code TODO comments, executing the task, or querying external trackers |
 | `$to-mmd` | Turn text, processes, or relationships into editable Mermaid source | Rendering PNG or SVG output |
 | `$ui-to-desc` | Accumulate UI evidence across multiple turns into one reviewable component design description | Implementing the component or inventing missing design values |
 
-A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. `$to-mmd` turns an idea or system into an editable diagram. `$ui-to-desc` stays with a component across a multi-turn design handoff, then produces one specification when the user marks it complete.
+A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. `$todo` checks project-local planning documents and chooses one evidence-backed next action; `$todo adhd` returns only one immediately startable step, its completion condition, and its source. `$to-mmd` turns an idea or system into an editable diagram. `$ui-to-desc` stays with a component across a multi-turn design handoff, then produces one specification when the user marks it complete.
 
 The library will grow around recurring parts of the personal AI workflow, not around every available command. See [DESIGN.md](DESIGN.md) for the product map and classification model.
 
 ## Use a skill
 
-In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$to-mmd` and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
+In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$todo`, `$to-mmd`, and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
 
 `$repo` queries the exact hosted repository before publication and creates it only when the provider confirms that it is absent. A new repository is private by default; use `$repo public` when the new repository should be public. This modifier never changes the visibility of an existing repository.
 

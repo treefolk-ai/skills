@@ -2,25 +2,25 @@
 
 ## Product map
 
-`core` supports the whole personal AI workflow. The product loop is `think` → `make` → `share` → `learn`; `core` and `make` currently contain public skills.
+`core` supports the whole personal AI workflow. The product loop is `think` → `make` → `share` → `learn`; `core`, `think`, and `make` currently contain public skills.
 
 | Category | User job | Completion boundary | Current skills | Status |
 | --- | --- | --- | --- | --- |
 | `core` | Operate recurring AI-assisted work safely with reusable foundations and cross-cutting utilities | The common workflow or intermediate artifact is complete and independently inspectable | `repo`, `push`, `pr`, `to-mmd` | Active |
-| `think` | Turn information or uncertainty into understanding, a decision, or a plan | The reasoning artifact can be reviewed; no final product is required | None | Product direction |
+| `think` | Turn information or uncertainty into understanding, a decision, or a plan | The reasoning artifact can be reviewed; no final product is required | `todo` | Active |
 | `make` | Turn intent or a decision into a usable product or creative artifact | The artifact exists and has been checked; publication is outside the boundary | `ui-to-desc` | Active |
 | `share` | Help finished work reach and make sense to its intended audience | Publication, communication, distribution, or adoption has an observable result | None | Working category |
 | `learn` | Turn outcomes and feedback into reusable knowledge or a better workflow | The learning is preserved for future work, not only stated in the current conversation | None | Product direction |
 
-Only `core` and `make` are active taxonomy today. Directional rows guide discovery and product planning; they do not promise future skills, create installation paths, or claim implemented capability. `share` is a working name for outward communication, distribution, adoption, and growth and should be reconsidered when real skills make that boundary concrete.
+Only `core`, `think`, and `make` are active taxonomy today. Directional rows guide discovery and product planning; they do not promise future skills, create installation paths, or claim implemented capability. `share` is a working name for outward communication, distribution, adoption, and growth and should be reconsidered when real skills make that boundary concrete.
 
 ### Classification axes
 
 | Axis | Question it answers | Current examples |
 | --- | --- | --- |
-| Category | Where does this outcome belong in the user's AI workflow? | `core`, `make` |
-| Domain | What subject, system, or artifact does it operate on? | `git`, `format`, `ui-design` |
-| Kind | What form of work does the skill perform? | `workflow`, `transform`, `synthesis` |
+| Category | Where does this outcome belong in the user's AI workflow? | `core`, `think`, `make` |
+| Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `format`, `ui-design` |
+| Kind | What form of work does the skill perform? | `workflow`, `triage`, `transform`, `synthesis` |
 | Invocation tier | How may the host select it? This is policy, not taxonomy. | P0 explicit, P1 implicit-capable, P2 disabled |
 
 ### Current classification
@@ -30,6 +30,7 @@ Only `core` and `make` are active taxonomy today. Directional rows guide discove
 | `repo` | `core` | `git` | `workflow` | Initialize and publish a repository safely, reusing or creating its intended remote |
 | `push` | `core` | `git` | `workflow` | Deliver one reviewed change to its intended remote |
 | `pr` | `core` | `git` | `workflow` | Publish work as exactly one verified pull request |
+| `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
 | `to-mmd` | `core` | `format` | `transform` | Produce faithful, editable Mermaid source |
 | `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
 
@@ -130,7 +131,7 @@ Invocation policy decides how a host may select a skill; it does not determine c
 - P1 allows explicit or description-based selection for focused, low-risk workflows.
 - P2 disables a workflow through host configuration when it should not participate in selection.
 
-The Git workflows `repo`, `push`, and `pr` are P0. `to-mmd` and `ui-to-desc` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+The Git workflows `repo`, `push`, and `pr` are P0. `todo`, `to-mmd`, and `ui-to-desc` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
 
