@@ -1,0 +1,7 @@
+interface:
+  display_name: "Deploy"
+  short_description: "Deploy safely, defaulting to Cloudflare"
+  default_prompt: "Use $deploy to deploy the current project through its existing hosting workflow, defaulting to Cloudflare, and verify the live result."
+
+policy:
+  allow_implicit_invocation: false

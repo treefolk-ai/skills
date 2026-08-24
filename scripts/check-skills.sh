@@ -45,6 +45,7 @@ required_sections=(
 )
 
 explicit_only_skills=(
+  "deploy"
   "pr"
   "push"
   "repo"

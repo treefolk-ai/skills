@@ -8,26 +8,29 @@ The goal is simple: tell an AI agent what you want to accomplish, reuse a well-d
 
 A Treefolk skill is more than a prompt snippet or command alias. It owns a complete user goal: when to use it, what information it needs, which decisions it may make, when it must stop, and how to verify the outcome.
 
-The current library combines a small `core` foundation with focused `think` and `make` workflows:
+The current library combines a small `core` foundation with focused `think`, `make`, and `share` workflows:
 
 | Skill | Helps you | Stops short of |
 | --- | --- | --- |
 | `$repo` | Prepare a local project on `main`, find or create its intended remote, and make the first safe push | Configuring authentication, guessing ambiguous ownership, or changing an existing repository's visibility |
 | `$push` | Review, commit, and safely push one coherent change | Initializing a repository, rewriting history, or opening a pull request |
 | `$pr` | Publish the intended work and create or reuse one verified pull request | Guessing through ambiguous branch, remote, provider, or pull-request state |
+| `$deploy` | Deploy one reviewed source state or artifact to one existing hosting target, using Cloudflare as the non-conflicting default, and verify the live result | Guessing Pages versus Workers, provisioning targets, or changing domains, routes, secrets, or migrations |
 | `$todo` | Read the current project's task documents and recommend one source-backed next action; `$todo adhd` reduces it to one tiny starting step | Editing task files, scanning source-code TODO comments, executing the task, or querying external trackers |
 | `$to-mmd` | Turn text, processes, or relationships into editable Mermaid source | Rendering PNG or SVG output |
 | `$ui-to-desc` | Accumulate UI evidence across multiple turns into one reviewable component design description | Implementing the component or inventing missing design values |
 
-A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. `$todo` checks project-local planning documents and chooses one evidence-backed next action; `$todo adhd` returns only one immediately startable step, its completion condition, and its source. `$to-mmd` turns an idea or system into an editable diagram. `$ui-to-desc` stays with a component across a multi-turn design handoff, then produces one specification when the user marks it complete.
+A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. Use `$deploy` when a prepared source state or artifact should reach its existing hosting target and be verified there. `$todo` checks project-local planning documents and chooses one evidence-backed next action; `$todo adhd` returns only one immediately startable step, its completion condition, and its source. `$to-mmd` turns an idea or system into an editable diagram. `$ui-to-desc` stays with a component across a multi-turn design handoff, then produces one specification when the user marks it complete.
 
 The library will grow around recurring parts of the personal AI workflow, not around every available command. See [DESIGN.md](DESIGN.md) for the product map and classification model.
 
 ## Use a skill
 
-In Codex, mention `$repo`, `$push`, or `$pr` explicitly before running those side-effecting workflows. `$todo`, `$to-mmd`, and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
+In Codex, mention `$repo`, `$push`, `$pr`, or `$deploy` explicitly before running those side-effecting workflows. `$todo`, `$to-mmd`, and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
 
 `$repo` queries the exact hosted repository before publication and creates it only when the provider confirms that it is absent. A new repository is private by default; use `$repo public` when the new repository should be public. This modifier never changes the visibility of an existing repository.
+
+`$deploy` defaults to Cloudflare only when no provider is supplied and project evidence does not point elsewhere. It does not guess Cloudflare Pages versus Workers, an account, project, environment, or production target. An explicitly named non-Cloudflare provider requires a complete existing project-owned deployment and authoritative verification path. The workflow deploys only to one exact existing target, does not provision infrastructure or publish Git work, and verifies both provider state and the applicable live endpoint. Use `$deploy plan` for static local inspection with no build, network access, file changes, or external mutation.
 
 Each skill's `SKILL.md` is its complete workflow and source of truth.
 
@@ -72,7 +75,7 @@ A clean result reports every public skill as already linked with no conflicts. T
 
 ## Host support
 
-The `codex` and `grok` selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior. The repository includes statically checked Codex invocation metadata for the Git skills; it does not yet include a Grok-specific invocation-policy adapter or live-host compatibility tests. Other hosts are not currently claimed as supported.
+The `codex` and `grok` selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior. The repository includes statically checked Codex invocation metadata for its P0 skills; it does not yet include a Grok-specific invocation-policy adapter or live-host compatibility tests. Other hosts are not currently claimed as supported.
 
 ## Update and uninstall
 

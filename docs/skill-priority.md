@@ -4,13 +4,13 @@
 
 Codex 没有公开的数字型 skill 优先级字段。Treefolk 使用 P0、P1、P2 作为维护约定，描述一个 skill 是否参与选择，以及它在启用时是否允许隐式匹配，而不是声明它比另一个 skill “更重要”。
 
-- **P0：已启用，仅显式调用。** 用户必须写出 `$skill-name`。适合会提交代码、推送远端、创建仓库或发起 Pull Request 的高影响工作流。
+- **P0：已启用，仅显式调用。** 用户必须写出 `$skill-name`。适合会提交代码、推送远端、创建仓库、发起 Pull Request 或部署到外部运行环境的高影响工作流。
 - **P1：已启用，允许隐式匹配。** 用户没有点名 skill 时，Codex 可以根据 `name` 和 `description` 判断是否使用。适合低风险、边界清楚的转换或分析工作流。
 - **P2：由 host 配置禁用。** Skill 可以保留在本地并继续由仓库 installer 建立链接，但不参与显式或隐式选择。适合低频、暂时不用或与其他 skill 高度重叠的能力。
 
 P0、P1、P2 不是 Codex 配置字段，也不属于 `treefolk-category`、`treefolk-domain` 或 `treefolk-kind`。这些 `treefolk-*` 值只负责分类，不控制安装或调用。
 
-> **P0 用户须知：** 安装或启用 P0 skill，不代表它会参与基于描述的自动语义匹配。普通自然语言请求不会让模型自动选中它；用户必须输入准确命令。P0 skill 仍可出现在宿主的 skill 列表或命令补全中。当前 Codex adapter 使用 `$repo`、`$push` 和 `$pr`。未来单独实现并验证 Claude Code adapter 后，对应命令将是 `/repo`、`/push` 和 `/pr`；当前 `setup` 尚不支持 Claude Code。
+> **P0 用户须知：** 安装或启用 P0 skill，不代表它会参与基于描述的自动语义匹配。普通自然语言请求不会让模型自动选中它；用户必须输入准确命令。P0 skill 仍可出现在宿主的 skill 列表或命令补全中。当前 Codex adapter 使用 `$repo`、`$push`、`$pr` 和 `$deploy`。未来单独实现并验证 Claude Code adapter 后，对应命令将是 `/repo`、`/push`、`/pr` 和 `/deploy`；当前 `setup` 尚不支持 Claude Code。
 
 P0 不禁止组合。一个被用户显式调用的 P0 工作流可以组合多个内部步骤，但它必须为完整结果统一承担授权、安全检查、停止条件、验证与报告。它不能依赖基于描述的自动匹配去发现并串联另一个 P0 工作流。
 
@@ -41,6 +41,7 @@ flowchart TD
 | `repo` | P0 | `$repo` | 会初始化仓库、查询并可能创建托管仓库、创建提交并推送远端 |
 | `push` | P0 | `$push` | 会暂存、提交并推送当前任务改动 |
 | `pr` | P0 | `$pr` | 会创建分支、提交、推送并创建或复用 Pull Request |
+| `deploy` | P0 | `$deploy` | 普通模式可能把源码或构建产物部署到外部运行环境，provider 在项目证据不冲突时默认 Cloudflare；`$deploy plan` 仍须显式调用，但只做本地静态检查 |
 | `todo` | P1 | 显式调用或语义匹配 | 只读查询当前项目的任务文档并推荐一个可审阅的下一步；`$todo adhd` 仅压缩输出，不增加副作用 |
 | `to-mmd` | P1 | 显式调用或语义匹配 | 只生成可审阅的 Mermaid 文本；未设置策略时，隐式调用默认为开启 |
 | `ui-to-desc` | P1 | 显式调用或语义匹配 | 低风险地整理组件设计证据；只有路径和写入意图明确后才落盘 |
