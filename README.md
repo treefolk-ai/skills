@@ -1,105 +1,57 @@
 # Treefolk Skills
 
-Treefolk Skills is Treefolk AI's evolving system for building a personal AI workflow. It turns recurring jobs into reusable skills with clear outcomes, useful defaults, safety boundaries, and checks that make the result inspectable.
+Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为有明确结果、安全默认值和验证方式的可复用 Skill。
 
-The goal is simple: tell an AI agent what you want to accomplish, reuse a well-designed workflow, and improve that workflow in one place instead of rebuilding the process in every conversation.
+## 产品方向
 
-## What lives here
+`core` 支撑整个工作流；产品主循环是 `think → make → share → learn`。
 
-A Treefolk skill is more than a prompt snippet or command alias. It owns a complete user goal: when to use it, what information it needs, which decisions it may make, when it must stop, and how to verify the outcome.
-
-The current library combines a small `core` foundation with focused `think`, `make`, and `share` workflows:
-
-| Skill | Helps you | Stops short of |
+| 方向 | 负责什么 | 当前能力 |
 | --- | --- | --- |
-| `$repo` | Prepare a local project on `main`, find or create its intended remote, and make the first safe push | Configuring authentication, guessing ambiguous ownership, or changing an existing repository's visibility |
-| `$push` | Review, commit, and safely push one coherent change | Initializing a repository, rewriting history, or opening a pull request |
-| `$pr` | Publish the intended work and create or reuse one verified pull request | Guessing through ambiguous branch, remote, provider, or pull-request state |
-| `$deploy` | Deploy one reviewed source state or artifact to one existing hosting target, using Cloudflare as the non-conflicting default, and verify the live result | Guessing Pages versus Workers, provisioning targets, or changing domains, routes, secrets, or migrations |
-| `$todo` | Read the current project's task documents and recommend one source-backed next action; `$todo adhd` reduces it to one tiny starting step | Editing task files, scanning source-code TODO comments, executing the task, or querying external trackers |
-| `$to-mmd` | Turn text, processes, or relationships into editable Mermaid source | Rendering PNG or SVG output |
-| `$ui-to-desc` | Accumulate UI evidence across multiple turns into one reviewable component design description | Implementing the component or inventing missing design values |
+| `core` 基础 | 提供跨环节复用的基础工作流与通用工具 | [`$repo`](repo/SKILL.md) 完成项目仓库的首次安全发布；[`$push`](push/SKILL.md) 交付一次完整改动；[`$pr`](pr/SKILL.md) 创建或复用已验证的 PR；[`$to-mmd`](to-mmd/SKILL.md) 转换为可编辑的 Mermaid 源码 |
+| `think` 思考 | 把信息和不确定性变成可审阅的决定或计划 | [`$todo`](todo/SKILL.md) 从本地任务文档中选出一个有文档依据的下一步 |
+| `make` 制作 | 把意图变成可使用、可检查的成果 | [`$ui-to-desc`](ui-to-desc/SKILL.md) 把多轮 UI 证据整理成组件设计描述 |
+| `share` 分享 | 让完成的成果到达目标用户或环境，并产生可观察结果 | [`$deploy`](deploy/SKILL.md) 部署到一个明确的既有托管目标并验证线上结果 |
+| `learn` 学习 | 把结果与反馈沉淀为以后可复用的知识 | 产品方向，暂无公开 Skill |
 
-A typical repository workflow is `$repo` once, `$push` for each coherent change, and `$pr` when work is ready for review. Use `$deploy` when a prepared source state or artifact should reach its existing hosting target and be verified there. `$todo` checks project-local planning documents and chooses one evidence-backed next action; `$todo adhd` returns only one immediately startable step, its completion condition, and its source. `$to-mmd` turns an idea or system into an editable diagram. `$ui-to-desc` stays with a component across a multi-turn design handoff, then produces one specification when the user marks it complete.
+分类只用于理解产品地图，不影响 Skill 的安装和调用。每个 Skill 的完整工作流以对应的 `SKILL.md` 为准。
 
-The library will grow around recurring parts of the personal AI workflow, not around every available command. See [DESIGN.md](DESIGN.md) for the product map and classification model.
+## 使用
 
-## Use a skill
+在 Codex 中直接输入 `$skill-name`。会改变 Git、远端或部署状态的 `$repo`、`$push`、`$pr`、`$deploy` 必须显式调用；只读或低风险的 `$todo`、`$to-mmd`、`$ui-to-desc` 也可以由 AI 根据描述选择。详见 [Skill 调用参与层级与启用策略](docs/skill-priority.md)。
 
-In Codex, mention `$repo`, `$push`, `$pr`, or `$deploy` explicitly before running those side-effecting workflows. `$todo`, `$to-mmd`, and `$ui-to-desc` may be invoked explicitly or selected from their descriptions. The current selection convention is documented in [Skill 调用参与层级与启用策略](docs/skill-priority.md).
+## 安装
 
-`$repo` queries the exact hosted repository before publication and creates it only when the provider confirms that it is absent. A new repository is private by default; use `$repo public` when the new repository should be public. This modifier never changes the visibility of an existing repository.
-
-`$deploy` defaults to Cloudflare only when no provider is supplied and project evidence does not point elsewhere. It does not guess Cloudflare Pages versus Workers, an account, project, environment, or production target. An explicitly named non-Cloudflare provider requires a complete existing project-owned deployment and authoritative verification path. The workflow deploys only to one exact existing target, does not provision infrastructure or publish Git work, and verifies both provider state and the applicable live endpoint. Use `$deploy plan` for static local inspection with no build, network access, file changes, or external mutation.
-
-Each skill's `SKILL.md` is its complete workflow and source of truth.
-
-## Install
-
-The bootstrap stores the source checkout at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`, validates it, and then activates its public skills.
-
-Install the moving `main` channel for Codex-oriented use:
+安装持续更新的 `main` 版本：
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh | bash -s -- --host codex
 ```
 
-Use `--host grok` for Grok-oriented use. For a reproducible release, replace `main` in the URL with an existing immutable tag and pass the same tag through `--ref`.
+源码默认保存在 `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`，各 Skill 默认激活到 `${HOME}/.agents/skills`。安装器只负责首次安装，并拒绝覆盖已有源码目录。
 
-To review the installer before running it:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh -o treefolk-install.sh
-less treefolk-install.sh
-bash treefolk-install.sh --host codex
-```
-
-From an existing checkout, preview activation before changing anything:
+从已有源码目录激活前，可先预览：
 
 ```sh
 ./setup --host codex --dry-run
 ./setup --host codex
 ```
 
-`setup` refuses to overwrite existing files, directories, or unrelated links.
-
-## Verify activation
-
-For a bootstrap installation, rerun the acquired setup as a dry-run:
-
-```sh
-"${TREEFOLK_HOME:-$HOME/.treefolk}/skills/setup" --host codex --dry-run
-```
-
-A clean result reports every public skill as already linked with no conflicts. This verifies filesystem activation, not whether a host has discovered or successfully invoked every workflow.
-
-## Host support
-
-The `codex` and `grok` selectors currently activate the same links in `${HOME}/.agents/skills` and use the same ownership-safe uninstall behavior. The repository includes statically checked Codex invocation metadata for its P0 skills; it does not yet include a Grok-specific invocation-policy adapter or live-host compatibility tests. Other hosts are not currently claimed as supported.
-
-## Update and uninstall
-
-The bootstrap is first-install only and refuses an existing source directory. Until a reviewed updater exists, update the source checkout explicitly rather than rerunning the bootstrap as an in-place update.
-
-Preview and remove only links owned by that checkout:
+删除源码目录前请先运行 `uninstall`。卸载前同样先预览；确认后移除 `--dry-run`：
 
 ```sh
 "${TREEFOLK_HOME:-$HOME/.treefolk}/skills/uninstall" --host codex --dry-run
-"${TREEFOLK_HOME:-$HOME/.treefolk}/skills/uninstall" --host codex
 ```
 
-Run `uninstall` before deleting the source checkout. From a local checkout, use `./uninstall` with the same options.
+使用 Grok 时改为 `--host grok`；它与 Codex 激活同一共享目录。目前仅 Codex 的高影响 Skill 调用元数据经过静态检查，尚无 Grok 专用适配器或真实宿主测试。其他宿主暂不声明支持。
 
-## Safety and trust
+## 安全与维护
 
-Installation uses HTTPS, requires no `sudo`, validates acquired source before activation, and refuses overwrite conflicts. Local setup and uninstall support true dry-runs, do not access the network, and remove links only after proving ownership.
+- 安装使用 HTTPS，不需要 `sudo`，并在激活前校验源码。
+- `setup` 与 `uninstall` 支持 dry-run，不覆盖冲突项，只移除能证明归属的链接。
+- 有副作用的 Skill 会先检查状态，在歧义或覆盖风险下停止，并在完成后验证真实结果。
+- 仓库检查证明包结构和安装场景，不等于所有 Skill 都通过了端到端或真实宿主测试。
 
-Side-effecting skills inspect state before acting, stop on ambiguity or overwrite risk, and verify authoritative state before reporting success. Repository checks validate package structure and installer behavior; they are not a substitute for per-run verification or live-host testing.
+产品设计见 [DESIGN.md](DESIGN.md)，维护规则见 [AGENTS.md](AGENTS.md)。
 
-## Shape the workflow
-
-Want to improve an existing workflow or add a recurring one? Read [DESIGN.md](DESIGN.md) for the product and classification model, then [AGENTS.md](AGENTS.md) for the AI-assisted design and maintenance process.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+MIT License，见 [LICENSE](LICENSE)。
