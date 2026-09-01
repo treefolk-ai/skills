@@ -8,7 +8,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 
 | 方向 | 负责什么 | 当前能力 |
 | --- | --- | --- |
-| `core` 基础 | 提供跨环节复用的基础工作流与通用工具 | [`$repo`](repo/SKILL.md) 完成项目仓库的首次安全发布；[`$push`](push/SKILL.md) 交付一次完整改动；[`$pr`](pr/SKILL.md) 创建或复用已验证的 PR；[`$to-mmd`](to-mmd/SKILL.md) 转换为可编辑的 Mermaid 源码 |
+| `core` 基础 | 提供跨环节复用的基础工作流与通用工具 | [`$code-craft`](code-craft/SKILL.md) 以跨语言的可读性、失败路径和模块边界规范构建代码；[`$repo`](repo/SKILL.md) 完成项目仓库的首次安全发布；[`$push`](push/SKILL.md) 交付一次完整改动；[`$pr`](pr/SKILL.md) 创建或复用已验证的 PR；[`$to-mmd`](to-mmd/SKILL.md) 转换为可编辑的 Mermaid 源码 |
 | `think` 思考 | 把信息和不确定性变成可审阅的决定或计划 | [`$todo`](todo/SKILL.md) 从本地任务文档中选出一个有文档依据的下一步 |
 | `make` 制作 | 把意图变成可使用、可检查的成果 | [`$ui-to-desc`](ui-to-desc/SKILL.md) 把多轮 UI 证据整理成组件设计描述；[`$context-shrink`](context-shrink/SKILL.md) 在保持行为不变的前提下缩小指定源码范围的维护上下文 |
 | `share` 分享 | 让完成的成果到达目标用户或环境，并产生可观察结果 | [`$deploy`](deploy/SKILL.md) 部署到一个明确的既有托管目标并验证线上结果 |
@@ -18,7 +18,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 
 ## 使用
 
-在 Codex 中直接输入 `$skill-name`。会改变 Git、远端或部署状态的 `$repo`、`$push`、`$pr`、`$deploy` 必须显式调用；边界明确的 `$todo`、`$to-mmd`、`$ui-to-desc`、`$context-shrink` 也可以由 AI 根据描述选择。`$context-shrink` 只有在用户明确要求缩小维护上下文并给出仓库内目录后才修改该范围内的源码，不会自动提交或推送。详见 [Skill 调用参与层级与启用策略](docs/skill-priority.md)。
+在 Codex 中直接输入 `$skill-name`。会改变 Git、远端或部署状态的 `$repo`、`$push`、`$pr`、`$deploy` 必须显式调用；边界明确的 `$code-craft`、`$todo`、`$to-mmd`、`$ui-to-desc`、`$context-shrink` 也可以由 AI 根据描述选择。`$code-craft` 从实现开始约束一个明确代码结果，不套用固定语言或框架架构；`$context-shrink` 只在用户明确要求缩小维护上下文并给出仓库内目录后重组已有源码。二者都不会自动提交或推送。详见 [Skill 调用参与层级与启用策略](docs/skill-priority.md)。
 
 ## 安装
 

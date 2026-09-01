@@ -6,7 +6,7 @@
 
 | Category | User job | Completion boundary | Current skills | Status |
 | --- | --- | --- | --- | --- |
-| `core` | Operate recurring AI-assisted work safely with reusable foundations and cross-cutting utilities | The common workflow or intermediate artifact is complete and independently inspectable | `repo`, `push`, `pr`, `to-mmd` | Active |
+| `core` | Operate recurring AI-assisted work safely with reusable foundations and cross-cutting utilities | The common workflow or intermediate artifact is complete and independently inspectable | `code-craft`, `repo`, `push`, `pr`, `to-mmd` | Active |
 | `think` | Turn information or uncertainty into understanding, a decision, or a plan | The reasoning artifact can be reviewed; no final product is required | `todo` | Active |
 | `make` | Turn intent or a decision into a usable product or creative artifact | The artifact exists and has been checked; publication is outside the boundary | `ui-to-desc`, `context-shrink` | Active |
 | `share` | Help finished work reach and make sense to its intended audience | Publication, communication, distribution, or adoption has an observable result | `deploy` | Active |
@@ -27,6 +27,7 @@
 
 | Skill | Category | Domain | Kind | Primary user outcome |
 | --- | --- | --- | --- | --- |
+| `code-craft` | `core` | `source-code` | `workflow` | Build one scoped code outcome with readable boundaries, explicit failure behavior, and success/failure verification across languages and frameworks |
 | `repo` | `core` | `git` | `workflow` | Initialize and publish a repository safely, reusing or creating its intended remote |
 | `push` | `core` | `git` | `workflow` | Deliver one reviewed change to its intended remote |
 | `pr` | `core` | `git` | `workflow` | Publish work as exactly one verified pull request |
@@ -105,6 +106,8 @@ An intermediate artifact can qualify as a skill when users request it directly, 
 
 `context-shrink` owns behavior-preserving context reduction inside one user-selected repository directory. It must establish protected behavior and a baseline, scan and classify findings, complete a MAP before mutation, verify every item, and verify the final result. Missing scope, performance tuning, type or architecture redesign, business-behavior changes, Git delivery, and external side effects remain outside its boundary. An empty MAP is a successful no-op, while failed or unavailable critical verification is an honest partial result rather than DONE.
 
+`code-craft` owns implementation of one user-defined code outcome from boundary discovery through success and failure verification. It is a language- and framework-neutral decision standard, not a universal folder layout: project idioms determine syntax and structure, while readability, explicit failure behavior, cohesive change boundaries, separation of pure logic from side effects, and evidence-backed completion remain invariant. It may perform the narrow restructuring required to keep a new change coherent, but broad post-hoc behavior-preserving context reduction belongs to `context-shrink`; read-only review, architecture planning, Git delivery, dependency acquisition, deployment, and external mutations remain outside its boundary.
+
 Split an existing skill only when users repeatedly want the sub-outcomes independently, the resulting names are clearer than the original, and neither entry requires the user to reconstruct the old workflow manually.
 
 ## Workflow contract
@@ -137,7 +140,7 @@ Invocation policy decides how a host may select a skill; it does not determine c
 - P1 allows explicit or description-based selection for focused workflows whose outcome is already authorized by the current request and whose risk is controlled through a bounded scope, stop conditions, and verification.
 - P2 disables a workflow through host configuration when it should not participate in selection.
 
-The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `todo`, `to-mmd`, `ui-to-desc`, and `context-shrink` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `code-craft`, `todo`, `to-mmd`, `ui-to-desc`, and `context-shrink` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
 
