@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- |
 | `core` | Operate recurring AI-assisted work safely with reusable foundations and cross-cutting utilities | The common workflow or intermediate artifact is complete and independently inspectable | `code-craft`, `repo`, `push`, `pr`, `to-mmd` | Active |
 | `think` | Turn information or uncertainty into understanding, a decision, or a plan | The reasoning artifact can be reviewed; no final product is required | `todo` | Active |
-| `make` | Turn intent or a decision into a usable product or creative artifact | The artifact exists and has been checked; publication is outside the boundary | `ui-to-desc`, `context-shrink` | Active |
+| `make` | Turn intent or a decision into a usable product or creative artifact | The artifact exists and has been checked; publication is outside the boundary | `ui-to-desc`, `context-shrink`, `seo`, `geo` | Active |
 | `share` | Help finished work reach and make sense to its intended audience | Publication, communication, distribution, or adoption has an observable result | `deploy` | Active |
 | `learn` | Turn outcomes and feedback into reusable knowledge or a better workflow | The learning is preserved for future work, not only stated in the current conversation | None | Product direction |
 
@@ -19,7 +19,7 @@
 | Axis | Question it answers | Current examples |
 | --- | --- | --- |
 | Category | Where does this outcome belong in the user's AI workflow? | `core`, `think`, `make`, `share` |
-| Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `format`, `ui-design`, `source-code`, `hosting` |
+| Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `format`, `ui-design`, `source-code`, `hosting`, `discoverability` |
 | Kind | What form of work does the skill perform? | `workflow`, `triage`, `transform`, `synthesis` |
 | Invocation tier | How may the host select it? This is policy, not taxonomy. | P0 explicit, P1 implicit-capable, P2 disabled |
 
@@ -36,6 +36,8 @@
 | `to-mmd` | `core` | `format` | `transform` | Produce faithful, editable Mermaid source |
 | `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
 | `context-shrink` | `make` | `source-code` | `workflow` | Reduce the maintenance context of one bounded source-code scope without changing external behavior |
+| `seo` | `make` | `discoverability` | `workflow` | Improve search discovery, crawl and index readiness, result presentation, and platform metadata with verified local changes or a read-only audit |
+| `geo` | `make` | `discoverability` | `workflow` | Improve answer accuracy and source support in controlled content, distinguishing content verification from observed generative-search citations |
 
 ## Product intent
 
@@ -108,6 +110,10 @@ An intermediate artifact can qualify as a skill when users request it directly, 
 
 `code-craft` owns implementation of one user-defined code outcome from boundary discovery through success and failure verification. It is a language- and framework-neutral decision standard, not a universal folder layout: project idioms determine syntax and structure, while readability, explicit failure behavior, cohesive change boundaries, separation of pure logic from side effects, and evidence-backed completion remain invariant. It may perform the narrow restructuring required to keep a new change coherent, but broad post-hoc behavior-preserving context reduction belongs to `context-shrink`; read-only review, architecture planning, Git delivery, dependency acquisition, deployment, and external mutations remain outside its boundary.
 
+`seo` and `geo` are separate public workflows because users independently ask for search discovery and for accurate, supported answers in generative search. `seo` owns search intent, crawl/index readiness, result presentation, and repository or package metadata. `geo` owns question-to-claim evidence, entity and version clarity, corrections to controlled content, and observed citation support. This is a product boundary, not a claim that search providers use wholly separate ranking systems. Neither skill requires the other to be installed or run.
+
+When both are requested, share the project facts and access observations, assign technical and metadata changes to `seo`, and assign answer-evidence changes to `geo`. Merge edits to shared prose once and verify the combined result. Explicit targets override inference from the current project; there is no universal GitHub-first default. Both are `make / discoverability / workflow` and P1 because their default deliverable is a verified local artifact or read-only audit, with concrete remote recommendations. Skill selection does not authorize public exposure, remote mutations, Git delivery, deployment, publication, or outreach; an already authorized action retains its original scope.
+
 Split an existing skill only when users repeatedly want the sub-outcomes independently, the resulting names are clearer than the original, and neither entry requires the user to reconstruct the old workflow manually.
 
 ## Workflow contract
@@ -140,7 +146,7 @@ Invocation policy decides how a host may select a skill; it does not determine c
 - P1 allows explicit or description-based selection for focused workflows whose outcome is already authorized by the current request and whose risk is controlled through a bounded scope, stop conditions, and verification.
 - P2 disables a workflow through host configuration when it should not participate in selection.
 
-The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `code-craft`, `todo`, `to-mmd`, `ui-to-desc`, and `context-shrink` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `code-craft`, `todo`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
 
