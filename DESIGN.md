@@ -2,7 +2,7 @@
 
 ## Product map
 
-`core` supports the whole personal AI workflow. The product loop is `think` → `make` → `share` → `learn`; `core`, `think`, `make`, and `share` currently contain public skills.
+`core` supports the whole personal AI workflow. The product loop is `think` → `make` → `share` → `learn`; all five categories currently contain public skills.
 
 | Category | User job | Completion boundary | Current skills | Status |
 | --- | --- | --- | --- | --- |
@@ -10,16 +10,16 @@
 | `think` | Turn information or uncertainty into understanding, a decision, or a plan | The reasoning artifact can be reviewed; no final product is required | `todo` | Active |
 | `make` | Turn intent or a decision into a usable product or creative artifact | The artifact exists and has been checked; publication is outside the boundary | `ui-to-desc`, `context-shrink`, `seo`, `geo` | Active |
 | `share` | Help finished work reach and make sense to its intended audience | Publication, communication, distribution, or adoption has an observable result | `deploy` | Active |
-| `learn` | Turn outcomes and feedback into reusable knowledge or a better workflow | The learning is preserved for future work, not only stated in the current conversation | None | Product direction |
+| `learn` | Turn outcomes and feedback into reusable knowledge or a better workflow | The learning is preserved for future work, not only stated in the current conversation | `human-in-the-loop` | Active |
 
-`core`, `think`, `make`, and `share` are active taxonomy today. `share` is grounded by `deploy`'s observable deployment outcome; reconsider its name and boundary as additional communication, distribution, adoption, or growth workflows make the category broader. Directional rows guide discovery and product planning; they do not promise future skills, create installation paths, or claim implemented capability.
+`core`, `think`, `make`, `share`, and `learn` are active taxonomy today. `share` is grounded by `deploy`'s observable deployment outcome; reconsider its name and boundary as additional communication, distribution, adoption, or growth workflows make the category broader. `learn` is grounded by `human-in-the-loop`: observed results and actual human corrections remain available to guide later work. Categories do not create installation paths or imply unimplemented capabilities.
 
 ### Classification axes
 
 | Axis | Question it answers | Current examples |
 | --- | --- | --- |
-| Category | Where does this outcome belong in the user's AI workflow? | `core`, `think`, `make`, `share` |
-| Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `format`, `ui-design`, `source-code`, `hosting`, `discoverability` |
+| Category | Where does this outcome belong in the user's AI workflow? | `core`, `think`, `make`, `share`, `learn` |
+| Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `project-progress`, `format`, `ui-design`, `source-code`, `hosting`, `discoverability` |
 | Kind | What form of work does the skill perform? | `workflow`, `triage`, `transform`, `synthesis` |
 | Invocation tier | How may the host select it? This is policy, not taxonomy. | P0 explicit, P1 implicit-capable, P2 disabled |
 
@@ -33,6 +33,7 @@
 | `pr` | `core` | `git` | `workflow` | Publish work as exactly one verified pull request |
 | `deploy` | `share` | `hosting` | `workflow` | Deploy one reviewed source state or artifact to one existing hosting target and verify the live result |
 | `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
+| `human-in-the-loop` | `learn` | `project-progress` | `workflow` | Preserve a four-line evidence checkpoint for one selected task and carry actual human corrections into the next iteration |
 | `to-mmd` | `core` | `format` | `transform` | Produce faithful, editable Mermaid source |
 | `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
 | `context-shrink` | `make` | `source-code` | `workflow` | Reduce the maintenance context of one bounded source-code scope without changing external behavior |
@@ -110,6 +111,12 @@ An intermediate artifact can qualify as a skill when users request it directly, 
 
 `code-craft` owns implementation of one user-defined code outcome from boundary discovery through success and failure verification. It is a language- and framework-neutral decision standard, not a universal folder layout: project idioms determine syntax and structure, while readability, explicit failure behavior, cohesive change boundaries, separation of pure logic from side effects, and evidence-backed completion remain invariant. It may perform the narrow restructuring required to keep a new change coherent, but broad post-hoc behavior-preserving context reduction belongs to `context-shrink`; read-only review, architecture planning, Git delivery, dependency acquisition, deployment, and external mutations remain outside its boundary.
 
+`human-in-the-loop` keeps the human able to judge and redirect an already-selected task while AI work proceeds; `todo` owns task selection. Each project has one root `evidence.md`, exactly four lines. It is a replaceable current-state checkpoint: its size and upkeep must not grow with project age or session count. An explicit task switch updates the same file and retains only relevant facts and still-applicable human constraints; it requires no second approval. Alternate paths, dated records and backups are excluded. Existing duplicates or misplaced records block writing without authorizing deletion. P1 selection authorizes this bounded record, with concurrent edits reconciled without claiming transactional isolation.
+
+Both the file and its reply must support human judgment without reconstructing the chat. Evidence includes success, failure and partial results; sources carry detail rather than replacing a readable conclusion. The reply uses at most two short lines: a key observation and its consequence for the next step, with a record link and at most one necessary human question. A write receipt alone fails this purpose. Human goals, acceptance conditions and tradeoffs remain effective until changed or no longer applicable; unresolved choices are not erased by technical success. The next verification addresses one necessary unknown, and a finished goal requires no replacement task. No-op calls do not refresh verification or demand attention. These rules preserve agency with bounded upkeep; installation establishes no monitoring or automatic checkpoints.
+
+These attention choices are design hypotheses, not measured benefits of this skill. Research on [cognitive forcing in AI-assisted decisions](https://arxiv.org/abs/2102.09692) found reduced overreliance alongside worse subjective ratings for the most effective interventions; that tradeoff motivates targeted participation rather than compulsory reflection on every result. Research on [interrupted work](https://www.ics.uci.edu/~gmark/chi08-mark.pdf) found higher reported stress and effort despite faster task completion; response speed or a shorter-looking record therefore cannot establish lower cognitive burden here. Behavioral checks should examine evidence accuracy, unnecessary questions and whether a human correction changes the subsequent proposal; attention and ADHD effects require separate real-use evidence.
+
 `seo` and `geo` are separate public workflows because users independently ask for search discovery and for accurate, supported answers in generative search. `seo` owns search intent, crawl/index readiness, result presentation, and repository or package metadata. `geo` owns question-to-claim evidence, entity and version clarity, corrections to controlled content, and observed citation support. This is a product boundary, not a claim that search providers use wholly separate ranking systems. Neither skill requires the other to be installed or run.
 
 When both are requested, share the project facts and access observations, assign technical and metadata changes to `seo`, and assign answer-evidence changes to `geo`. Merge edits to shared prose once and verify the combined result. Explicit targets override inference from the current project; there is no universal GitHub-first default. Both are `make / discoverability / workflow` and P1 because their default deliverable is a verified local artifact or read-only audit, with concrete remote recommendations. Skill selection does not authorize public exposure, remote mutations, Git delivery, deployment, publication, or outreach; an already authorized action retains its original scope.
@@ -146,7 +153,7 @@ Invocation policy decides how a host may select a skill; it does not determine c
 - P1 allows explicit or description-based selection for focused workflows whose outcome is already authorized by the current request and whose risk is controlled through a bounded scope, stop conditions, and verification.
 - P2 disables a workflow through host configuration when it should not participate in selection.
 
-The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `code-craft`, `todo`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `code-craft`, `todo`, `human-in-the-loop`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
 
