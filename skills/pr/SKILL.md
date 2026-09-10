@@ -2,7 +2,7 @@
 name: pr
 description: Review current Git work, create a safe topic branch when needed, publish the intended commits, and create or reuse a verified pull request; use when local work should be proposed for review without rewriting history.
 metadata:
-  treefolk-category: core
+  treefolk-category: share
   treefolk-domain: git
   treefolk-kind: workflow
 ---

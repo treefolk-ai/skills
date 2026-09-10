@@ -2,23 +2,21 @@
 
 ## Product map
 
-`core` supports the whole personal AI workflow. The product loop is `think` → `make` → `share` → `learn`; all five categories currently contain public skills.
+The product map has three categories: `think` → `make` → `share`. Choose from the user's immediate goal; users invoke a skill directly without choosing a category first.
 
-| Category | User job | Completion boundary | Current skills | Status |
-| --- | --- | --- | --- | --- |
-| `core` | Operate recurring AI-assisted work safely with reusable foundations and cross-cutting utilities | The common workflow or intermediate artifact is complete and independently inspectable | `code-craft`, `repo`, `push`, `pr`, `to-mmd` | Active |
-| `think` | Turn information or uncertainty into understanding, a decision, or a plan | The reasoning artifact can be reviewed; no final product is required | `todo` | Active |
-| `make` | Turn intent or a decision into a usable product or creative artifact | The artifact exists and has been checked; publication is outside the boundary | `ui-to-desc`, `context-shrink`, `seo`, `geo` | Active |
-| `share` | Help finished work reach and make sense to its intended audience | Publication, communication, distribution, or adoption has an observable result | `deploy` | Active |
-| `learn` | Turn outcomes and feedback into reusable knowledge or a better workflow | The learning is preserved for future work, not only stated in the current conversation | `human-in-the-loop` | Active |
+| Category | User job | Current skills |
+| --- | --- | --- |
+| `think` | Decide what to do and reconnect with a project's current progress | `todo`, `human-in-the-loop` |
+| `make` | Create or improve a usable artifact | `code-craft`, `context-shrink`, `ui-to-desc`, `to-mmd`, `seo`, `geo` |
+| `share` | Deliver work to a repository or running environment | `repo`, `push`, `pr`, `deploy` |
 
-`core`, `think`, `make`, `share`, and `learn` are active taxonomy today. `share` is grounded by `deploy`'s observable deployment outcome; reconsider its name and boundary as additional communication, distribution, adoption, or growth workflows make the category broader. `learn` is grounded by `human-in-the-loop`: observed results and actual human corrections remain available to guide later work. Categories do not create installation paths or imply unimplemented capabilities.
+The earlier `core` mixed generality with workflow outcomes; its code and diagram skills now belong to `make`, and Git delivery belongs to `share`. The earlier `learn` emphasized evidence retention, while the user's immediate job is reconnecting with a project; `human-in-the-loop` therefore belongs to `think`. These changes simplify discovery without merging skills or changing their workflows. Each skill defines its own completion boundary.
 
 ### Classification axes
 
 | Axis | Question it answers | Current examples |
 | --- | --- | --- |
-| Category | Where does this outcome belong in the user's AI workflow? | `core`, `think`, `make`, `share`, `learn` |
+| Category | Where does this outcome belong in the user's AI workflow? | `think`, `make`, `share` |
 | Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `project-progress`, `format`, `ui-design`, `source-code`, `hosting`, `discoverability` |
 | Kind | What form of work does the skill perform? | `workflow`, `triage`, `transform`, `synthesis` |
 | Invocation tier | How may the host select it? This is policy, not taxonomy. | P0 explicit, P1 implicit-capable, P2 disabled |
@@ -27,18 +25,18 @@
 
 | Skill | Category | Domain | Kind | Primary user outcome |
 | --- | --- | --- | --- | --- |
-| `code-craft` | `core` | `source-code` | `workflow` | Build one scoped code outcome with readable boundaries, explicit failure behavior, and success/failure verification across languages and frameworks |
-| `repo` | `core` | `git` | `workflow` | Initialize and publish a repository safely, reusing or creating its intended remote |
-| `push` | `core` | `git` | `workflow` | Deliver one reviewed change to its intended remote |
-| `pr` | `core` | `git` | `workflow` | Publish work as exactly one verified pull request |
-| `deploy` | `share` | `hosting` | `workflow` | Deploy one reviewed source state or artifact to one existing hosting target and verify the live result |
 | `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
-| `human-in-the-loop` | `learn` | `project-progress` | `workflow` | Preserve a four-line evidence checkpoint for one selected task and carry actual human corrections into the next iteration |
-| `to-mmd` | `core` | `format` | `transform` | Produce faithful, editable Mermaid source |
-| `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
+| `human-in-the-loop` | `think` | `project-progress` | `workflow` | Reconnect with one selected project through a readable record shared by humans and AI, preserving verified progress and human judgment |
+| `code-craft` | `make` | `source-code` | `workflow` | Build one scoped code outcome with readable boundaries, explicit failure behavior, and success/failure verification across languages and frameworks |
 | `context-shrink` | `make` | `source-code` | `workflow` | Reduce the maintenance context of one bounded source-code scope without changing external behavior |
+| `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
+| `to-mmd` | `make` | `format` | `transform` | Produce faithful, editable Mermaid source |
 | `seo` | `make` | `discoverability` | `workflow` | Improve search discovery, crawl and index readiness, result presentation, and platform metadata with verified local changes or a read-only audit |
 | `geo` | `make` | `discoverability` | `workflow` | Improve answer accuracy and source support in controlled content, distinguishing content verification from observed generative-search citations |
+| `repo` | `share` | `git` | `workflow` | Initialize and publish a repository safely, reusing or creating its intended remote |
+| `push` | `share` | `git` | `workflow` | Deliver one reviewed change to its intended remote |
+| `pr` | `share` | `git` | `workflow` | Publish work as exactly one verified pull request |
+| `deploy` | `share` | `hosting` | `workflow` | Deploy one reviewed source state or artifact to one existing hosting target and verify the live result |
 
 ## Product intent
 
@@ -52,13 +50,19 @@ The library is not a catalog of everything an agent can do. It should contain th
 
 Choose a category from the user's primary reason for invoking the skill, not from the tools or intermediate steps it happens to use.
 
-- `core` is not a synonym for “important” or “frequent.” It is the active starting layer for broadly reusable workflow foundations. Revisit current assignments when a new product family becomes concrete enough to improve discovery.
-- `think` ends in a decision, model, synthesis, or plan. If the requested final result is a document, diagram, application, or other usable artifact, prefer `make`.
+- `think` helps the user understand, decide or reconnect with work. A plan or evidence record may be its artifact; writing a document alone does not make the outcome `make`.
 - `make` owns creation and transformation of the artifact. Publishing or distributing that artifact belongs to `share` unless publication is inseparable from the natural outcome.
 - `share` owns observable communication, publication, distribution, adoption, or growth. Creating collateral alone remains `make`.
-- `learn` closes the loop by preserving evidence, lessons, or workflow improvements for later use. Solving only the present decision remains `think`.
 
-Activate or rename a category only when real recurring skills make it improve discovery or roadmap decisions. Do not create one category per tool, customer, content type, or implementation technology. Categories remain metadata; public skill packages and host activation remain flat.
+Activate or rename a category only when real recurring skills make it improve discovery or roadmap decisions. Do not create one category per tool, customer, content type, or implementation technology. Evidence and feedback can improve every stage without requiring their own category.
+
+## Package layout
+
+All public packages live directly under `skills/<name>/`, separate from repository-level `docs/`, `scripts/` and `templates/`. Each package owns its complete `SKILL.md` and supporting scripts, references, examples, templates and host adapters. Category metadata does not create subdirectories; reclassification must not move a package or change its invocation name.
+
+`setup`, `uninstall`, source acquisition and package validation discover `skills/*/SKILL.md` independently of classification. Host links remain flat at the selected activation directory, such as `~/.agents/skills/<name>`. The checkout path and package directory are separate: a default checkout at `~/.treefolk/skills` contains its packages at `~/.treefolk/skills/skills/<name>`.
+
+Moving packages from the old repository root must preserve existing installations through ownership-checked link migration. `setup` may retarget an exact link to this checkout's absent former package path, including existing links in the legacy Codex directory. It must preserve unrelated links, real files and directories, and any former source path that has been reused. Dry-run reports planned changes without writing; `uninstall` can remove a proven old link directly. Changing the source layout does not itself run installation, change global configuration or prove that a host has refreshed discovery.
 
 ## Convenience model
 
@@ -111,13 +115,21 @@ An intermediate artifact can qualify as a skill when users request it directly, 
 
 `code-craft` owns implementation of one user-defined code outcome from boundary discovery through success and failure verification. It is a language- and framework-neutral decision standard, not a universal folder layout: project idioms determine syntax and structure, while readability, explicit failure behavior, cohesive change boundaries, separation of pure logic from side effects, and evidence-backed completion remain invariant. It may perform the narrow restructuring required to keep a new change coherent, but broad post-hoc behavior-preserving context reduction belongs to `context-shrink`; read-only review, architecture planning, Git delivery, dependency acquisition, deployment, and external mutations remain outside its boundary.
 
-`human-in-the-loop` keeps the human able to judge and redirect an already-selected task while AI work proceeds; `todo` owns task selection. Each project has one root `evidence.md`, exactly four lines. It is a replaceable current-state checkpoint: its size and upkeep must not grow with project age or session count. An explicit task switch updates the same file and retains only relevant facts and still-applicable human constraints; it requires no second approval. Alternate paths, dated records and backups are excluded. Existing duplicates or misplaced records block writing without authorizing deletion. P1 selection authorizes this bounded record, with concurrent edits reconciled without claiming transactional isolation.
+`human-in-the-loop` owns reconnecting with one already-selected project, preserving what can actually be trusted, and carrying human judgment into the next action. Its source is the user's excerpt from a ChatGPT scheduled daily briefing, proposing four lines in a root `evidence.md`, then continuing existing development. Subsequent design discussion makes it a shared human and AI record: four stable fields with readable spacing, not four physical lines. Value is tested by whether a later session can reconnect more easily and the human can regain understanding without a new maintenance task. These are product requirements, not findings attributed to the studies named in the briefing.
 
-Both the file and its reply must support human judgment without reconstructing the chat. Evidence includes success, failure and partial results; sources carry detail rather than replacing a readable conclusion. The reply uses at most two short lines: a key observation and its consequence for the next step, with a record link and at most one necessary human question. A write receipt alone fails this purpose. Human goals, acceptance conditions and tradeoffs remain effective until changed or no longer applicable; unresolved choices are not erased by technical success. The next verification addresses one necessary unknown, and a finished goal requires no replacement task. No-op calls do not refresh verification or demand attention. These rules preserve agency with bounded upkeep; installation establishes no monitoring or automatic checkpoints.
+The public name stays `human-in-the-loop` because the user already recognizes that entry point and its intended human role; `evidence.md` is its artifact, not a second skill. `todo` selects a task; this skill reconnects with and records the selected one. It qualifies independently through repeated return, pause and feedback situations, a reviewable record, and decisions about evidence freshness, unresolved acceptance and next verification. Its primary category is `think`: the user regains understanding of the current project and where to continue. Actual observations and corrections remain useful after the chat ends. Returning to a project is a branch of this workflow, not another public mode or command.
 
-These attention choices are design hypotheses, not measured benefits of this skill. Research on [cognitive forcing in AI-assisted decisions](https://arxiv.org/abs/2102.09692) found reduced overreliance alongside worse subjective ratings for the most effective interventions; that tradeoff motivates targeted participation rather than compulsory reflection on every result. Research on [interrupted work](https://www.ics.uci.edu/~gmark/chi08-mark.pdf) found higher reported stress and effort despite faster task completion; response speed or a shorter-looking record therefore cannot establish lower cognitive burden here. Behavioral checks should examine evidence accuracy, unnecessary questions and whether a human correction changes the subsequent proposal; attention and ADHD effects require separate real-use evidence.
+The four fields reduce different burdens: `Current goal` restores the intended result and its meaningful constraints; `Last verified result` makes real progress visible; `Known failure` keeps uncertainty and human rejection from disappearing; `Next verification` provides one startable action with an observable decision. AI maintains the record; humans may read, contribute rough fragments, correct it, or decline to participate. Polishing must preserve meaning and distinguish intention, observation and uncertainty. User experience and tradeoffs cannot be erased merely because tests pass. Human takeover is reserved for decisions that actually require a person; no ritual approval, activity tracking or artificial handoff is required. Existing permission to continue development remains in force across a checkpoint.
+
+Each project has one root record, with no dated copies, backups or expanding history. It contains only the selected goal and relevant unresolved work, not a second TODO list. An explicit task switch reuses it without another confirmation and preserves applicable constraints. Rough current-task notes can be organized; unrelated archives and protected original text remain intact. Unchanged, readable records do not get rewritten or receive fresh verification dates. A completed goal does not require a replacement task. P1 discovery applies to clear reconnecting, handoff or record-maintenance requests, not every coding task. The complete workflow, field rules and recovery branches live only in `skills/human-in-the-loop/SKILL.md`.
+
+When explicitly requested, minimal project integration may add a local `AGENTS.md` pointer to `evidence.md` while preserving existing guidance. This makes the record easier to find without duplicating the skill's workflow or creating a mandatory onboarding document. General Agent environment preparation has no demonstrated separate recurring job here and does not justify another public skill. A pointer is not proof that every host or later session will load it.
+
+Attention benefits are design hypotheses, not measured clinical or productivity outcomes. Evaluation checks whether the user can understand the current result without rereading a chat, whether a next action is concrete, whether corrections change subsequent behavior, and whether the record avoids unnecessary questions and upkeep. Diagnostic labels are not stored in project evidence. Installation provides discovery, not monitoring, scheduled reminders or guaranteed loading in every future session.
 
 `seo` and `geo` are separate public workflows because users independently ask for search discovery and for accurate, supported answers in generative search. `seo` owns search intent, crawl/index readiness, result presentation, and repository or package metadata. `geo` owns question-to-claim evidence, entity and version clarity, corrections to controlled content, and observed citation support. This is a product boundary, not a claim that search providers use wholly separate ranking systems. Neither skill requires the other to be installed or run.
+
+Public `AGENTS.md` content belongs in `geo` when it helps answer the target reader's questions, alongside existing README and documentation sources. Purpose, installation, running, verification and limits are optional content perspectives, not a required file or five-field template. Reuse authoritative facts without duplicating their maintenance; preserve development instructions and authorization boundaries. Listing a command does not prove execution, and a filename does not prove ranking or citation gains. Internal `evidence.md` may inform fact checking but is not automatically published or treated as a publicly accessible source. Full Agent environment setup remains outside this outcome.
 
 When both are requested, share the project facts and access observations, assign technical and metadata changes to `seo`, and assign answer-evidence changes to `geo`. Merge edits to shared prose once and verify the combined result. Explicit targets override inference from the current project; there is no universal GitHub-first default. Both are `make / discoverability / workflow` and P1 because their default deliverable is a verified local artifact or read-only audit, with concrete remote recommendations. Skill selection does not authorize public exposure, remote mutations, Git delivery, deployment, publication, or outreach; an already authorized action retains its original scope.
 
@@ -170,7 +182,7 @@ Once selected, one entry point owns its complete outcome. A side-effecting skill
 
 - A public wrapper for one command or one trivial parameter choice.
 - Many atomic skills that make the user orchestrate the original workflow.
-- `core` as a dumping ground for every useful capability.
+- A general-purpose category that becomes a dumping ground for unrelated outcomes.
 - Categories based on tools rather than user outcomes.
 - Empty categories, speculative packages, or placeholder resource trees.
 - Copies of one workflow body for different hosts.

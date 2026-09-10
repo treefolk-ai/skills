@@ -3,7 +3,7 @@ name: code-craft
 description: >-
   在任何语言或框架中实现或修改一个明确范围的生产代码成果，以可读性、失败路径和模块边界为一等验收标准；用于用户要求从一开始以长期可维护方式构建功能、模块或产品时，不用于只读审查、一次性临时代码、单纯缩短代码，或事后大范围上下文缩小。
 metadata:
-  treefolk-category: core
+  treefolk-category: make
   treefolk-domain: source-code
   treefolk-kind: workflow
 ---

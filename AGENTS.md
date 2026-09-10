@@ -44,7 +44,7 @@ If the answer is weak, refine the design or keep the capability internal. Do not
 - Select one primary `treefolk-category` by the user's intended outcome. Use `treefolk-domain` for the subject or object and `treefolk-kind` for the form of work.
 - Resolve overlaps by the final user-owned outcome, not by every intermediate action a workflow performs.
 - Propose a new category in `DESIGN.md` only when the current map obscures real recurring jobs. Do not add an empty directory or stabilize speculative vocabulary.
-- Keep public packages flat at the repository root. Setup and uninstall must discover them independently of taxonomy metadata.
+- Keep public packages flat under `skills/`. Setup and uninstall must discover `skills/*/SKILL.md` independently of taxonomy metadata.
 - Do not make users navigate categories to invoke a skill. Names, descriptions, defaults, and invocation policy should make the common path direct.
 
 ## Sources of truth
@@ -54,7 +54,7 @@ Keep each kind of product truth in one place:
 - `README.md` tells users what this repository does, what is currently available, and how to use it.
 - `AGENTS.md` tells AI agents how to design and maintain the workflow product.
 - `DESIGN.md` records the product map and durable classification, granularity, composition, naming, and invocation decisions.
-- Each skill's `SKILL.md` is its only complete workflow.
+- Each skill's `skills/<name>/SKILL.md` is its only complete workflow.
 - `templates/SKILL.md.tmpl` defines the public package skeleton; `scripts/check-skills.sh` enforces it. Keep them synchronized.
 - `docs/skill-priority.md` explains the current invocation-tier convention and host configuration.
 
@@ -70,7 +70,7 @@ Write a workflow once, in its `SKILL.md`. Host adapters may describe only how th
 ## Public package contract
 
 - Apply the admission and naming rules in `DESIGN.md`; do not expose a single command or speculative capability as a skill.
-- Keep public skill directories at the repository root, use lowercase kebab-case, and make the directory name equal the frontmatter `name`.
+- Keep public skill directories directly under `skills/`, use lowercase kebab-case, and make the directory name equal the frontmatter `name`. Do not add category subdirectories.
 - Start new skills from `templates/SKILL.md.tmpl` and make every package pass `scripts/check-skills.sh`.
 - Include explicit inputs, defaults, decision branches, no-op behavior, stop conditions, verification, and honest partial outcomes where relevant.
 - Keep scripts, templates, references, and implementation steps inside an existing skill or repository-support directory. Promote them only when they independently pass the admission test.
@@ -78,9 +78,9 @@ Write a workflow once, in its `SKILL.md`. Host adapters may describe only how th
 
 ## Installer and host contract
 
-- `setup` and `uninstall` must discover every top-level `*/SKILL.md` package independently of category metadata.
+- `setup` and `uninstall` must discover every `skills/*/SKILL.md` package independently of category metadata. Source acquisition and package validation must use the same package location.
 - Keep source acquisition separate from activation. `install.sh` acquires source at `${TREEFOLK_HOME:-$HOME/.treefolk}/skills`; the acquired checkout's `setup` is the only activation implementation.
-- New user-level installations activate in `${HOME}/.agents/skills`. Preserve existing `${CODEX_HOME}/skills` or `${HOME}/.codex/skills` links; uninstall may remove shared or legacy links only after proving ownership.
+- New user-level installations activate in `${HOME}/.agents/skills`, with one link per skill name and no category directories. Preserve existing `${CODEX_HOME}/skills` or `${HOME}/.codex/skills` installations; when source packages move, `setup` may migrate links proven to target this checkout's absent former package paths. Preserve unrelated links and any reused former source path; uninstall may remove shared or legacy links only after proving ownership.
 - Keep the curl bootstrap self-contained and compatible with macOS Bash 3.2. It must use HTTPS, require no `sudo`, and refuse to overwrite an existing source directory.
 - A downloaded `install.sh --dry-run` must perform no network access or filesystem mutation. Validate acquired source before activation.
 - Use immutable refs for release channels. Documentation and implementation must use the same release tag for the installer URL and `--ref`; identify `main` as a moving channel.

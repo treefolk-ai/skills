@@ -2,7 +2,7 @@
 name: repo
 description: Safely initialize a local project on main, find or create its intended hosted repository, and make the first non-destructive push; use when publishing an unconfigured project for the first time.
 metadata:
-  treefolk-category: core
+  treefolk-category: share
   treefolk-domain: git
   treefolk-kind: workflow
 ---

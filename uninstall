@@ -22,7 +22,8 @@ Legacy Codex target:
   1. CODEX_HOME/skills (when CODEX_HOME is set)
   2. HOME/.codex/skills
 
-Only symlinks proven to point into this checkout are removed from either target.
+Only symlinks proven to point into this checkout are removed from either target,
+including owned links to the previous root-level package layout.
 EOF
 }
 
@@ -139,8 +140,8 @@ link_resolves_to() {
 }
 
 # Compare a symlink's target with an expected path without requiring the target
-# itself to exist. Renamed skill directories no longer exist, so resolving the
-# symlink as a directory would not prove ownership for these legacy names.
+# itself to exist. Renamed or moved skill directories no longer exist, so
+# resolving the symlink as a directory cannot prove ownership for old paths.
 link_points_to_path() {
   local candidate expected raw_output raw_target
 
@@ -158,6 +159,17 @@ link_points_to_path() {
   # repository root. Exact byte equality is therefore both sufficient proof
   # of ownership and safer than normalizing an arbitrary lookalike path.
   [ "$raw_target" = "$expected" ]
+}
+
+owned_package_link() {
+  local candidate skill_physical old_source
+  candidate=$1
+  skill_physical=$2
+  old_source=$3
+  link_resolves_to "$candidate" "$skill_physical" && return 0
+  # Preserve links to root paths that have since been repurposed.
+  { [ ! -e "$old_source" ] && [ ! -L "$old_source" ]; } || return 1
+  link_points_to_path "$candidate" "$old_source"
 }
 
 host=
@@ -237,7 +249,7 @@ for target_dir in "${TARGET_DIRS[@]}"; do
   fi
 
   shopt -s nullglob dotglob
-  for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
+  for skill_file in "$REPOSITORY_ROOT"/skills/*/SKILL.md; do
     [ -f "$skill_file" ] || continue
     skill_dir=${skill_file%/SKILL.md}
     [ -d "$skill_dir" ] || continue
@@ -247,13 +259,13 @@ for target_dir in "${TARGET_DIRS[@]}"; do
     skill_physical=$(physical_directory "$skill_dir")
     destination="$target_dir/$skill_name"
 
-    if link_resolves_to "$destination" "$skill_physical"; then
+    if owned_package_link "$destination" "$skill_physical" "$REPOSITORY_ROOT/$skill_name"; then
       printf '  remove    %s (%s)\n' "$skill_name" "$destination"
       if [ "$dry_run" -eq 0 ]; then
         # Re-check immediately before unlinking so only a verified repository
         # symlink can ever be removed.
-        if link_resolves_to "$destination" "$skill_physical"; then
-          if unlink "$destination"; then
+        if owned_package_link "$destination" "$skill_physical" "$REPOSITORY_ROOT/$skill_name"; then
+          if unlink "$destination" && [ ! -e "$destination" ] && [ ! -L "$destination" ]; then
             removed_count=$((removed_count + 1))
           else
             printf 'uninstall: could not unlink: %s\n' "$destination" >&2
@@ -290,13 +302,16 @@ for target_dir in "${TARGET_DIRS[@]}"; do
     # A legacy name that exists again in the checkout may have been
     # intentionally repurposed; the normal public-skill loop owns that case.
     { [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ]; } || continue
+    { [ ! -e "$REPOSITORY_ROOT/skills/$legacy_name" ] &&
+      [ ! -L "$REPOSITORY_ROOT/skills/$legacy_name" ]; } || continue
     if link_points_to_path "$legacy_destination" "$legacy_source"; then
       printf '  remove    %s (owned legacy link at %s)\n' "$legacy_name" "$legacy_destination"
       if [ "$dry_run" -eq 0 ]; then
         # Re-check immediately before unlinking so only a verified repository
         # symlink can ever be removed.
-        if link_points_to_path "$legacy_destination" "$legacy_source"; then
-          if unlink "$legacy_destination"; then
+        if [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ] &&
+           link_points_to_path "$legacy_destination" "$legacy_source"; then
+          if unlink "$legacy_destination" && [ ! -e "$legacy_destination" ] && [ ! -L "$legacy_destination" ]; then
             removed_count=$((removed_count + 1))
           else
             printf 'uninstall: could not unlink owned legacy link: %s\n' "$legacy_destination" >&2
@@ -312,7 +327,7 @@ for target_dir in "${TARGET_DIRS[@]}"; do
 done
 
 if [ "$skill_count" -eq 0 ] && [ "$conflict_count" -eq 0 ]; then
-  printf '  (no top-level skills found)\n'
+  printf '  (no skills/ packages found)\n'
 fi
 
 printf 'Removed: %d\n' "$removed_count"

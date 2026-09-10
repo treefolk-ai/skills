@@ -6,7 +6,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/check-skills.sh [--help]
 
-Validate every top-level */SKILL.md package and required Codex adapter in this repository.
+Validate every skills/*/SKILL.md package and required Codex adapter in this repository.
 EOF
 }
 
@@ -234,6 +234,7 @@ metadata_key_status() {
           }
         }
         candidate_nonempty[candidate_count] = (trim(value) != "")
+        candidate_supported[candidate_count] = (key != "treefolk-category" || value == "think" || value == "make" || value == "share")
       }
     }
     END {
@@ -242,10 +243,15 @@ metadata_key_status() {
           direct = 1
           if (candidate_nonempty[index_value]) {
             valid = 1
+            if (candidate_supported[index_value]) {
+              supported = 1
+            }
           }
         }
       }
-      if (valid) {
+      if (valid && !supported) {
+        print "unsupported"
+      } else if (valid) {
         print "ok"
       } else if (direct) {
         print "empty"
@@ -426,16 +432,16 @@ validate_explicit_only_adapter() {
 }
 
 shopt -s nullglob
-skill_files=("$repo_root"/*/SKILL.md)
+skill_files=("$repo_root"/skills/*/SKILL.md)
 shopt -u nullglob
 
 if [ "${#skill_files[@]}" -eq 0 ]; then
-  report_error "." "no top-level */SKILL.md files found"
+  report_error "skills" "no skills/*/SKILL.md files found"
 fi
 
 for explicit_only_skill in "${explicit_only_skills[@]}"; do
-  if [ ! -f "$repo_root/$explicit_only_skill/SKILL.md" ]; then
-    report_error "scripts/check-skills.sh" "P0 skill '$explicit_only_skill' does not name an existing top-level package"
+  if [ ! -f "$repo_root/skills/$explicit_only_skill/SKILL.md" ]; then
+    report_error "scripts/check-skills.sh" "P0 skill '$explicit_only_skill' does not name an existing package in skills/"
   fi
 done
 
@@ -514,6 +520,9 @@ for skill_file in "${skill_files[@]}"; do
             empty)
               report_error "$relative_file" "nested metadata key '$metadata_key' must not be empty"
               ;;
+            unsupported)
+              report_error "$relative_file" "treefolk-category must be think, make, or share"
+              ;;
           esac
         done
         ;;
@@ -539,4 +548,4 @@ if [ "$error_count" -gt 0 ]; then
   exit 1
 fi
 
-printf 'Validation passed: checked %d top-level skill package(s); found 0 errors.\n' "$checked_count"
+printf 'Validation passed: checked %d skill package(s) in skills/; found 0 errors.\n' "$checked_count"

@@ -44,7 +44,7 @@ flowchart TD
 | `pr` | P0 | `$pr` | 会创建分支、提交、推送并创建或复用 Pull Request |
 | `deploy` | P0 | `$deploy` | 普通模式可能把源码或构建产物部署到外部运行环境，provider 在项目证据不冲突时默认 Cloudflare；`$deploy plan` 仍须显式调用，但只做本地静态检查 |
 | `todo` | P1 | 显式调用或语义匹配 | 只读查询当前项目的任务文档并推荐一个可审阅的下一步；`$todo adhd` 仅压缩输出，不增加副作用 |
-| `human-in-the-loop` | P1 | 显式调用或语义匹配 | 维护根目录唯一的四行 `evidence.md` 并沿用有效的人工约束；最多两个短行呈现结果与下一步，仅为必要判断提问，不自动执行验证 |
+| `human-in-the-loop` | P1 | 显式调用或语义匹配 | 在明确的接续、交接或记录请求中维护人和 AI 共用的四字段 `evidence.md`，接受随手简记；仅为必要判断提问，不自动给所有开发任务加检查点；项目接入指引需明确要求 |
 | `to-mmd` | P1 | 显式调用或语义匹配 | 只生成可审阅的 Mermaid 文本；未设置策略时，隐式调用默认为开启 |
 | `ui-to-desc` | P1 | 显式调用或语义匹配 | 低风险地整理组件设计证据；只有路径和写入意图明确后才落盘 |
 | `context-shrink` | P1 | 显式调用或语义匹配 | 只在用户明确要求缩小维护上下文并给出仓库内目录后修改该范围；先 MAP、逐项验证，不提交或推送 |
@@ -53,7 +53,7 @@ flowchart TD
 
 ## 配置 P0
 
-在 skill 目录中添加 `agents/openai.yaml`。字符串保持引号，`default_prompt` 必须显式包含该 skill 的 `$name`：
+在源码包内添加 `skills/<name>/agents/openai.yaml`。字符串保持引号，`default_prompt` 必须显式包含该 skill 的 `$name`：
 
 ```yaml
 interface:
@@ -77,7 +77,9 @@ path = "/absolute/path/to/skill/SKILL.md"
 enabled = false
 ```
 
-P2 是 host 层的禁用状态，不是安装过滤器；仓库 `setup` 仍然按目录发现并链接所有顶层 public skill。修改全局配置后重启 Codex。重新启用时将 `enabled` 改为 `true`，或者删除对应配置项。
+P2 是 host 层的禁用状态，不是安装过滤器；仓库 `setup` 仍然通过 `skills/*/SKILL.md` 发现全部公开包，并在宿主目录中按名称平铺链接。分类不参与安装或调用策略。修改全局配置后重启 Codex。重新启用时将 `enabled` 改为 `true`，或者删除对应配置项。
+
+若配置直接引用了旧版源码根目录下的 `SKILL.md`，迁移后需改为对应的 `skills/<name>/SKILL.md` 路径。安装器只迁移能证明归属的链接，不改写宿主全局配置；指向宿主安装链接的路径无需因本次源码移动而改变。
 
 ## 维护原则
 

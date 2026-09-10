@@ -7,7 +7,7 @@ usage() {
 Usage: setup [--host codex|grok] [--dry-run]
        setup --help
 
-Install the top-level skills in this repository into the shared user directory
+Install packages from skills/ into the shared user directory
 discovered by Codex and Grok.
 
 Options:
@@ -20,8 +20,9 @@ Install target precedence:
   1. TREEFOLK_SKILLS_DIR
   2. HOME/.agents/skills
 
-Existing links under CODEX_HOME/skills or HOME/.codex/skills are preserved as
-legacy Codex compatibility links. New links are created only in the shared target.
+Existing owned links under CODEX_HOME/skills or HOME/.codex/skills are retained
+as legacy Codex compatibility links and updated for the skills/ source layout.
+New links are created only in the shared target.
 EOF
 }
 
@@ -103,6 +104,28 @@ resolve_target() {
   printf '%s\n' "$selected"
 }
 
+resolve_legacy_codex_target() {
+  local selected
+
+  if [ "${CODEX_HOME+x}" = x ]; then
+    [ -n "$CODEX_HOME" ] || fail 'CODEX_HOME is set but empty'
+    selected="${CODEX_HOME%/}/skills"
+  else
+    [ "${HOME+x}" = x ] && [ -n "$HOME" ] || fail 'HOME is not set'
+    selected="${HOME%/}/.codex/skills"
+  fi
+
+  case "$selected" in
+    /*) ;;
+    *) selected="$(pwd -P)/$selected" ;;
+  esac
+
+  while [ "$selected" != / ] && [ "${selected%/}" != "$selected" ]; do
+    selected=${selected%/}
+  done
+  printf '%s\n' "$selected"
+}
+
 physical_directory() {
   CDPATH= cd -P "$1" 2>/dev/null && pwd
 }
@@ -119,7 +142,7 @@ link_resolves_to() {
 
 # Compare a symlink's target with an expected path without requiring the target
 # itself to exist. This is used only for narrowly owned legacy links whose
-# source directories disappeared after a public skill rename.
+# source directories disappeared after a public skill rename or layout move.
 link_points_to_path() {
   local candidate expected raw_output raw_target
 
@@ -137,6 +160,16 @@ link_points_to_path() {
   # repository root. Exact byte equality is therefore both sufficient proof
   # of ownership and safer than normalizing an arbitrary lookalike path.
   [ "$raw_target" = "$expected" ]
+}
+
+# Root-level package paths may have been repurposed after the layout move.
+# Only absent old sources and the exact historical absolute link are owned.
+owned_old_package_link() {
+  local candidate old_source
+  candidate=$1
+  old_source=$2
+  { [ ! -e "$old_source" ] && [ ! -L "$old_source" ]; } || return 1
+  link_points_to_path "$candidate" "$old_source"
 }
 
 host=codex
@@ -186,9 +219,11 @@ esac
 
 REPOSITORY_ROOT=$(repository_root) || fail 'could not resolve the repository root'
 TARGET_DIR=$(resolve_target)
+LEGACY_CODEX_TARGET_DIR=$(resolve_legacy_codex_target)
 
 printf 'Repository: %s\n' "$REPOSITORY_ROOT"
 printf 'Target: %s\n' "$TARGET_DIR"
+printf 'Legacy Codex target: %s\n' "$LEGACY_CODEX_TARGET_DIR"
 printf 'Host: %s\n' "$host"
 if [ "$dry_run" -eq 1 ]; then
   printf 'Mode: dry-run\n'
@@ -205,6 +240,9 @@ skill_count=0
 migration_count=0
 migrated_count=0
 planned_legacy_names=()
+relocation_destinations=()
+relocation_old_sources=()
+relocation_new_sources=()
 
 if { [ -L "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; } ||
    { [ -e "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; }; then
@@ -217,10 +255,12 @@ else
     legacy_source="$REPOSITORY_ROOT/$legacy_name"
     legacy_destination="$TARGET_DIR/$legacy_name"
 
-    [ -f "$REPOSITORY_ROOT/$replacement_name/SKILL.md" ] || continue
+    [ -f "$REPOSITORY_ROOT/skills/$replacement_name/SKILL.md" ] || continue
     # A legacy name that exists again in the checkout may have been
     # intentionally repurposed; never treat that live path as migration state.
     { [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ]; } || continue
+    { [ ! -e "$REPOSITORY_ROOT/skills/$legacy_name" ] &&
+      [ ! -L "$REPOSITORY_ROOT/skills/$legacy_name" ]; } || continue
     if link_points_to_path "$legacy_destination" "$legacy_source"; then
       printf '  migrate   %s -> %s (remove owned legacy link)\n' "$legacy_name" "$replacement_name"
       planned_legacy_names[${#planned_legacy_names[@]}]=$legacy_name
@@ -229,7 +269,7 @@ else
   done
 
   shopt -s nullglob dotglob
-  for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
+  for skill_file in "$REPOSITORY_ROOT"/skills/*/SKILL.md; do
     [ -f "$skill_file" ] || continue
     skill_dir=${skill_file%/SKILL.md}
     [ -d "$skill_dir" ] || continue
@@ -242,6 +282,12 @@ else
     if link_resolves_to "$destination" "$skill_physical"; then
       printf '  skip      %s (already linked)\n' "$skill_name"
       skipped_count=$((skipped_count + 1))
+    elif owned_old_package_link "$destination" "$REPOSITORY_ROOT/$skill_name"; then
+      printf '  migrate   %s (source layout at %s)\n' "$skill_name" "$destination"
+      relocation_destinations[${#relocation_destinations[@]}]=$destination
+      relocation_old_sources[${#relocation_old_sources[@]}]="$REPOSITORY_ROOT/$skill_name"
+      relocation_new_sources[${#relocation_new_sources[@]}]=$skill_dir
+      migration_count=$((migration_count + 1))
     elif [ -L "$destination" ]; then
       printf '  conflict  %s (wrong symlink at %s)\n' "$skill_name" "$destination"
       conflict_count=$((conflict_count + 1))
@@ -259,8 +305,35 @@ else
   done
 fi
 
+# Legacy Codex directories are compatibility locations, never new install
+# targets. Ignore unrelated entries and only update an existing owned link.
+# Compare physical directories too: two configured paths can name one target.
+legacy_is_shared=0
+if [ "$LEGACY_CODEX_TARGET_DIR" = "$TARGET_DIR" ]; then
+  legacy_is_shared=1
+elif [ -d "$LEGACY_CODEX_TARGET_DIR" ] && [ -d "$TARGET_DIR" ] &&
+     [ "$(physical_directory "$LEGACY_CODEX_TARGET_DIR")" = "$(physical_directory "$TARGET_DIR")" ]; then
+  legacy_is_shared=1
+fi
+if [ "$legacy_is_shared" -eq 0 ] && [ -d "$LEGACY_CODEX_TARGET_DIR" ]; then
+  for skill_file in "$REPOSITORY_ROOT"/skills/*/SKILL.md; do
+    [ -f "$skill_file" ] || continue
+    skill_dir=${skill_file%/SKILL.md}
+    [ -d "$skill_dir" ] || continue
+    skill_name=${skill_dir##*/}
+    destination="$LEGACY_CODEX_TARGET_DIR/$skill_name"
+    if owned_old_package_link "$destination" "$REPOSITORY_ROOT/$skill_name"; then
+      printf '  migrate   %s (source layout at %s)\n' "$skill_name" "$destination"
+      relocation_destinations[${#relocation_destinations[@]}]=$destination
+      relocation_old_sources[${#relocation_old_sources[@]}]="$REPOSITORY_ROOT/$skill_name"
+      relocation_new_sources[${#relocation_new_sources[@]}]=$skill_dir
+      migration_count=$((migration_count + 1))
+    fi
+  done
+fi
+
 if [ "$skill_count" -eq 0 ] && [ "$conflict_count" -eq 0 ]; then
-  printf '  (no top-level skills found)\n'
+  printf '  (no skills/ packages found)\n'
 fi
 
 if [ "$conflict_count" -gt 0 ]; then
@@ -274,7 +347,7 @@ fi
 if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" -gt 0 ]; }; then
   mkdir -p "$TARGET_DIR"
 
-  for skill_file in "$REPOSITORY_ROOT"/*/SKILL.md; do
+  for skill_file in "$REPOSITORY_ROOT"/skills/*/SKILL.md; do
     [ -f "$skill_file" ] || continue
     skill_dir=${skill_file%/SKILL.md}
     [ -d "$skill_dir" ] || continue
@@ -283,7 +356,8 @@ if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" 
     skill_physical=$(physical_directory "$skill_dir")
     destination="$TARGET_DIR/$skill_name"
 
-    if link_resolves_to "$destination" "$skill_physical"; then
+    if link_resolves_to "$destination" "$skill_physical" ||
+       owned_old_package_link "$destination" "$REPOSITORY_ROOT/$skill_name"; then
       continue
     fi
     if [ -L "$destination" ] || [ -e "$destination" ]; then
@@ -293,7 +367,13 @@ if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" 
     fi
 
     if ln -s "$skill_dir" "$destination"; then
-      installed_count=$((installed_count + 1))
+      if link_resolves_to "$destination" "$skill_physical"; then
+        installed_count=$((installed_count + 1))
+      else
+        printf 'setup: could not verify symlink: %s\n' "$destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
     else
       printf 'setup: could not create symlink: %s\n' "$destination" >&2
       conflict_count=$((conflict_count + 1))
@@ -301,20 +381,55 @@ if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" 
     fi
   done
 
-  if [ "$conflict_count" -eq 0 ] && [ "$migration_count" -gt 0 ]; then
+  if [ "$conflict_count" -eq 0 ]; then
+    relocation_index=0
+    while [ "$relocation_index" -lt "${#relocation_destinations[@]}" ]; do
+      destination=${relocation_destinations[$relocation_index]}
+      old_source=${relocation_old_sources[$relocation_index]}
+      new_source=${relocation_new_sources[$relocation_index]}
+      if ! owned_old_package_link "$destination" "$old_source"; then
+        printf 'setup: source-layout link changed after planning: %s\n' "$destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
+      if ! unlink "$destination"; then
+        printf 'setup: could not unlink owned source-layout link: %s\n' "$destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
+      if ! ln -s "$new_source" "$destination"; then
+        # Restore the previous link only if no concurrent entry took its place.
+        if [ ! -e "$destination" ] && [ ! -L "$destination" ]; then
+          ln -s "$old_source" "$destination" || true
+        fi
+        printf 'setup: could not update source-layout link: %s\n' "$destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
+      if ! link_resolves_to "$destination" "$(physical_directory "$new_source")"; then
+        printf 'setup: could not verify source-layout link: %s\n' "$destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
+      migrated_count=$((migrated_count + 1))
+      relocation_index=$((relocation_index + 1))
+    done
+  fi
+
+  if [ "$conflict_count" -eq 0 ] && [ "${#planned_legacy_names[@]}" -gt 0 ]; then
     for legacy_name in "${planned_legacy_names[@]}"; do
       legacy_source="$REPOSITORY_ROOT/$legacy_name"
       legacy_destination="$TARGET_DIR/$legacy_name"
 
-      if link_points_to_path "$legacy_destination" "$legacy_source"; then
-        if unlink "$legacy_destination"; then
+      if owned_old_package_link "$legacy_destination" "$legacy_source"; then
+        if unlink "$legacy_destination" && [ ! -e "$legacy_destination" ] && [ ! -L "$legacy_destination" ]; then
           migrated_count=$((migrated_count + 1))
         else
           printf 'setup: could not remove owned legacy link: %s\n' "$legacy_destination" >&2
           conflict_count=$((conflict_count + 1))
           break
         fi
-      elif [ -L "$legacy_destination" ]; then
+      elif [ -L "$legacy_destination" ] || [ -e "$legacy_destination" ]; then
         printf 'setup: legacy link changed after planning: %s\n' "$legacy_destination" >&2
         conflict_count=$((conflict_count + 1))
         break

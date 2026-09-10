@@ -256,9 +256,9 @@ if ! /bin/bash -n "$extracted_dir/install.sh" ||
 fi
 
 shopt -s nullglob
-downloaded_skills=("$extracted_dir"/*/SKILL.md)
+downloaded_skills=("$extracted_dir"/skills/*/SKILL.md)
 shopt -u nullglob
-[ "${#downloaded_skills[@]}" -gt 0 ] || fail 'downloaded source contains no top-level skill packages'
+[ "${#downloaded_skills[@]}" -gt 0 ] || fail 'downloaded source contains no skills/*/SKILL.md packages'
 
 if ! /bin/bash "$extracted_dir/scripts/check-skills.sh"; then
   fail 'downloaded source failed skill-package validation'

@@ -2,7 +2,7 @@
 name: to-mmd
 description: 当用户请求将流程描述、业务流程、架构、时序、数据关系或设计文档转换为 Mermaid 图表时使用此技能。支持 flowchart、sequenceDiagram、block（Mermaid 语法头为 block-beta）、erDiagram、预定义配色与架构图渐进式披露。适用于“创建用户流程的 Mermaid 图”“将此流程可视化”或“绘制系统或代码工程架构图”等任务。
 metadata:
-  treefolk-category: core
+  treefolk-category: make
   treefolk-domain: format
   treefolk-kind: transform
 ---

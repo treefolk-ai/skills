@@ -2,7 +2,7 @@
 name: push
 description: Review current Git changes, create a scoped and meaningful commit when needed, and safely push the current branch; use for routine delivery of local work to its intended remote.
 metadata:
-  treefolk-category: core
+  treefolk-category: share
   treefolk-domain: git
   treefolk-kind: workflow
 ---
