@@ -45,7 +45,15 @@ $loop 5 普通文本对比度>=4.5:1：调整当前落地页的正文配色
 
 ## 安装
 
-安装持续更新的 `main` 版本：
+当前整体版本为 [`v0.1.0`](https://github.com/treefolk-ai/skills/tree/v0.1.0)。版本标签固定整个技能库的同一次提交，包含全部 Skill、安装器和文档。
+
+安装固定版本：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/v0.1.0/install.sh | bash -s -- --host codex --ref v0.1.0
+```
+
+`main` 是持续变化的开发分支。需要安装最新源码时使用：
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh | bash -s -- --host codex

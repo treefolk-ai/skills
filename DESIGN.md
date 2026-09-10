@@ -184,6 +184,7 @@ Once selected, one entry point owns its complete outcome. A side-effecting skill
 - Check names and descriptions together for search collisions and ambiguous triggering.
 - Treat renames, category activation, category migration, and invocation changes as product decisions. Update the metadata, README, DESIGN, adapters, and checks that express them in the same change.
 - Let repeated use expose missing boundaries. Do not pre-create placeholder skills or empty category directories.
+- Version the library as a whole with immutable annotated Git tags named `vMAJOR.MINOR.PATCH`. Each tag identifies one repository commit containing all skills, installers, and documentation. Pin both the bootstrap URL and its `--ref` to the same release tag; keep `main` explicitly described as a moving development channel.
 
 ## Anti-patterns
 
