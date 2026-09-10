@@ -1,3 +1,7 @@
+> 生产力的提升，会改变你能够遇见的问题，进而改变你能够理解的需求。
+>
+> [阅读完整思考：生产力如何改变需求](docs/productivity-and-needs.md)
+
 # Treefolk Skills
 
 Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为有明确结果、安全默认值和验证方式的可复用 Skill。
@@ -95,7 +99,7 @@ curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh 
 
 ```text
 skills/       所有 Skill 包，直接按名称平铺
-docs/         使用与维护说明
+docs/         使用、维护说明与心得
 scripts/      仓库校验脚本
 templates/    新 Skill 的公共模板
 README.md     产品入口与安装说明
