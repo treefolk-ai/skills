@@ -9,14 +9,22 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 | 方向 | 负责什么 | 当前能力 |
 | --- | --- | --- |
 | `think` 理清与判断 | 决定现在做什么，判断成果是否符合目标 | [`$todo`](skills/todo/SKILL.md) 从当前项目的任务文档选出一个下一步；[`$human-in-the-loop`](skills/human-in-the-loop/SKILL.md) 用简短证据看清 AI 的实际结果与可信边界，让人的纠正影响后续工作 |
-| `make` 制作与改进 | 把成果做出来，或者改好 | [`$loop`](skills/loop/SKILL.md) 按验收标准持续迭代一个任务；[`$code-craft`](skills/code-craft/SKILL.md) 构建可读、可维护的代码；[`$context-shrink`](skills/context-shrink/SKILL.md) 保持行为并简化源码；[`$ui-to-desc`](skills/ui-to-desc/SKILL.md) 整理组件设计描述；[`$to-mmd`](skills/to-mmd/SKILL.md) 生成 Mermaid 源码；[`$seo`](skills/seo/SKILL.md) 改善搜索发现；[`$geo`](skills/geo/SKILL.md) 改善生成式回答的内容与证据 |
+| `make` 制作与改进 | 把成果做出来，或者改好 | [`$loop`](skills/loop/SKILL.md) 按验收标准持续迭代一个任务；[`$build`](skills/build/SKILL.md) 根据明确需求构建功能并验证；[`$context-shrink`](skills/context-shrink/SKILL.md) 保持行为并简化源码；[`$ui-to-desc`](skills/ui-to-desc/SKILL.md) 整理组件设计描述；[`$to-mmd`](skills/to-mmd/SKILL.md) 生成 Mermaid 源码；[`$seo`](skills/seo/SKILL.md) 改善搜索发现；[`$geo`](skills/geo/SKILL.md) 改善生成式回答的内容与证据 |
 | `share` 交付与发布 | 把成果交付到仓库或运行环境 | [`$repo`](skills/repo/SKILL.md) 首次发布仓库；[`$push`](skills/push/SKILL.md) 交付一次完整改动；[`$pr`](skills/pr/SKILL.md) 创建或复用已验证的 PR；[`$deploy`](skills/deploy/SKILL.md) 部署到既有目标并验证线上结果 |
 
 分类只用于理解产品地图，不影响 Skill 的安装和调用。每个 Skill 的完整工作流以对应的 `SKILL.md` 为准。
 
 ## 使用
 
-在 Codex 中直接输入 `$skill-name`。会改变 Git、远端或部署状态的 `$repo`、`$push`、`$pr`、`$deploy` 必须显式调用；边界明确的 `$code-craft`、`$todo`、`$human-in-the-loop`、`$to-mmd`、`$ui-to-desc`、`$context-shrink`、`$seo`、`$geo` 也可以由 AI 根据描述选择。`$code-craft` 从实现开始约束一个明确代码结果，不套用固定语言或框架架构；`$context-shrink` 只在用户明确要求缩小维护上下文并给出仓库内目录后重组已有源码。二者都不会自动提交或推送。`$seo` 处理搜索发现与元信息，`$geo` 处理生成式回答的内容与引用证据；分别加 `audit` 可只读审查。两者可独立使用，不自动公开仓库、应用远端设置或发布。详见 [Skill 调用参与层级与启用策略](docs/skill-priority.md)。
+在 Codex 中直接输入 `$skill-name`。会改变 Git、远端或部署状态的 `$repo`、`$push`、`$pr`、`$deploy` 必须显式调用；边界明确的 `$build`、`$todo`、`$human-in-the-loop`、`$to-mmd`、`$ui-to-desc`、`$context-shrink`、`$seo`、`$geo` 也可以由 AI 根据描述选择。`$context-shrink` 只在用户明确要求缩小维护上下文并给出仓库内目录后重组已有源码。`$seo` 处理搜索发现与元信息，`$geo` 处理生成式回答的内容与引用证据；分别加 `audit` 可只读审查。两者可独立使用，不自动公开仓库、应用远端设置或发布。详见 [Skill 调用参与层级与启用策略](docs/skill-priority.md)。
+
+想新增功能、改变既有行为，或把已确定的接口与设计规格做成代码，用 [`$build`](skills/build/SKILL.md)（原 `code-craft`）。这里的 build 表示构建功能，单独运行编译或打包命令无需调用它。默认少增实体、复用现有能力；沿用项目工具链，没有既定包管理器且环境兼容的 JavaScript/TypeScript 项目优先 pnpm。它完成实现和适用验证，不自动安装工具、迁移工具链、提交或发布。
+
+```text
+$build 给现有 CLI 增加 CSV 导出，空数据只输出表头，写入失败时返回非零退出码
+$build 按已确定的接口协议实现分页查询，复用项目现有请求层
+$build 给设置页增加语言选择，保存后刷新仍保留选择
+```
 
 想留证据或写回目标、验收、取舍反馈时，用 `$human-in-the-loop` 让你用少量注意力判断 AI 结果是否符合目标。根目录 `evidence.md` 默认以四字段呈现目标、验证结果、未决问题、下一次验证；你可随手写，AI 整理，无变化不改。普通开发、问进度或恢复 AI 上下文不触发写入。见[技能说明](skills/human-in-the-loop/SKILL.md)。
 
@@ -53,6 +61,8 @@ curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/main/install.sh 
 ```
 
 从旧版根目录布局更新源码后，重新运行 `setup` 会迁移能证明属于当前源码目录的旧链接，保留名称与调用方式；外部链接和真实目录不会被覆盖。已有的 Codex 旧安装位置也会检查并迁移这类链接，具体改动先看 `--dry-run`。
+
+`code-craft` 已改名为 `build`。更新源码后，`setup` 会在共享目录激活 `build`，确认成功后再清理共享目录和已有 Codex 旧安装位置中、能证明指向本 checkout 已不存在的旧包路径的 `code-craft` 链接。旧名称不保留为第二个技能；旧路径被重用、无关链接及真实目录会保留，新名称冲突时不清理旧链接。`uninstall` 也能直接识别这些旧链接。若个人配置直接引用了旧名称或源码路径，需要同步调整；安装器不改写个人配置。
 
 删除源码目录前请先运行 `uninstall`。卸载前同样先预览；确认后移除 `--dry-run`：
 

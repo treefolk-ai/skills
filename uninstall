@@ -172,14 +172,28 @@ owned_package_link() {
   link_points_to_path "$candidate" "$old_source"
 }
 
+owned_renamed_package_link() {
+  local candidate old_source old_name
+  candidate=$1
+  old_source=$2
+  old_name=${old_source##*/}
+  { [ ! -e "$REPOSITORY_ROOT/$old_name" ] &&
+    [ ! -L "$REPOSITORY_ROOT/$old_name" ] &&
+    [ ! -e "$REPOSITORY_ROOT/skills/$old_name" ] &&
+    [ ! -L "$REPOSITORY_ROOT/skills/$old_name" ]; } || return 1
+  link_points_to_path "$candidate" "$old_source"
+}
+
 host=
 dry_run=0
 
-legacy_skill_names=(
+legacy_skill_paths=(
   commit-push
   c-push
   setup-repo
   s-repo
+  code-craft
+  skills/code-craft
 )
 
 while [ "$#" -gt 0 ]; do
@@ -295,22 +309,18 @@ for target_dir in "${TARGET_DIRS[@]}"; do
   # Remove historical names only when the symlink still points to the exact
   # package path that used to exist in this checkout. Unrelated same-named
   # entries are outside this repository's ownership and are left untouched.
-  for legacy_name in "${legacy_skill_names[@]}"; do
-    legacy_source="$REPOSITORY_ROOT/$legacy_name"
+  for legacy_path in "${legacy_skill_paths[@]}"; do
+    legacy_name=${legacy_path##*/}
+    legacy_source="$REPOSITORY_ROOT/$legacy_path"
     legacy_destination="$target_dir/$legacy_name"
 
-    # A legacy name that exists again in the checkout may have been
-    # intentionally repurposed; the normal public-skill loop owns that case.
-    { [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ]; } || continue
-    { [ ! -e "$REPOSITORY_ROOT/skills/$legacy_name" ] &&
-      [ ! -L "$REPOSITORY_ROOT/skills/$legacy_name" ]; } || continue
-    if link_points_to_path "$legacy_destination" "$legacy_source"; then
+    # Current packages and reused source paths are outside rename cleanup.
+    if owned_renamed_package_link "$legacy_destination" "$legacy_source"; then
       printf '  remove    %s (owned legacy link at %s)\n' "$legacy_name" "$legacy_destination"
       if [ "$dry_run" -eq 0 ]; then
         # Re-check immediately before unlinking so only a verified repository
         # symlink can ever be removed.
-        if [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ] &&
-           link_points_to_path "$legacy_destination" "$legacy_source"; then
+        if owned_renamed_package_link "$legacy_destination" "$legacy_source"; then
           if unlink "$legacy_destination" && [ ! -e "$legacy_destination" ] && [ ! -L "$legacy_destination" ]; then
             removed_count=$((removed_count + 1))
           else

@@ -560,7 +560,7 @@ for custom_mode in dry real repeat; do
   else
     assert_link_resolves_to "$custom_legacy/geo" "$package_root/geo" 'custom legacy migrates owned link'
   fi
-  assert_absent "$custom_legacy/code-craft" 'custom legacy receives no missing package'
+  assert_absent "$custom_legacy/build" 'custom legacy receives no missing package'
   assert_absent "$custom_home/.codex" 'custom CODEX_HOME leaves default legacy directory absent'
   assert_raw_link "$custom_legacy/repo" "$unrelated_dir" 'foreign legacy link preserved'
   assert_raw_link "$custom_legacy/todo" "$custom_newline_source" 'legacy newline lookalike preserved'
@@ -772,5 +772,132 @@ fixture_alias_uninstall_output="$test_root/output-reused-alias-uninstall.txt"
 run_in_private_home "$fixture_alias_uninstall_output" "$fixture_home" "$fixture_repo/uninstall" --host codex
 assert_status 0 'reused alias uninstalls as a current package' "$fixture_alias_uninstall_output"
 assert_absent "$fixture_shared/c-push" 'reused alias package uninstalled'
+
+# A public rename spans both source layouts and both activation locations.
+# Keep this fixture independent of the live package list so the old name is
+# always absent and the replacement is the only package that can be activated.
+rename_repo="$test_root/rename-checkout"
+mkdir -p "$rename_repo/skills/build"
+rename_repo=$(CDPATH= cd -P "$rename_repo" && pwd)
+cp "$setup_script" "$rename_repo/setup"
+cp "$uninstall_script" "$rename_repo/uninstall"
+printf '%s\n' '# Renamed implementation workflow' >"$rename_repo/skills/build/SKILL.md"
+for former_layout in root nested; do
+  if [ "$former_layout" = root ]; then
+    former_source="$rename_repo/code-craft"
+  else
+    former_source="$rename_repo/skills/code-craft"
+  fi
+  for rename_action in setup uninstall conflict; do
+    rename_home="$test_root/rename-$former_layout-$rename_action-home"
+    rename_shared="$rename_home/.agents/skills"
+    rename_codex="$test_root/rename-$former_layout-$rename_action-codex"
+    rename_legacy="$rename_codex/skills"
+    mkdir -p "$rename_shared" "$rename_legacy"
+    for rename_target in "$rename_shared" "$rename_legacy"; do
+      ln -s "$former_source" "$rename_target/code-craft"
+    done
+    if [ "$rename_action" = conflict ]; then
+      mkdir "$rename_shared/build"
+      printf '%s\n' 'user-owned replacement' >"$rename_shared/build/keep.txt"
+    elif [ "$rename_action" = setup ] && [ "$former_layout" = nested ]; then
+      # Cleanup must also run when the replacement was already activated.
+      ln -s "$rename_repo/skills/build" "$rename_shared/build"
+    fi
+    for rename_mode in dry real; do
+      rename_output="$test_root/output-rename-$former_layout-$rename_action-$rename_mode.txt"
+      rename_args=()
+      [ "$rename_mode" != dry ] || rename_args=(--dry-run)
+      if [ "$rename_action" = uninstall ]; then
+        run_in_private_home "$rename_output" "$rename_home" env CODEX_HOME="$rename_codex" \
+          "$rename_repo/uninstall" --host codex ${rename_args[@]+"${rename_args[@]}"}
+      else
+        run_in_private_home "$rename_output" "$rename_home" env CODEX_HOME="$rename_codex" \
+          "$rename_repo/setup" --host grok ${rename_args[@]+"${rename_args[@]}"}
+      fi
+      if [ "$rename_action" = conflict ]; then
+        assert_status 1 "rename conflict ($former_layout, $rename_mode)" "$rename_output"
+        [ ! -L "$rename_shared/build" ] &&
+          [ "$(cat "$rename_shared/build/keep.txt")" = 'user-owned replacement' ] ||
+          fail 'rename changed replacement conflict contents'
+        pass
+      else
+        assert_status 0 "rename $rename_action ($former_layout, $rename_mode)" "$rename_output"
+      fi
+      for rename_target in "$rename_shared" "$rename_legacy"; do
+        if [ "$rename_mode" = dry ] || [ "$rename_action" = conflict ]; then
+          assert_raw_link "$rename_target/code-craft" "$former_source" 'rename preserves old link before successful activation'
+        else
+          assert_absent "$rename_target/code-craft" "rename $rename_action removes owned old name"
+        fi
+      done
+      if [ "$rename_action" = setup ] && { [ "$rename_mode" = real ] || [ "$former_layout" = nested ]; }; then
+        assert_link_resolves_to "$rename_shared/build" "$rename_repo/skills/build" 'renamed workflow activated'
+      elif [ "$rename_action" != conflict ]; then
+        assert_absent "$rename_shared/build" 'rename dry-run or direct uninstall creates no replacement'
+      fi
+      assert_absent "$rename_legacy/build" 'rename adds no legacy compatibility package'
+      assert_absent "$rename_home/.codex" 'rename honors custom CODEX_HOME'
+    done
+    if [ "$rename_action" = setup ]; then
+      run_in_private_home "$rename_output" "$rename_home" env CODEX_HOME="$rename_codex" "$rename_repo/setup"
+      assert_status 0 "rename repeat ($former_layout)" "$rename_output"
+      assert_output_contains "$rename_output" 'Installed: 0' 'rename repeat installs nothing'
+      assert_output_contains "$rename_output" 'Migrated: 0' 'rename repeat migrates nothing'
+    fi
+  done
+done
+
+# A target name alone is not ownership: preserve foreign links, lookalike
+# paths and user directories, including entries in the legacy Codex target.
+for protected_kind in foreign newline directory reused-root reused-nested reused-symlink; do
+  protected_repo="$test_root/rename-protected-checkout-$protected_kind"
+  mkdir -p "$protected_repo/skills/build"
+  protected_repo=$(CDPATH= cd -P "$protected_repo" && pwd)
+  cp "$setup_script" "$protected_repo/setup"
+  cp "$uninstall_script" "$protected_repo/uninstall"
+  printf '%s\n' '# Replacement package' >"$protected_repo/skills/build/SKILL.md"
+  protected_home="$test_root/rename-protected-$protected_kind"
+  protected_shared="$protected_home/.agents/skills"
+  protected_legacy="$protected_home/.codex/skills"
+  mkdir -p "$protected_shared" "$protected_legacy"
+  case "$protected_kind" in
+    foreign) protected_source="$unrelated_dir" ;;
+    newline) protected_source="$protected_repo/skills/code-craft"$'\n' ;;
+    reused-root) protected_source="$protected_repo/code-craft" ;;
+    reused-nested|reused-symlink) protected_source="$protected_repo/skills/code-craft" ;;
+    directory) protected_source= ;;
+  esac
+  case "$protected_kind" in
+    reused-symlink) ln -s "$unrelated_dir" "$protected_source" ;;
+    reused-*)
+      mkdir "$protected_source"
+      printf '%s\n' 'reused source' >"$protected_source/keep.txt"
+      ;;
+  esac
+  for protected_target in "$protected_shared" "$protected_legacy"; do
+    if [ "$protected_kind" = directory ]; then
+      mkdir "$protected_target/code-craft"
+      printf '%s\n' 'user-owned skill' >"$protected_target/code-craft/keep.txt"
+    else
+      ln -s "$protected_source" "$protected_target/code-craft"
+    fi
+  done
+  for protected_action in setup uninstall; do
+    protected_output="$test_root/output-rename-protected-$protected_kind-$protected_action.txt"
+    run_in_private_home "$protected_output" "$protected_home" "$protected_repo/$protected_action" --host codex
+    assert_status 0 "protected old name ($protected_kind, $protected_action)" "$protected_output"
+    for protected_target in "$protected_shared" "$protected_legacy"; do
+      if [ "$protected_kind" = directory ]; then
+        [ ! -L "$protected_target/code-craft" ] &&
+          [ "$(cat "$protected_target/code-craft/keep.txt")" = 'user-owned skill' ] ||
+          fail 'rename modified a user-owned old-name directory'
+        pass
+      else
+        assert_raw_link "$protected_target/code-craft" "$protected_source" 'rename preserves unowned old name'
+      fi
+    done
+  done
+done
 
 printf 'PASS: setup regression checks completed (%d assertions).\n' "$check_count"

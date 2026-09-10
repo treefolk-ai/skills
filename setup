@@ -162,7 +162,7 @@ link_points_to_path() {
   [ "$raw_target" = "$expected" ]
 }
 
-# Root-level package paths may have been repurposed after the layout move.
+# Former package paths may have been repurposed after a layout move or rename.
 # Only absent old sources and the exact historical absolute link are owned.
 owned_old_package_link() {
   local candidate old_source
@@ -170,6 +170,19 @@ owned_old_package_link() {
   old_source=$2
   { [ ! -e "$old_source" ] && [ ! -L "$old_source" ]; } || return 1
   link_points_to_path "$candidate" "$old_source"
+}
+
+owned_renamed_package_link() {
+  local candidate old_source old_name
+  candidate=$1
+  old_source=$2
+  old_name=${old_source##*/}
+  # Either former layout may now contain user content or a new public package.
+  { [ ! -e "$REPOSITORY_ROOT/$old_name" ] &&
+    [ ! -L "$REPOSITORY_ROOT/$old_name" ] &&
+    [ ! -e "$REPOSITORY_ROOT/skills/$old_name" ] &&
+    [ ! -L "$REPOSITORY_ROOT/skills/$old_name" ]; } || return 1
+  owned_old_package_link "$candidate" "$old_source"
 }
 
 host=codex
@@ -181,6 +194,8 @@ legacy_skill_migrations=(
   "c-push push"
   "setup-repo repo"
   "s-repo repo"
+  "code-craft build"
+  "skills/code-craft build"
 )
 
 while [ "$#" -gt 0 ]; do
@@ -239,7 +254,9 @@ conflict_count=0
 skill_count=0
 migration_count=0
 migrated_count=0
-planned_legacy_names=()
+legacy_destinations=()
+legacy_old_sources=()
+legacy_replacement_names=()
 relocation_destinations=()
 relocation_old_sources=()
 relocation_new_sources=()
@@ -249,25 +266,6 @@ if { [ -L "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR" ]; } ||
   printf '  conflict  target is not a directory: %s\n' "$TARGET_DIR"
   conflict_count=$((conflict_count + 1))
 else
-  for legacy_migration in "${legacy_skill_migrations[@]}"; do
-    legacy_name=${legacy_migration%% *}
-    replacement_name=${legacy_migration#* }
-    legacy_source="$REPOSITORY_ROOT/$legacy_name"
-    legacy_destination="$TARGET_DIR/$legacy_name"
-
-    [ -f "$REPOSITORY_ROOT/skills/$replacement_name/SKILL.md" ] || continue
-    # A legacy name that exists again in the checkout may have been
-    # intentionally repurposed; never treat that live path as migration state.
-    { [ ! -e "$legacy_source" ] && [ ! -L "$legacy_source" ]; } || continue
-    { [ ! -e "$REPOSITORY_ROOT/skills/$legacy_name" ] &&
-      [ ! -L "$REPOSITORY_ROOT/skills/$legacy_name" ]; } || continue
-    if link_points_to_path "$legacy_destination" "$legacy_source"; then
-      printf '  migrate   %s -> %s (remove owned legacy link)\n' "$legacy_name" "$replacement_name"
-      planned_legacy_names[${#planned_legacy_names[@]}]=$legacy_name
-      migration_count=$((migration_count + 1))
-    fi
-  done
-
   shopt -s nullglob dotglob
   for skill_file in "$REPOSITORY_ROOT"/skills/*/SKILL.md; do
     [ -f "$skill_file" ] || continue
@@ -331,6 +329,32 @@ if [ "$legacy_is_shared" -eq 0 ] && [ -d "$LEGACY_CODEX_TARGET_DIR" ]; then
     fi
   done
 fi
+
+# Historical names are removed from either existing target only after the
+# replacement is active in the shared target. The table records old source
+# paths relative to this checkout, so both former layouts can be recognized.
+rename_targets=("$TARGET_DIR")
+if [ "$legacy_is_shared" -eq 0 ] && [ -d "$LEGACY_CODEX_TARGET_DIR" ]; then
+  rename_targets[${#rename_targets[@]}]=$LEGACY_CODEX_TARGET_DIR
+fi
+for rename_target in "${rename_targets[@]}"; do
+  for legacy_migration in "${legacy_skill_migrations[@]}"; do
+    legacy_path=${legacy_migration%% *}
+    legacy_name=${legacy_path##*/}
+    replacement_name=${legacy_migration#* }
+    legacy_source="$REPOSITORY_ROOT/$legacy_path"
+    legacy_destination="$rename_target/$legacy_name"
+    [ -f "$REPOSITORY_ROOT/skills/$replacement_name/SKILL.md" ] || continue
+    if owned_renamed_package_link "$legacy_destination" "$legacy_source"; then
+      printf '  migrate   %s -> %s (remove owned legacy link at %s)\n' \
+        "$legacy_name" "$replacement_name" "$legacy_destination"
+      legacy_destinations[${#legacy_destinations[@]}]=$legacy_destination
+      legacy_old_sources[${#legacy_old_sources[@]}]=$legacy_source
+      legacy_replacement_names[${#legacy_replacement_names[@]}]=$replacement_name
+      migration_count=$((migration_count + 1))
+    fi
+  done
+done
 
 if [ "$skill_count" -eq 0 ] && [ "$conflict_count" -eq 0 ]; then
   printf '  (no skills/ packages found)\n'
@@ -416,12 +440,21 @@ if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" 
     done
   fi
 
-  if [ "$conflict_count" -eq 0 ] && [ "${#planned_legacy_names[@]}" -gt 0 ]; then
-    for legacy_name in "${planned_legacy_names[@]}"; do
-      legacy_source="$REPOSITORY_ROOT/$legacy_name"
-      legacy_destination="$TARGET_DIR/$legacy_name"
+  if [ "$conflict_count" -eq 0 ]; then
+    legacy_index=0
+    while [ "$legacy_index" -lt "${#legacy_destinations[@]}" ]; do
+      legacy_destination=${legacy_destinations[$legacy_index]}
+      legacy_source=${legacy_old_sources[$legacy_index]}
+      replacement_name=${legacy_replacement_names[$legacy_index]}
+      replacement_source="$REPOSITORY_ROOT/skills/$replacement_name"
+      if ! [ -f "$replacement_source/SKILL.md" ] ||
+         ! link_resolves_to "$TARGET_DIR/$replacement_name" "$(physical_directory "$replacement_source")"; then
+        printf 'setup: replacement is not active; preserving legacy link: %s\n' "$legacy_destination" >&2
+        conflict_count=$((conflict_count + 1))
+        break
+      fi
 
-      if owned_old_package_link "$legacy_destination" "$legacy_source"; then
+      if owned_renamed_package_link "$legacy_destination" "$legacy_source"; then
         if unlink "$legacy_destination" && [ ! -e "$legacy_destination" ] && [ ! -L "$legacy_destination" ]; then
           migrated_count=$((migrated_count + 1))
         else
@@ -434,6 +467,7 @@ if [ "$dry_run" -eq 0 ] && { [ "$planned_count" -gt 0 ] || [ "$migration_count" 
         conflict_count=$((conflict_count + 1))
         break
       fi
+      legacy_index=$((legacy_index + 1))
     done
   fi
 fi
