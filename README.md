@@ -8,7 +8,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 
 | 方向 | 负责什么 | 当前能力 |
 | --- | --- | --- |
-| `think` 理清与接续 | 决定现在做什么，找回项目进展 | [`$todo`](skills/todo/SKILL.md) 从任务文档选出一个下一步；[`$human-in-the-loop`](skills/human-in-the-loop/SKILL.md) 用人和 AI 共用的证据接上项目，保留真实进展与人工反馈 |
+| `think` 理清与判断 | 决定现在做什么，判断成果是否符合目标 | [`$todo`](skills/todo/SKILL.md) 从当前项目的任务文档选出一个下一步；[`$human-in-the-loop`](skills/human-in-the-loop/SKILL.md) 用简短证据看清 AI 的实际结果与可信边界，让人的纠正影响后续工作 |
 | `make` 制作与改进 | 把成果做出来，或者改好 | [`$code-craft`](skills/code-craft/SKILL.md) 构建可读、可维护的代码；[`$context-shrink`](skills/context-shrink/SKILL.md) 保持行为并简化源码；[`$ui-to-desc`](skills/ui-to-desc/SKILL.md) 整理组件设计描述；[`$to-mmd`](skills/to-mmd/SKILL.md) 生成 Mermaid 源码；[`$seo`](skills/seo/SKILL.md) 改善搜索发现；[`$geo`](skills/geo/SKILL.md) 改善生成式回答的内容与证据 |
 | `share` 交付与发布 | 把成果交付到仓库或运行环境 | [`$repo`](skills/repo/SKILL.md) 首次发布仓库；[`$push`](skills/push/SKILL.md) 交付一次完整改动；[`$pr`](skills/pr/SKILL.md) 创建或复用已验证的 PR；[`$deploy`](skills/deploy/SKILL.md) 部署到既有目标并验证线上结果 |
 
@@ -18,7 +18,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 
 在 Codex 中直接输入 `$skill-name`。会改变 Git、远端或部署状态的 `$repo`、`$push`、`$pr`、`$deploy` 必须显式调用；边界明确的 `$code-craft`、`$todo`、`$human-in-the-loop`、`$to-mmd`、`$ui-to-desc`、`$context-shrink`、`$seo`、`$geo` 也可以由 AI 根据描述选择。`$code-craft` 从实现开始约束一个明确代码结果，不套用固定语言或框架架构；`$context-shrink` 只在用户明确要求缩小维护上下文并给出仓库内目录后重组已有源码。二者都不会自动提交或推送。`$seo` 处理搜索发现与元信息，`$geo` 处理生成式回答的内容与引用证据；分别加 `audit` 可只读审查。两者可独立使用，不自动公开仓库、应用远端设置或发布。详见 [Skill 调用参与层级与启用策略](docs/skill-priority.md)。
 
-忘了做到哪里、准备暂停或想保留反馈时，调用 `$human-in-the-loop`。项目根目录的 `evidence.md` 用四个字段保存目标、验证结果、未决问题和下一次验证，不限定行数。你可以只看或随手记一句，AI 核对整理、保留你的判断，继续已授权的工作。`$todo` 只负责从当前项目的任务中选下一步。下次可说“读取 evidence.md，帮我接上这个项目”；明确要求时才在 `AGENTS.md` 留入口，不保证宿主自动读取。完整规则见[技能说明](skills/human-in-the-loop/SKILL.md)。
+想留证据或写回目标、验收、取舍反馈时，用 `$human-in-the-loop` 让你用少量注意力判断 AI 结果是否符合目标。根目录 `evidence.md` 默认以四字段呈现目标、验证结果、未决问题、下一次验证；你可随手写，AI 整理，无变化不改。普通开发、问进度或恢复 AI 上下文不触发写入。见[技能说明](skills/human-in-the-loop/SKILL.md)。
 
 想让外部 AI 更准确地介绍项目，使用 `$geo` 核实已有 README、公开文档和相关 `AGENTS.md` 中的答案与来源。按实际问题补足用途、用法或验证信息，不强制新建文件；内部证据不自动公开，内容改进也不等于已获得 AI 引用。
 

@@ -6,11 +6,11 @@ The product map has three categories: `think` → `make` → `share`. Choose fro
 
 | Category | User job | Current skills |
 | --- | --- | --- |
-| `think` | Decide what to do and reconnect with a project's current progress | `todo`, `human-in-the-loop` |
+| `think` | Decide what to do and assess whether results meet the user's goals | `todo`, `human-in-the-loop` |
 | `make` | Create or improve a usable artifact | `code-craft`, `context-shrink`, `ui-to-desc`, `to-mmd`, `seo`, `geo` |
 | `share` | Deliver work to a repository or running environment | `repo`, `push`, `pr`, `deploy` |
 
-The earlier `core` mixed generality with workflow outcomes; its code and diagram skills now belong to `make`, and Git delivery belongs to `share`. The earlier `learn` emphasized evidence retention, while the user's immediate job is reconnecting with a project; `human-in-the-loop` therefore belongs to `think`. These changes simplify discovery without merging skills or changing their workflows. Each skill defines its own completion boundary.
+The earlier `core` mixed generality with workflow outcomes; its code and diagram skills now belong to `make`, and Git delivery belongs to `share`. The earlier `learn` emphasized evidence retention, while the user's immediate job is judging AI's results against their goals; `human-in-the-loop` therefore belongs to `think`. These changes simplify discovery without merging skills or changing their workflows. Each skill defines its own completion boundary.
 
 ### Classification axes
 
@@ -26,7 +26,7 @@ The earlier `core` mixed generality with workflow outcomes; its code and diagram
 | Skill | Category | Domain | Kind | Primary user outcome |
 | --- | --- | --- | --- | --- |
 | `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
-| `human-in-the-loop` | `think` | `project-progress` | `workflow` | Reconnect with one selected project through a readable record shared by humans and AI, preserving verified progress and human judgment |
+| `human-in-the-loop` | `think` | `project-progress` | `workflow` | Let the user assess AI's actual results and evidence limits with little attention, and carry their corrections into subsequent work |
 | `code-craft` | `make` | `source-code` | `workflow` | Build one scoped code outcome with readable boundaries, explicit failure behavior, and success/failure verification across languages and frameworks |
 | `context-shrink` | `make` | `source-code` | `workflow` | Reduce the maintenance context of one bounded source-code scope without changing external behavior |
 | `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
@@ -50,7 +50,7 @@ The library is not a catalog of everything an agent can do. It should contain th
 
 Choose a category from the user's primary reason for invoking the skill, not from the tools or intermediate steps it happens to use.
 
-- `think` helps the user understand, decide or reconnect with work. A plan or evidence record may be its artifact; writing a document alone does not make the outcome `make`.
+- `think` helps the user understand, decide and assess work against their goals. A plan or evidence record may be its artifact; writing a document alone does not make the outcome `make`.
 - `make` owns creation and transformation of the artifact. Publishing or distributing that artifact belongs to `share` unless publication is inseparable from the natural outcome.
 - `share` owns observable communication, publication, distribution, adoption, or growth. Creating collateral alone remains `make`.
 
@@ -115,13 +115,9 @@ An intermediate artifact can qualify as a skill when users request it directly, 
 
 `code-craft` owns implementation of one user-defined code outcome from boundary discovery through success and failure verification. It is a language- and framework-neutral decision standard, not a universal folder layout: project idioms determine syntax and structure, while readability, explicit failure behavior, cohesive change boundaries, separation of pure logic from side effects, and evidence-backed completion remain invariant. It may perform the narrow restructuring required to keep a new change coherent, but broad post-hoc behavior-preserving context reduction belongs to `context-shrink`; read-only review, architecture planning, Git delivery, dependency acquisition, deployment, and external mutations remain outside its boundary.
 
-`human-in-the-loop` belongs to `think`: it restores understanding of one already-selected project and carries human judgment forward. Repeated return, pause and feedback situations justify a separate entry, with decisions about evidence freshness and unresolved acceptance. The recognized name preserves the intended human role; `evidence.md` is its artifact. `todo` selects a task within the current project; this skill records and reconnects with the selected work. P1 selection applies to clear reconnecting or record-maintenance requests, not every coding task.
+`human-in-the-loop` belongs to `think`: it helps a person judge whether AI's actual results fit their goals, with little attention. Repeated requests to retain evidence or write back judgments about goals, acceptance and tradeoffs justify this entry; the name reflects that human role. `todo` selects a task within the current project; this skill preserves evidence and corrections for the already-selected task. P1 selection applies to those recording requests. Ordinary development, progress questions and AI context recovery do not trigger file writes.
 
-One root record has four stable fields—goal, verified result, unresolved issues and next verification—with readable spacing rather than a physical-line limit. AI organizes rough notes while preserving human meaning, uncertainty and judgment; participation is optional, and existing development authorization continues across checkpoints. Compression must preserve decision-relevant evidence and constraints without creating a second backlog or maintenance ritual. The complete workflow, field rules and recovery branches live only in `skills/human-in-the-loop/SKILL.md`.
-
-Explicitly requested project integration may add a minimal `AGENTS.md` pointer while preserving existing guidance. This supports discovery without duplicating the workflow; general Agent environment preparation has no demonstrated separate recurring job here. The pointer does not prove future host loading or provide monitoring or reminders.
-
-The source was the user's excerpt from a ChatGPT scheduled daily briefing proposing four lines in `evidence.md` and continued development. It informed product requirements, not research conclusions attributed to the briefing's cited studies. Attention benefits remain unmeasured hypotheses: evaluate whether people can recover context without rereading chat, start one concrete action, and see their corrections affect later work with little upkeep.
+One root `evidence.md` defaults to four fields—goal, verified result, unresolved issues and next verification—for a predictable reading entry. These are the information needed for judgment, not a rigid format: clear equivalent layouts need no rewrite. People can contribute rough notes; AI preserves their meaning and uncertainty, and leaves unchanged records untouched. Compression must retain the evidence and constraints needed for a decision. Judge value by whether the person can distinguish actual results from unknowns, decide whether the work meets their goals, and see corrections affect subsequent work without added upkeep. Record maintenance neither interrupts nor expands existing task authorization. The complete workflow lives only in `skills/human-in-the-loop/SKILL.md`.
 
 `seo` and `geo` are separate public workflows because users independently ask for search discovery and for accurate, supported answers in generative search. `seo` owns search intent, crawl/index readiness, result presentation, and repository or package metadata. `geo` owns question-to-claim evidence, entity and version clarity, corrections to controlled content, and observed citation support. This is a product boundary, not a claim that search providers use wholly separate ranking systems. Neither skill requires the other to be installed or run.
 

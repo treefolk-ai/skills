@@ -1,7 +1,7 @@
 interface:
   display_name: "Human in the Loop · Treefolk"
-  short_description: "让人和 AI 共用简短项目证据，保留反馈并快速接上工作"
-  default_prompt: "Use $human-in-the-loop to help me reconnect with this project's current task, organize my notes without inventing results, and maintain a readable evidence.md shared by me and AI."
+  short_description: "用简短证据看清 AI 的真实进展与未决问题，让人的纠正影响后续工作"
+  default_prompt: "Use $human-in-the-loop to maintain concise evidence.md so I can judge the AI's actual progress and correct its direction."
 
 policy:
   allow_implicit_invocation: true
