@@ -7,7 +7,7 @@ The product map has three categories: `think` → `make` → `share`. Choose fro
 | Category | User job | Current skills |
 | --- | --- | --- |
 | `think` | Decide what to do and assess whether results meet the user's goals | `todo`, `human-in-the-loop` |
-| `make` | Create or improve a usable artifact | `code-craft`, `context-shrink`, `ui-to-desc`, `to-mmd`, `seo`, `geo` |
+| `make` | Create or improve a usable artifact | `loop`, `code-craft`, `context-shrink`, `ui-to-desc`, `to-mmd`, `seo`, `geo` |
 | `share` | Deliver work to a repository or running environment | `repo`, `push`, `pr`, `deploy` |
 
 The earlier `core` mixed generality with workflow outcomes; its code and diagram skills now belong to `make`, and Git delivery belongs to `share`. The earlier `learn` emphasized evidence retention, while the user's immediate job is judging AI's results against their goals; `human-in-the-loop` therefore belongs to `think`. These changes simplify discovery without merging skills or changing their workflows. Each skill defines its own completion boundary.
@@ -27,6 +27,7 @@ The earlier `core` mixed generality with workflow outcomes; its code and diagram
 | --- | --- | --- | --- | --- |
 | `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
 | `human-in-the-loop` | `think` | `project-progress` | `workflow` | Let the user assess AI's actual results and evidence limits with little attention, and carry their corrections into subsequent work |
+| `loop` | `make` | `artifact-quality` | `workflow` | Declare a scoped outcome and reconcile observed gaps within a finite iteration budget, with verifiable acceptance and a clear stopping result |
 | `code-craft` | `make` | `source-code` | `workflow` | Build one scoped code outcome with readable boundaries, explicit failure behavior, and success/failure verification across languages and frameworks |
 | `context-shrink` | `make` | `source-code` | `workflow` | Reduce the maintenance context of one bounded source-code scope without changing external behavior |
 | `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
@@ -105,6 +106,14 @@ A new skill should normally pass questions 1–3 and 5, with question 4 answered
 
 Compose capabilities inside the natural user outcome before splitting them into public entries. A selected skill may use commands, scripts, resources, or host capabilities, but it remains responsible for authorization, stopping, verification, and reporting across the complete outcome.
 
+`loop` is an explicitly requested, independent entry point for sustained iteration across artifact types. Its recurring job is to finish a bounded task without requiring the user to prompt every round. The design combines [Ralph Wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) iteration with the desired-state and reconciliation concepts of [Kubernetes controllers](https://kubernetes.io/docs/concepts/architecture/controller/); it does not require another skill or inherit one domain's workflow. The short name reflects the user's recurring invocation. Fixed acceptance, candidate evidence and distinct success, no-op, partial and blocked outcomes make results inspectable and recoverable. Choosing appropriate criteria and the next corrective action involves judgment beyond a command wrapper. It belongs to `make / artifact-quality / workflow`, with P0 selection because it deliberately overlaps ordinary production workflows.
+
+The public interaction teaches two forms: `$loop [rounds] [acceptance conditions…] [：task]` and `$loop help [task or concern]`. These are conversation inputs interpreted by the agent, not a shell grammar. Users declare the goal; the agent chooses actions from observed gaps. Rounds normally set an upper bound, defaulting to ten, with early completion. An explicit request for a fixed number of checks preserves that intent without forcing edits. Omitted task text inherits only an unambiguous current target. Conditions keep their comparison direction, native units and evidence requirements; missing criteria do not authorize a universal scorecard or speculative extensibility work.
+
+Help is a read-only invocation builder: it uses conversation context and packaged references, suggests a few relevant criteria and a ready-to-use invocation, then stops. The full ten-term industry menu is disclosed on request. This keeps the common path convenient without adding routine approval gates. Status and cancellation remain controls of the active task, rather than additional entry points to learn. Runtime language, configuration schemas and model selection stay out of ordinary help.
+
+The complete workflow lives in `skills/loop/SKILL.md`, supported only by invocation metadata and the criteria reference. Iteration depends on the active agent following the workflow; the package does not include a standalone command runner or provide host-enforced continuation, background execution or automatic recovery. A script belongs here only when it serves an actual execution path, rather than introducing a separate unused interface. Explicit invocation authorizes scoped local work and necessary records only; external actions and Git delivery still need task-specific authorization. Progress and completion require artifact evidence. Better outcome quality than a baseline remains an empirical question, not a consequence of adopting these design references.
+
 `repo` owns first publication end to end. After resolving one unambiguous hosted-repository identity, it queries the provider and may create exactly one empty repository when absence is confirmed. Creation defaults to private; public visibility requires an explicit instruction in the current invocation. Reusing an existing repository never changes its visibility implicitly.
 
 `deploy` owns deployment after a project is prepared. When the user does not name a provider and project evidence does not conflict, it defaults provider selection to Cloudflare—but not to Pages or Workers, an account, a project, an environment, or production. Its normal path updates one exact existing target and verifies authoritative provider state plus the applicable live endpoint; an explicitly named non-Cloudflare provider is supported only through a complete existing project-owned deployment and verification path. Provisioning, Git publication, routing, domains, secrets, migrations, retries after an indeterminate result, rollback, and deletion remain separate explicit work. The `$deploy plan` modifier performs static local inspection only, with no build, network access, file change, or external mutation.
@@ -157,7 +166,7 @@ Invocation policy decides how a host may select a skill; it does not determine c
 - P1 allows explicit or description-based selection for focused workflows whose outcome is already authorized by the current request and whose risk is controlled through a bounded scope, stop conditions, and verification.
 - P2 disables a workflow through host configuration when it should not participate in selection.
 
-The Git workflows `repo`, `push`, and `pr` and the deployment workflow `deploy` are P0. `code-craft`, `todo`, `human-in-the-loop`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+The Git workflows `repo`, `push`, and `pr`, the deployment workflow `deploy`, and the cross-domain iteration workflow `loop` are P0. `code-craft`, `todo`, `human-in-the-loop`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
 

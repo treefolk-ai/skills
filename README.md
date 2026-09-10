@@ -9,7 +9,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 | 方向 | 负责什么 | 当前能力 |
 | --- | --- | --- |
 | `think` 理清与判断 | 决定现在做什么，判断成果是否符合目标 | [`$todo`](skills/todo/SKILL.md) 从当前项目的任务文档选出一个下一步；[`$human-in-the-loop`](skills/human-in-the-loop/SKILL.md) 用简短证据看清 AI 的实际结果与可信边界，让人的纠正影响后续工作 |
-| `make` 制作与改进 | 把成果做出来，或者改好 | [`$code-craft`](skills/code-craft/SKILL.md) 构建可读、可维护的代码；[`$context-shrink`](skills/context-shrink/SKILL.md) 保持行为并简化源码；[`$ui-to-desc`](skills/ui-to-desc/SKILL.md) 整理组件设计描述；[`$to-mmd`](skills/to-mmd/SKILL.md) 生成 Mermaid 源码；[`$seo`](skills/seo/SKILL.md) 改善搜索发现；[`$geo`](skills/geo/SKILL.md) 改善生成式回答的内容与证据 |
+| `make` 制作与改进 | 把成果做出来，或者改好 | [`$loop`](skills/loop/SKILL.md) 按验收标准持续迭代一个任务；[`$code-craft`](skills/code-craft/SKILL.md) 构建可读、可维护的代码；[`$context-shrink`](skills/context-shrink/SKILL.md) 保持行为并简化源码；[`$ui-to-desc`](skills/ui-to-desc/SKILL.md) 整理组件设计描述；[`$to-mmd`](skills/to-mmd/SKILL.md) 生成 Mermaid 源码；[`$seo`](skills/seo/SKILL.md) 改善搜索发现；[`$geo`](skills/geo/SKILL.md) 改善生成式回答的内容与证据 |
 | `share` 交付与发布 | 把成果交付到仓库或运行环境 | [`$repo`](skills/repo/SKILL.md) 首次发布仓库；[`$push`](skills/push/SKILL.md) 交付一次完整改动；[`$pr`](skills/pr/SKILL.md) 创建或复用已验证的 PR；[`$deploy`](skills/deploy/SKILL.md) 部署到既有目标并验证线上结果 |
 
 分类只用于理解产品地图，不影响 Skill 的安装和调用。每个 Skill 的完整工作流以对应的 `SKILL.md` 为准。
@@ -21,6 +21,19 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的用户目标沉淀为�
 想留证据或写回目标、验收、取舍反馈时，用 `$human-in-the-loop` 让你用少量注意力判断 AI 结果是否符合目标。根目录 `evidence.md` 默认以四字段呈现目标、验证结果、未决问题、下一次验证；你可随手写，AI 整理，无变化不改。普通开发、问进度或恢复 AI 上下文不触发写入。见[技能说明](skills/human-in-the-loop/SKILL.md)。
 
 想让外部 AI 更准确地介绍项目，使用 `$geo` 核实已有 README、公开文档和相关 `AGENTS.md` 中的答案与来源。按实际问题补足用途、用法或验证信息，不强制新建文件；内部证据不自动公开，内容改进也不等于已获得 AI 引用。
+
+想按目标持续改进代码、内容、设计或数据，显式调用 [`$loop`](skills/loop/SKILL.md)。用“轮次 + 验收条件 + 任务”声明期望状态，AI 根据实际差距决定下一步；数字表示最多执行的轮次，省略时最多 10 轮，达标即可停止。未给条件时按任务选择少量适用验收，不统一套用高分要求。
+
+```text
+$loop help
+$loop help 优化这篇新手指南
+$loop 10 可读性>=9 可测试性>=9
+$loop 5 普通文本对比度>=4.5:1：调整当前落地页的正文配色
+```
+
+这些是对话输入。省略任务时沿用当前明确的工作对象，也接受“可读性至少 9”等自然表达。`help` 只帮助选择标准并生成可复制的调用，不检查或修改项目，不自动执行建议。`$loop help 评分标准` 可展开 [10 个跨行业评价术语](skills/loop/references/criteria.md)；原生指标保留单位，主观评分须有具体依据。
+
+由 AI 按技能说明在当前会话组织迭代，无需配置文件；无可验证进展时会停止并说明剩余问题，运行中可要求查看进度或停止。不自动提交或发布，也不提供宿主强制续跑、后台运行或跨会话自动恢复。
 
 ## 安装
 

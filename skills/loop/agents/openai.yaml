@@ -1,0 +1,7 @@
+interface:
+  display_name: "Loop"
+  short_description: "Declare a goal and iterate toward verified results"
+  default_prompt: "Use $loop help to turn my task and acceptance criteria into a ready-to-use invocation."
+
+policy:
+  allow_implicit_invocation: false
