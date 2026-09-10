@@ -6,7 +6,7 @@ The product map has three categories: `think` → `make` → `share`. Choose fro
 
 | Category | User job | Current skills |
 | --- | --- | --- |
-| `think` | Decide what to do and assess whether results meet the user's goals | `todo`, `human-in-the-loop` |
+| `think` | Decide what to do and assess whether results meet the user's goals | `grill`, `todo`, `human-in-the-loop` |
 | `make` | Create or improve a usable artifact | `loop`, `build`, `context-shrink`, `ui-to-desc`, `to-mmd`, `seo`, `geo` |
 | `share` | Deliver work to a repository or running environment | `repo`, `push`, `pr`, `deploy` |
 
@@ -25,6 +25,7 @@ The earlier `core` mixed generality with workflow outcomes; its code and diagram
 
 | Skill | Category | Domain | Kind | Primary user outcome |
 | --- | --- | --- | --- | --- |
+| `grill` | `think` | `project-planning` | `workflow` | Stress-test one proposed decision and reach an evidence-backed recommendation about value, complexity, alternatives and timing |
 | `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
 | `human-in-the-loop` | `think` | `project-progress` | `workflow` | Let the user assess AI's actual results and evidence limits with little attention, and carry their corrections into subsequent work |
 | `loop` | `make` | `artifact-quality` | `workflow` | Declare a scoped outcome and reconcile observed gaps within a finite iteration budget, with verifiable acceptance and a clear stopping result |
@@ -79,6 +80,8 @@ A skill is convenient when the user can express the desired outcome without orch
 
 Convenience does not mean hiding consequential behavior. It means placing decisions at the right level: the skill handles routine judgment, while the user retains control over irreversible, ambiguous, or externally visible choices.
 
+README leads installation with one copyable request for the coding host to acquire source, activate it through the existing `setup`, and verify the result. Reuse an existing installation only after checking its source; preserve conflicts. Terminal commands and fixed-version options are secondary. Installation and update remain repository infrastructure, without a new public skill or implied authorization to enable automatic updates.
+
 ## Capability boundaries
 
 | Concept | Product role |
@@ -105,6 +108,12 @@ A new skill should normally pass questions 1–3 and 5, with question 4 answered
 ## Scope and composition
 
 Compose capabilities inside the natural user outcome before splitting them into public entries. A selected skill may use commands, scripts, resources, or host capabilities, but it remains responsible for authorization, stopping, verification, and reporting across the complete outcome.
+
+`grill` owns the recurring decision “is this worth doing?” across features, architecture, defaults, automation and collaboration rules. Actual examples include adding a Codex hook, cleaning up terminals at session exit, choosing dev-server reuse or a new port, and recording every discussion. The user chose the short name for its direct, probing tone. `todo` selects from documented work, `build` implements an already-clear behavior, and `human-in-the-loop` records result evidence; none owns challenging a proposed decision. The result is an inspectable argument with sources, assumptions, tradeoffs and a next step, rather than a claim that discussion proves future value. It belongs to `think / project-planning / workflow`.
+
+The interaction borrows one-question-at-a-time probing, recommended answers for decisions, and independent fact lookup from `grilling`, but is self-contained and does not require that package. The questions follow consequential uncertainty rather than an exhaustive interview. Scrutiny is proportional to consequences and reversibility, treats the proposal and alternatives symmetrically, and ends when further questions would not change the recommendation. New working conditions can create real needs, as described in [productivity and needs](docs/productivity-and-needs.md); absent history alone does not invalidate them. Learning and enjoyment can be legitimate benefits. Maintaining the status quo is a successful outcome when supported, missing evidence produces a conditional recommendation, and an unidentified target requires only the smallest clarifying question. Repeated use must establish how useful the questioning is.
+
+`grill` is P0 because the user deliberately chooses scrutiny that overlaps ordinary implementation and planning conversations. Invocation authorizes discussion and relevant local read-only inspection; external research needs explicit task authorization, and implementation is subsequent work. Its complete workflow lives only in `skills/grill/SKILL.md`. Conversation is the default deliverable, with memory organization left entirely to the host. The package adds no discussion-document requirement, shared preference store, cross-project synchronization, global guidance edits or hooks, and makes no persistence guarantee. Source creation does not install or replace the separately available `grilling` skill.
 
 `loop` is an explicitly requested, independent entry point for sustained iteration across artifact types. Its recurring job is to finish a bounded task without requiring the user to prompt every round. The design combines [Ralph Wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) iteration with the desired-state and reconciliation concepts of [Kubernetes controllers](https://kubernetes.io/docs/concepts/architecture/controller/); it does not require another skill or inherit one domain's workflow. The short name reflects the user's recurring invocation. Fixed acceptance, candidate evidence and distinct success, no-op, partial and blocked outcomes make results inspectable and recoverable. Choosing appropriate criteria and the next corrective action involves judgment beyond a command wrapper. It belongs to `make / artifact-quality / workflow`, with P0 selection because it deliberately overlaps ordinary production workflows.
 
@@ -176,7 +185,7 @@ Invocation policy decides how a host may select a skill; it does not determine c
 - P1 allows explicit or description-based selection for focused workflows whose outcome is already authorized by the current request and whose risk is controlled through a bounded scope, stop conditions, and verification.
 - P2 disables a workflow through host configuration when it should not participate in selection.
 
-The Git workflows `repo`, `push`, and `pr`, the deployment workflow `deploy`, and the cross-domain iteration workflow `loop` are P0. `build`, `todo`, `human-in-the-loop`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+The decision-challenging workflow `grill`, the Git workflows `repo`, `push`, and `pr`, the deployment workflow `deploy`, and the cross-domain iteration workflow `loop` are P0. `build`, `todo`, `human-in-the-loop`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
 
 Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
 

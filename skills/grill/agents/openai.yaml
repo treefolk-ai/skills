@@ -1,0 +1,7 @@
+interface:
+  display_name: "Grill"
+  short_description: "Stress-test ideas, assumptions, and complexity costs"
+  default_prompt: "Use $grill to challenge my proposal one question at a time and help me decide whether it is worth doing."
+
+policy:
+  allow_implicit_invocation: false
