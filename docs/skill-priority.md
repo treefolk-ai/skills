@@ -10,7 +10,7 @@ Codex 没有公开的数字型 skill 优先级字段。Treefolk 使用 P0、P1�
 
 P0、P1、P2 不是 Codex 配置字段，也不属于 `treefolk-category`、`treefolk-domain` 或 `treefolk-kind`。这些 `treefolk-*` 值只负责分类，不控制安装或调用。
 
-> **P0 用户须知：** 安装或启用 P0 skill，不代表它会参与基于描述的自动语义匹配。普通自然语言请求不会让模型自动选中它；用户必须输入准确命令。P0 skill 仍可出现在宿主的 skill 列表或命令补全中。当前 Codex adapter 使用 `$grill`、`$repo`、`$push`、`$pr`、`$deploy` 和 `$loop`。当前 `setup` 尚不支持 Claude Code，也不安装 Ralph Wiggum 或 `loop` 的宿主 Stop hook。
+> **P0 用户须知：** 安装或启用 P0 skill，不代表它会参与基于描述的自动语义匹配。普通自然语言请求不会让模型自动选中它；用户必须输入准确命令。P0 skill 仍可出现在宿主的 skill 列表或命令补全中。当前 Codex adapter 使用 `$grill`、`$insights`、`$repo`、`$push`、`$pr`、`$deploy` 和 `$loop`。当前 `setup` 尚不支持 Claude Code，也不安装 Ralph Wiggum 或 `loop` 的宿主 Stop hook。
 
 P0 不禁止组合。一个被用户显式调用的 P0 工作流可以组合多个内部步骤，但它必须为完整结果统一承担授权、安全检查、停止条件、验证与报告。它不能依赖基于描述的自动匹配去发现并串联另一个 P0 工作流。
 
@@ -39,6 +39,7 @@ flowchart TD
 | Skill | 层级 | 调用方式 | 原因 |
 | --- | --- | --- | --- |
 | `grill` | P0 | `$grill` | 主动选择逐题盘问，检验需求、复杂度与取舍；默认只读对话，普通实现不进入盘问，记忆交给宿主，不自动落盘或修改全局规则 |
+| `insights` | P0 | `$insights` | 主动选择跨会话的个人使用回顾；默认 90 天，可筛选期间与项目，并用开关控制官方最新功能查询；只交付私有报告，不应用建议 |
 | `build` | P1 | 显式调用或语义匹配 | 根据明确需求构建功能并完成适用验证；匹配新增或改变代码行为，不匹配仅运行编译命令、需求探索或只读审查；工具偏好不授权安装、联网或迁移 |
 | `repo` | P0 | `$repo` | 会初始化仓库、查询并可能创建托管仓库、创建提交并推送远端 |
 | `push` | P0 | `$push` | 会暂存、提交并推送当前任务改动 |

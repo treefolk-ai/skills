@@ -47,6 +47,7 @@ required_sections=(
 explicit_only_skills=(
   "deploy"
   "grill"
+  "insights"
   "loop"
   "pr"
   "push"
