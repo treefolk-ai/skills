@@ -1,7 +1,7 @@
 interface:
   display_name: "Insights"
-  short_description: "Review AI habits and discover useful features"
-  default_prompt: "Use $insights to review my last 90 days of AI work, check current features, and create a local HTML report."
+  short_description: "Find fresh workflow ideas from real AI usage"
+  default_prompt: "Use $insights to review my last 90 days of AI work, compare past advice, and create a local report with useful new findings and token/cache statistics. Keep latest-feature queries off."
 
 policy:
   allow_implicit_invocation: false

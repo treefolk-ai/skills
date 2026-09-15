@@ -17,7 +17,10 @@ import stat
 import sys
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from storage import create_report_dir, new_file
+from storage import create_report_dir, ensure_report_root, new_file, report_root
+from context import load_context
+from feedback import load_feedback
+from tokens import TokenCounter, add_tokens, empty_totals, summarize
 
 MAX_FILE_BYTES = 32 * 1024 * 1024
 MAX_LINE_BYTES = 1024 * 1024
@@ -135,6 +138,8 @@ def read_session(path, root, start, end, tz, project, coverage):
     canonical_users = False
     seen_calls = set()
     seen_results = set()
+    tokens = TokenCounter()
+    token_time = None
     for line, record in records(path, coverage):
         payload = record.get("payload")
         if not isinstance(payload, dict):
@@ -156,8 +161,20 @@ def read_session(path, root, start, end, tz, project, coverage):
         observed = timestamp(record.get("timestamp"))
         if observed is None:
             coverage["undated_records"] += 1
+            if outer == "event_msg" and kind == "token_count":
+                tokens.previous = None
             continue
         day = observed.astimezone(tz).date()
+        if outer == "event_msg" and kind == "token_count":
+            if token_time is not None and observed < token_time:
+                tokens.previous = None
+                delta = {"coverage": {"snapshots": 1, "out_of_order": 1}}
+            else:
+                delta = tokens.read(payload)
+            token_time = max(observed, token_time) if token_time else observed
+            if start <= day <= end:
+                events.append({"date": day.isoformat(), "line": line, "kind": "tokens", "tokens": delta})
+            continue
         if not start <= day <= end:
             continue
         item = {"date": day.isoformat(), "line": line}
@@ -263,7 +280,7 @@ def collect(root, start, end, tz, project=None, max_files=MAX_FILES):
         for event in session["events"]:
             key = event["date"], label
             if key not in activity:
-                activity[key] = {"date": key[0], "project": label, "sessions": set(), "requests": 0, "tools": 0, "errors": 0, "tool_names": Counter(), "commands": Counter(), "skills": Counter()}
+                activity[key] = {"date": key[0], "project": label, "sessions": set(), "requests": 0, "tools": 0, "errors": 0, "tool_names": Counter(), "commands": Counter(), "skills": Counter(), "tokens": empty_totals()}
             row = activity[key]
             row["sessions"].add(sid)
             if event["kind"] == "request":
@@ -276,7 +293,9 @@ def collect(root, start, end, tz, project=None, max_files=MAX_FILES):
                 row["tool_names"][event["text"]] += 1
                 if event.get("command"):
                     row["commands"][event["command"]] += 1
-            else:
+            elif event["kind"] == "tokens":
+                add_tokens(row["tokens"], event["tokens"], sid)
+            elif event["kind"] == "error":
                 row["errors"] += 1
         candidates = [e for e in session["events"] if e["kind"] == "request"]
         # Evenly spaced request samples retain the start and end without dumping
@@ -289,13 +308,13 @@ def collect(root, start, end, tz, project=None, max_files=MAX_FILES):
             ref = sid + ":L" + str(event["line"])
             refs.append(ref)
             evidence.append({"id": ref, "session": sid, "line": event["line"], "date": event["date"], "project": label, "kind": event["kind"], "text": excerpt(event.get("command") or event["text"])})
-        index.append({"id": sid, "project": label, "source": session["source"], "evidence": refs})
+        index.append({"id": sid, "project": label, "cwd": session["cwd"], "source": session["source"], "evidence": refs})
     rows = sorted(activity.values(), key=lambda row: (row["date"], row["project"]))
     for row in rows:
         row["sessions"] = sorted(row["sessions"])
     incomplete = any(coverage[key] for key in GAPS)
     status = ("PARTIAL" if incomplete else "COLLECTED") if sessions else ("BLOCKED" if incomplete else "NO-DATA")
-    return {"schema_version": 1, "host": "codex", "status": status, "generated_at": datetime.now(timezone.utc).isoformat(), "period": {"since": start.isoformat(), "until": end.isoformat(), "timezone": str(tz)}, "scope": "所选项目" if project else "本机全部项目", "coverage": dict(coverage), "sessions": index, "activity": rows, "evidence": evidence}
+    return {"schema_version": 1, "host": "codex", "status": status, "generated_at": datetime.now(timezone.utc).isoformat(), "period": {"since": start.isoformat(), "until": end.isoformat(), "timezone": str(tz)}, "scope": "所选项目" if project else "本机全部项目", "coverage": dict(coverage), "sessions": index, "activity": rows, "evidence": evidence, "token_usage": dict(summarize(rows), scope="main_sessions")}
 
 
 def main():
@@ -321,8 +340,16 @@ def main():
         project = str(Path(args.project).expanduser().resolve()) if args.project else None
         result = collect(args.source, start, end, tz, project)
         output = Path(args.output).expanduser().absolute() if args.output else create_report_dir() / "usage.json"
+        result.update(load_context(report_root(), output.parent, project, result["sessions"]))
+        if result["sessions"]:
+            result["suggestion_selection"] = "random-v1"
+            if result["feedback"]["status"] == "missing":
+                result["feedback"] = load_feedback(ensure_report_root(), create=True)
+            if result["feedback"]["status"] != "ready":
+                result["status"] = "PARTIAL"
+                result["coverage"]["feedback_unavailable"] = 1
         new_file(output, json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-        print(json.dumps({"status": result["status"], "period": result["period"], "sessions": len(result["sessions"]), "requests": sum(row["requests"] for row in result["activity"]), "evidence_samples": len(result["evidence"]), "coverage": result["coverage"], "output": str(output), "report_dir": str(output.parent)}, ensure_ascii=False))
+        print(json.dumps({"status": result["status"], "period": result["period"], "sessions": len(result["sessions"]), "requests": sum(row["requests"] for row in result["activity"]), "evidence_samples": len(result["evidence"]), "coverage": result["coverage"], "token_usage": result["token_usage"], "history_items": len(result["history"]["items"]), "feedback_status": result["feedback"]["status"], "known_advice": sum(i["known"] for i in result["feedback"]["entries"]), "output": str(output), "report_dir": str(output.parent)}, ensure_ascii=False))
     except (OSError, ValueError, OverflowError, ZoneInfoNotFoundError) as error:
         parser.exit(2, "collect: " + str(error) + "\n")
 

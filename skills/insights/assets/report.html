@@ -130,10 +130,10 @@
   .new-run p { color: var(--muted); font-size: 12px; margin-top: 4px; }
   .switch-row { display: flex; align-items: center; gap: 10px; }
   .switch-row label { font-size: 12px; color: #475467; }
-  input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 34px; height: 20px; margin: 0; background: #c9d0da; border-radius: 12px; position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s; }
-  input[type="checkbox"]::after { content: ""; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; box-shadow: 0 1px 2px #0002; transition: transform .15s; }
-  input[type="checkbox"]:checked { background: var(--blue); }
-  input[type="checkbox"]:checked::after { transform: translateX(14px); }
+  .switch-row input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 34px; height: 20px; margin: 0; background: #c9d0da; border-radius: 12px; position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s; }
+  .switch-row input[type="checkbox"]::after { content: ""; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; box-shadow: 0 1px 2px #0002; transition: transform .15s; }
+  .switch-row input[type="checkbox"]:checked { background: var(--blue); }
+  .switch-row input[type="checkbox"]:checked::after { transform: translateX(14px); }
   .command-row { display: flex; gap: 12px; margin-top: 18px; align-items: stretch; }
   .command-row .code { flex: 1; min-width: 0; background: #fff; }
   .copy { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: var(--blue); color: #fff; border-radius: 7px; padding: 11px 16px; font-size: 12px; white-space: nowrap; }
@@ -151,6 +151,55 @@
   .coverage { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 20px; padding-top: 12px; font-size: 11px; }
   footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding: 20px 0 30px; color: #7c8798; font-size: 11px; }
   .hidden { display: none !important; }
+  .section-tools { display: flex; align-items: center; gap: 10px; }
+  .manage-known, .feedback-secondary, .known-undo { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--muted); }
+  .manage-known { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+  .manage-known:hover, .manage-known[aria-pressed="true"] { border-color: #b8c5ef; color: var(--blue-ink); }
+  .known-choice { display: none; align-items: center; gap: 7px; width: fit-content; min-height: 36px; margin-top: 10px; color: var(--muted); font-size: 12px; cursor: pointer; }
+  .known-managing .known-choice { display: flex; }
+  .known-choice input { width: 15px; height: 15px; margin: 0; accent-color: var(--blue); cursor: pointer; }
+  .known-result { display: inline-flex; align-items: center; gap: 2px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+  .known-result[hidden] { display: none; }
+  .known-undo { border: 0; padding: 3px 4px; color: var(--blue-ink); font-size: 11px; }
+  .feedback-manager { position: fixed; z-index: 20; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(760px, calc(100% - 36px)); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 16px; border: 1px solid #dce3f5; border-radius: 10px; background: #fff; box-shadow: 0 12px 36px #17254a24; }
+  .feedback-manager[hidden] { display: none; }
+  .feedback-manager:focus { outline: none; }
+  .feedback-manager-copy { min-width: 0; }
+  .feedback-manager-copy strong { display: block; font-size: 13px; }
+  #feedback-status { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+  .feedback-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .feedback-help { position: relative; }
+  .feedback-help > summary { min-height: 36px; padding: 4px 8px; }
+  .feedback-help-body { position: absolute; right: 0; bottom: calc(100% + 12px); width: min(420px, calc(100vw - 36px)); padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 12px 30px #17254a1c; }
+  .feedback-help-body p { margin-bottom: 8px; font-size: 11px; color: var(--muted); }
+  .feedback-help-body code { display: block; margin: 8px 0; overflow-wrap: anywhere; font-size: 10px; }
+  .feedback-secondary, #feedback-save { min-height: 36px; padding: 6px 11px; font-size: 12px; white-space: nowrap; }
+  #feedback-save { border: 0; border-radius: 6px; background: var(--blue); color: #fff; }
+  #feedback-save:hover { background: #294ac1; }
+  .feedback-toast { position: fixed; z-index: 21; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: calc(100% - 36px); padding: 10px 14px; border: 1px solid #dce3f5; border-radius: 8px; background: #fff; box-shadow: 0 10px 28px #17254a20; color: var(--blue-ink); font-size: 12px; }
+  .feedback-toast[hidden], .known-managing .feedback-toast { display: none; }
+  .feedback-toast[data-state="error"] { border-color: #ead7b9; color: var(--amber); }
+  .known-managing { padding-bottom: 88px; }
+  .history-panel { margin: 24px 0 20px; border: 1px solid var(--line); border-radius: 8px; padding: 15px 18px; }
+  .history-item { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .history-item:last-child { border: 0; padding-bottom: 0; }
+  .history-item h3 { font-size: 14px; margin-bottom: 6px; }
+  .history-item p { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .history-item small { display: block; color: var(--muted); font-size: 11px; margin-top: 8px; }
+  .quick-reference { margin-top: 20px; }
+  .quick-reference h3 { margin-top: 20px; font-size: 14px; }
+  .quick-reference table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+  .quick-reference th, .quick-reference td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 10px 8px 10px 0; overflow-wrap: anywhere; }
+  .quick-reference th:first-child { width: 28%; }
+  .quick-reference th:nth-child(2) { width: 29%; }
+  .quick-reference td small { display: block; color: var(--muted); margin-top: 5px; }
+  .token-box { margin-top: 18px; padding: 0 20px 20px; background: #f8faff; border: 1px solid #e2e9fb; border-radius: 10px; }
+  .token-box .stat strong { font-size: 29px; }
+  .token-box .stat small { display: block; color: var(--muted); font-size: 11px; margin-top: 6px; }
+  .token-note, .token-method { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .token-method p { margin-top: 8px; }
+  #token-metric { width: auto; min-width: 125px; }
+  .feature-benefit { color: var(--blue-ink) !important; margin-top: 8px; }
   @media (max-width: 760px) {
     .wrap { width: calc(100% - 40px); }
     .topbar { height: 68px; }
@@ -169,6 +218,9 @@
     .new-run { padding: 20px; }
     .command-row { flex-direction: column; }
     .copy { align-self: flex-end; min-height: 40px; }
+    .feedback-manager { align-items: stretch; flex-direction: column; gap: 10px; }
+    .feedback-actions { justify-content: flex-end; flex-wrap: wrap; }
+    .feedback-help { margin-right: auto; }
   }
   @media (max-width: 480px) {
     .wrap { width: calc(100% - 36px); }
@@ -200,6 +252,8 @@
     .run-heading { gap: 16px; }
     .switch-row { width: 100%; justify-content: space-between; }
     .coverage { grid-template-columns: 1fr; }
+    .known-choice, .manage-known, .feedback-secondary, #feedback-save { min-height: 44px; }
+    .known-managing { padding-bottom: 168px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -224,18 +278,20 @@
       <div class="hero-meta"><span id="period"></span><span id="scope"></span></div>
       <p id="demo" class="demo-note hidden"><mark>合成示例</mark><span>仅展示报告效果，不代表你的真实使用。</span></p>
       <p id="coverage-notice" class="demo-note hidden"><mark>采集不完整</mark><span>结论仅适用于已读取的记录，详情见页尾的数据来源。</span></p>
+      <details id="history-panel" class="history-panel"><summary id="history-heading">曾经给过的意见</summary><div id="history-list"></div><p id="history-note" class="source"></p></details>
       <div class="hero-summary"><span class="summary-label">本次结论</span><p id="summary"></p></div>
     </div>
 
     <section id="ideas" aria-labelledby="ideas-title">
-      <div class="section-head"><h2 id="ideas-title">下一次，可以这样做</h2><span id="findings-count" class="section-note"></span></div>
+      <div class="section-head"><h2 id="ideas-title">下一次，可以这样做</h2><div class="section-tools"><span id="findings-count" class="section-note"></span><button type="button" class="manage-known" data-feedback-manage aria-pressed="false" hidden>整理建议</button></div></div>
       <div id="findings" class="findings"></div>
     </section>
 
     <section id="features" aria-labelledby="features-title">
-      <div class="section-head"><h2 id="features-title">值得了解的功能</h2><span id="latest-status" class="status"></span></div>
+      <div class="section-head"><h2 id="features-title">本次值得尝试的新用法</h2><div class="section-tools"><span id="latest-status" class="status"></span><button type="button" class="manage-known" data-feedback-manage aria-pressed="false" hidden>整理建议</button></div></div>
       <div id="feature-list" class="feature-list"></div>
       <details class="query-details"><summary>查询说明与来源</summary><p id="latest-note"></p><div id="latest-sources" class="sources"></div></details>
+      <details class="quick-reference" id="quick-reference"><summary>快捷键与命令速查 · App / CLI</summary><p class="source">以下是参考资料，不计作本次新建议。绑定可能随版本、自定义配置和焦点变化；资料日期不代表本机验证日期。</p><div id="quick-tables"></div></details>
     </section>
 
     <section id="usage" aria-labelledby="usage-title">
@@ -251,6 +307,20 @@
         <div class="project-filter"><label class="sr-only" for="project">项目</label><select id="project"><option value="">全部项目</option></select></div>
       </div>
       <p id="filter-note" class="filter-note" aria-live="polite"></p>
+      <div class="token-box">
+        <div class="stats">
+          <div class="stat"><strong id="token-used">—</strong><span>已知 Used</span><small>未缓存输入 + 输出</small></div>
+          <div class="stat"><strong id="token-input">—</strong><span>Input</span><small id="token-cached">含缓存输入</small></div>
+          <div class="stat"><strong id="token-output">—</strong><span>Output</span><small>已包含推理输出</small></div>
+          <div class="stat"><strong id="token-cache">—</strong><span>缓存命中率</span><small>按已知输入 token 加权</small></div>
+        </div>
+        <p id="token-note" class="token-note" aria-live="polite"></p>
+        <details class="token-method"><summary>计算口径与缺口</summary><p>Used = Input − Cached input + Output；缓存命中率 = 缓存输入总数 ÷ 对应的已知输入总数。Input 包含缓存；Output 包含推理，不能再加一次。缺失缓存字段不会当成 0。</p><p>只统计采集到的主会话，排除子代理。按快照时间归属日期，累计快照取差值；重复快照不重复计入，未知基线和计数回退会留下缺口。这不是完整账单或效率评分。</p><p id="token-gaps"></p></details>
+        <div class="chart-title"><label for="token-metric">Token 趋势</label><select id="token-metric"><option value="used_tokens">Used</option><option value="input_tokens">Input</option><option value="output_tokens">Output</option><option value="cache_hit_rate">缓存命中率</option></select></div>
+        <div id="token-chart" class="chart" role="img" aria-label="Token 趋势"></div>
+        <div class="chart-axis"><span id="token-axis-start"></span><span id="token-axis-end"></span></div>
+        <p class="chart-desc">无可计算记录显示为缺口；长期间按相邻日期合并，缓存率按合并后的 token 数计算。</p>
+      </div>
       <div class="stats">
         <div class="stat"><strong id="requests-count">0</strong><span>用户请求</span></div>
         <div class="stat"><strong id="sessions-count">0</strong><span>有记录的会话</span></div>
@@ -273,7 +343,7 @@
     <section id="new-run" class="new-run" aria-labelledby="run-title">
       <div class="run-heading">
         <div><h2 id="run-title">再生成一份回顾</h2><p>使用上面选择的日期和项目。</p></div>
-        <div class="switch-row"><label for="latest-toggle">读取最新功能</label><input id="latest-toggle" type="checkbox" role="switch" checked></div>
+        <div class="switch-row"><label for="latest-toggle">读取最新功能</label><input id="latest-toggle" type="checkbox" role="switch"></div>
       </div>
       <div class="command-row"><pre id="next-command" class="code"></pre><button id="copy-command" class="copy" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M10 2H4a2 2 0 0 0-2 2v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>复制调用</span></button></div>
       <p class="run-note"><strong>复制后粘贴到 Codex</strong>，才会开始新分析；本页的建议不会自动更新。</p>
@@ -289,19 +359,35 @@
         <details><summary>查看采集覆盖情况</summary><div id="coverage" class="coverage"></div></details>
       </div>
     </details>
+    <aside id="feedback-manager" class="feedback-manager" tabindex="-1" hidden>
+      <div class="feedback-manager-copy"><strong id="feedback-selection">选择要调整的建议</strong><span id="feedback-status" role="status" aria-live="polite"></span></div>
+      <div class="feedback-actions">
+        <details class="feedback-help"><summary>记录文件</summary><div class="feedback-help-body">
+          <p>第一次保存时请选择下面位置的原文件并允许写入。新报告或权限失效时可能需要重新选择。</p>
+          <code id="feedback-path"></code>
+          <p>macOS 文件选择窗口可按 ⌘⇧G 粘贴路径；也可以直接编辑文件里的 Markdown checkbox。</p>
+          <button id="feedback-connect" class="feedback-secondary" type="button">重新选择记录文件</button>
+        </div></details>
+        <button id="feedback-cancel" class="feedback-secondary" type="button">完成</button>
+        <button id="feedback-save" type="button" disabled>保存更改</button>
+      </div>
+    </aside>
+    <div id="feedback-toast" class="feedback-toast" role="status" aria-live="polite" hidden></div>
   </main>
   <footer><span>Treefolk · Insights</span><span>本地报告</span></footer>
 </div>
 <script id="report-data" type="application/json">__INSIGHTS_DATA__</script>
 <script>
   'use strict';
-  const {usage, analysis} = JSON.parse(document.getElementById('report-data').textContent);
+  __INSIGHTS_FEEDBACK__
+  const {usage, analysis, history=[], history_coverage={}, knowledge=[], feedback={}} = JSON.parse(document.getElementById('report-data').textContent);
+  const feedbackUI = InsightsFeedback.mount(feedback);
   const $ = id => document.getElementById(id);
   const node = (tag, text, cls) => {const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);if(cls)el.className=cls;return el;};
   const addText = (parent, tag, text, cls) => {const el=node(tag,text,cls);parent.append(el);return el;};
   const evidence = new Map(usage.evidence.map(item=>[item.id,item]));
   const confidence = {high:'较高把握',medium:'仍需验证',low:'初步线索'};
-  const availability = {local:'本机已核实',official:'官方已确认 · 本机待核实',unverified:'待核实'};
+  const availability = {local:'本机已核实',official:'官方已确认 · 本机待核实',reference:'本地参考资料 · 本机未核实',unverified:'待核实'};
   const latestLabels = {checked:'最新功能已查询',partial:'最新功能仅部分核实',unavailable:'最新功能尚未核实',off:'最新功能查询已关闭'};
   function sourceLink(parent,item){if(item.url){const a=addText(parent,'a',item.title);a.href=item.url;a.target='_blank';a.rel='noreferrer noopener';}else addText(parent,'span',item.title);}
   function showEvidence(parent,refs){for(const ref of refs){const item=evidence.get(ref);const block=addText(parent,'div',undefined,'evidence');addText(block,'small',item.date+' · '+item.project+' · '+item.id);addText(block,'p',item.text);}}
@@ -310,6 +396,17 @@
   $('scope').textContent='Codex · '+usage.scope;
   if(usage.demo){$('demo').classList.remove('hidden');document.title='Insights 合成示例 · Treefolk';}
   if(usage.status==='PARTIAL')$('coverage-notice').classList.remove('hidden');
+  $('history-heading').textContent='曾经给过的意见（'+history.length+' 项）';
+  for(const item of history){
+    const article=addText($('history-list'),'article',undefined,'history-item');
+    addText(article,'h3',item.title);addText(article,'p',item.action);
+    addText(article,'small','首次 '+item.first_seen+' · 最近 '+item.last_seen+' · 给过建议不代表已经采用');
+    const links=addText(article,'div',undefined,'sources');const seen=new Set();
+    for(const src of item.sources){const label=(src.origin==='user_confirmation'?'用户确认':'原报告')+' · '+src.date;const key=label+src.url;if(seen.has(key))continue;seen.add(key);sourceLink(links,{title:label,url:src.url});if(src.note)addText(article,'small',src.note);}
+    feedbackUI.add(article,item.feedback);
+  }
+  const historyGaps=Object.entries(history_coverage).filter(([key,n])=>n&&!['scanned_reports','imported_reports','demo_reports'].includes(key));
+  $('history-note').textContent=(history.length?'历史覆盖已读取的旧报告，不随下方日期筛选变化。':'尚无可导入的历史建议。')+(historyGaps.length?' 有 '+historyGaps.reduce((n,[,v])=>n+v,0)+' 项报告或建议因不完整、范围或读取限额未纳入。':'');
   $('findings-count').textContent=analysis.findings?.length ? analysis.findings.length+' 条有依据的建议' : '';
   (analysis.findings||[]).forEach((finding,i)=>{
     const card=addText($('findings'),'article',undefined,'finding');
@@ -330,6 +427,8 @@
       line.append(document.createTextNode(value));
     }
     showEvidence(details,finding.refs);
+    if(finding.new_detail)addText(body,'p','本次新增：'+finding.new_detail,'feature-benefit');
+    feedbackUI.add(body,finding.feedback);
   });
   if(!analysis.findings?.length)addText($('findings'),'p','目前没有足够依据建议改变。已有的使用概览仍可帮助你回顾。','empty');
   $('latest-status').textContent=latestLabels[analysis.latest.status];
@@ -344,20 +443,50 @@
     const status=addText(title,'span',availability[feature.availability],'status');
     status.dataset.state=feature.availability;
     addText(intro,'p',feature.why);
+    if(feature.when)addText(intro,'p','触发条件：'+feature.when);
+    if(feature.benefit)addText(intro,'p','能帮你省掉：'+feature.benefit,'feature-benefit');
+    if(feature.new_detail)addText(intro,'p','与之前不同：'+feature.new_detail);
     const detail=addText(article,'div');
     addText(detail,'pre',feature.command,'code');
     const src=addText(detail,'div',undefined,'source');
     addText(src,'span',feature.version+' · '+feature.checked_at);
     sourceLink(src,feature.source);
     const refs=addText(detail,'details');addText(refs,'summary','与你有关的会话依据');showEvidence(refs,feature.refs);
+    feedbackUI.add(intro,feature.feedback);
   }
-  if(!analysis.features?.length)addText($('feature-list'),'p','本次没有找到证据充分、值得推荐的功能。','empty');
+  if(!analysis.features?.length)addText($('feature-list'),'p','本次没有足够有价值的新发现；无需重复已有建议。','empty');
+  const platformNames={macos:'macOS',windows:'Windows',linux:'Linux',all:'各平台'};
+  for(const [host,label] of [['app','App'],['cli','CLI']]){
+    const rows=knowledge.flatMap(doc=>(doc.quick_reference||[]).filter(row=>row.host===host).map(row=>({...row,doc})));
+    if(!rows.length)continue;addText($('quick-tables'),'h3',label);
+    const table=addText($('quick-tables'),'table');const head=addText(table,'thead');const tr=addText(head,'tr');for(const text of ['操作','作用','触发条件与来源']){const th=addText(tr,'th',text);th.scope='col';}
+    const body=addText(table,'tbody');for(const row of rows){const line=addText(body,'tr');addText(line,'td',row.keys);addText(line,'td',row.action);const detail=addText(line,'td',platformNames[row.platform]+' · '+row.when);const src=addText(detail,'small');sourceLink(src,{title:'资料 '+row.doc.source_date,url:row.doc.source.url});}
+  }
+  if(!knowledge.length)addText($('quick-tables'),'p','这份旧报告没有保存速查资料。','empty');
   const projects=[...new Set(usage.activity.map(item=>item.project))].sort();for(const project of projects){const option=addText($('project'),'option',project);option.value=project;}
   const since=$('since'),until=$('until');for(const el of [since,until]){el.min=usage.period.since;el.max=usage.period.until;}
   since.value=usage.period.since;until.value=usage.period.until;
   $('latest-toggle').checked=analysis.latest.enabled;
   function nextCommand(){const project=$('project').value;const scope=project?'，项目 '+project:(usage.scope==='所选项目'?'，沿用本次项目范围':'');$('next-command').textContent='$insights '+since.value+' 到 '+until.value+scope+'，最新功能'+($('latest-toggle').checked?'开':'关');}
   function distribution(id,counts,empty){const target=$(id);target.replaceChildren();const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,5);if(!sorted.length){addText(target,'p',empty,'dist-empty');return;}const max=Math.max(1,sorted[0][1]);for(const [name,count]of sorted){const row=addText(target,'div',undefined,'dist-row');const label=addText(row,'div',undefined,'dist-label');addText(label,'span',name);addText(label,'span',count);const track=addText(row,'div',undefined,'dist-track');const fill=addText(track,'div',undefined,'dist-fill');fill.style.width=(count/max*100)+'%';}}
+  const tokenFields=['input_tokens','output_tokens','cached_input_tokens','cache_eligible_input_tokens','used_tokens'];
+  function tokenTotals(rows){const total=Object.fromEntries(tokenFields.map(k=>[k,null]));total.coverage={};total.sessions=new Set();for(const row of rows){const t=row.tokens;if(!t)continue;for(const k of tokenFields)if(t[k]!==null&&t[k]!==undefined)total[k]=(total[k]??0)+t[k];for(const [k,n]of Object.entries(t.coverage||{}))total.coverage[k]=(total.coverage[k]||0)+n;for(const sid of t.sessions||[])total.sessions.add(sid);}total.cache_hit_rate=total.cache_eligible_input_tokens?total.cached_input_tokens/total.cache_eligible_input_tokens:null;return total;}
+  function formatToken(n){if(n===null||n===undefined)return '—';return n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toLocaleString();}
+  function updateTokens(rows,allDays,step,valid){
+    const total=tokenTotals(rows),sessions=new Set(rows.flatMap(row=>row.sessions)),cov=total.coverage;
+    for(const [id,key]of [['token-used','used_tokens'],['token-input','input_tokens'],['token-output','output_tokens']]){const el=$(id);el.textContent=formatToken(total[key]);el.title=total[key]===null?'没有可计算记录':total[key].toLocaleString()+' tokens';}
+    $('token-cached').textContent='其中已知缓存 '+formatToken(total.cached_input_tokens);
+    $('token-cache').textContent=total.cache_hit_rate===null?'—':(100*total.cache_hit_rate).toFixed(1)+'%';
+    $('token-cache').title=total.cache_hit_rate===null?'没有可用分母':total.cached_input_tokens.toLocaleString()+' / '+total.cache_eligible_input_tokens.toLocaleString();
+    $('token-note').textContent=total.input_tokens===null?'所选记录没有可计算的 token 用量；缺失数据未当成 0。':'主会话覆盖 '+total.sessions.size+' / '+sessions.size+'；可计算区间 '+(cov.measured||0)+' 个，其中缓存已知 '+(cov.cache_known||0)+' 个。'+((cov.cache_known||0)<(cov.measured||0)?'Used 和缓存率仅反映缓存已知的部分。':'');
+    const gapNames={unknown_baseline:'未知基线',counter_resets:'计数回退',missing_usage:'缺失用量快照',invalid_usage:'无效用量',out_of_order:'时间乱序',duplicates:'已忽略的重复快照'};
+    $('token-gaps').textContent=Object.entries(gapNames).filter(([k])=>cov[k]).map(([k,label])=>label+' '+cov[k]).join('；')||'所选记录未记录到快照异常；未保存的调用仍不可见。';
+    const metric=$('token-metric').value,chart=$('token-chart');chart.replaceChildren();const byDay=new Map();for(const row of rows){if(!byDay.has(row.date))byDay.set(row.date,[]);byDay.get(row.date).push(row);}
+    const buckets=[];for(let i=0;i<allDays.length;i+=step){const days=allDays.slice(i,i+step);const t=tokenTotals(days.flatMap(d=>byDay.get(d)||[]));buckets.push({start:days[0],end:days.at(-1),value:t[metric]});}
+    const peak=metric==='cache_hit_rate'?1:Math.max(1,...buckets.map(b=>b.value??0));
+    for(const b of buckets){const bar=addText(chart,'div',undefined,'bar');bar.style.height=b.value===null?'0px':Math.max(1,b.value/peak*94)+'px';bar.title=b.start+(b.end!==b.start?' — '+b.end:'')+'：'+(b.value===null?'无可计算记录':metric==='cache_hit_rate'?(b.value*100).toFixed(1)+'%':b.value.toLocaleString()+' tokens');}
+    chart.setAttribute('aria-label',$('token-metric').selectedOptions[0].text+' 趋势，主会话有用量记录 '+total.sessions.size+' 个');$('token-axis-start').textContent=valid?since.value:'';$('token-axis-end').textContent=valid?until.value:'';
+  }
   function update(){
     const valid=since.value&&until.value&&since.value<=until.value&&since.value>=usage.period.since&&until.value<=usage.period.until;
     $('copy-command').disabled=!valid;
@@ -374,6 +503,7 @@
     if(valid){for(let d=new Date(since.value+'T00:00:00Z');d.toISOString().slice(0,10)<=until.value;d.setUTCDate(d.getUTCDate()+1))allDays.push(d.toISOString().slice(0,10));}
     // At most 180 visible bars, grouping adjacent dates for long custom ranges.
     const step=Math.max(1,Math.ceil(allDays.length/180)),buckets=[];for(let i=0;i<allDays.length;i+=step){const days=allDays.slice(i,i+step);buckets.push({start:days[0],end:days.at(-1),value:days.reduce((n,d)=>n+(daily[d]||0),0)});}
+    updateTokens(rows,allDays,step,valid);
     const peak=Math.max(1,...buckets.map(b=>b.value));for(const b of buckets){const bar=addText(chart,'div',undefined,'bar');bar.style.height=(b.value?Math.max(3,b.value/peak*94):1)+'px';bar.style.opacity=b.value?'1':'.24';bar.title=b.start+(b.end!==b.start?' — '+b.end:'')+'：'+b.value+' 次请求';}
     $('axis-start').textContent=valid?since.value:'';$('axis-end').textContent=valid?until.value:'';
     const active=Object.values(daily).filter(n=>n>0).length;$('chart-summary').textContent=active+' 个有请求记录的日期 · '+(step>1?'每 '+step+' 天合并一列':'每日一列');
@@ -383,7 +513,7 @@
   }
   for(const button of document.querySelectorAll('[data-days]'))button.addEventListener('click',()=>{for(const b of document.querySelectorAll('[data-days]'))b.setAttribute('aria-pressed',String(b===button));until.value=usage.period.until;let start=usage.period.since;if(button.dataset.days!=='all'){const d=new Date(until.value+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-Number(button.dataset.days)+1);start=d.toISOString().slice(0,10);}since.value=start<usage.period.since?usage.period.since:start;update();});
   for(const element of [since,until])element.addEventListener('change',()=>{for(const b of document.querySelectorAll('[data-days]'))b.setAttribute('aria-pressed','false');update();});
-  $('project').addEventListener('change',update);$('latest-toggle').addEventListener('change',nextCommand);
+  $('project').addEventListener('change',update);$('token-metric').addEventListener('change',update);$('latest-toggle').addEventListener('change',nextCommand);
   $('copy-command').addEventListener('click',async()=>{
     const text=$('next-command').textContent;let copied=false;
     try{await navigator.clipboard.writeText(text);copied=true;}catch{
