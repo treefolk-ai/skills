@@ -6,9 +6,9 @@
 
 默认根目录是 `${TREEFOLK_HOME:-~/.treefolk}/insights/`，独立于工作目录、技能源码和 Codex 会话根目录。`storage.py` 创建 `YYYY-MM-DD_HHMMSS-<唯一后缀>/`，新建目录权限为 `0700`，报告数据文件为 `0600`；不覆盖已有内容或更改已有目录权限。父路径别名（如 macOS 的 `/var`）解析为实际路径；Treefolk 根目录与其 `insights/` 目录本身若为符号链接则报错。
 
-`collect.py` 省略 `--output` 时创建本次目录，并在输出 JSON 中给出 `output` 和 `report_dir`。将 `analysis.json` 写在同目录；`render.py` 省略 `--output` 时生成同目录的 `report.html`。`demo.py` 的默认示例也采用同一根目录；维护测试用显式输出路径或隔离的 `TREEFOLK_HOME`，不向用户真实目录写入测试数据。
+`collect.py` 省略 `--output` 时创建本次目录，并在输出 JSON 中给出 `output` 和 `report_dir`。将 `analysis.json` 写在同目录；`render.py` 省略 `--output` 时生成同目录的 `report.html`。
 
-每次报告的中间数据和验证产物都留在自己的文件夹里，交付时给出网页与文件夹入口；整夹移除即可清理一份报告。当前没有自动清理或后台索引，不更改技能卸载逻辑。
+每次报告的中间数据和网页都留在自己的文件夹里，交付时给出网页与文件夹入口；整夹移除即可清理一份报告。当前没有自动清理或后台索引，不更改技能卸载逻辑。
 
 ## usage.json
 
@@ -34,7 +34,7 @@
       "observation": "记录里具体看到了什么",
       "interpretation": "可能原因，保留其他解释",
       "action": "下一次的一个具体做法",
-      "check": "下次如何观察是否有帮助",
+      "check": "用户下次如何观察是否有帮助；本次不执行验证",
       "confidence": "medium",
       "refs": ["来自 usage.json 的真实证据 ID"]
     }
@@ -44,10 +44,10 @@
       "title": "与实际需要相关的功能",
       "why": "为什么值得这个用户尝试",
       "command": "已核实的命令，或明确标为待核实的用法",
-      "availability": "local",
-      "version": "本机实际版本，或本机支持情况未知",
+      "availability": "unverified",
+      "version": "本机支持情况未知",
       "checked_at": "2026-09-15",
-      "source": {"title": "实际执行的帮助命令或读取的官方页面", "url": null},
+      "source": {"title": "已有材料的来源；用法待核实", "url": null},
       "refs": ["来自 usage.json 的真实证据 ID"]
     }
   ],
@@ -56,17 +56,17 @@
     "status": "off",
     "checked_at": null,
     "sources": [],
-    "note": "本次关闭最新功能查询；推荐只依据本机可验证能力。"
+    "note": "本次关闭最新功能查询；推荐只依据已有材料。"
   },
-  "limitations": ["影响本次判断的覆盖、抽样、版本或验证限制"]
+  "limitations": ["影响本次判断的已知覆盖、抽样或来源限制"]
 }
 ```
 
 - `confidence`：`high` / `medium` / `low`，为模型判断的置信度，不是个人评分。`findings` 按建议优先级排序，通常不超过 3 项；保留有益做法也可作为行动。
-- `availability`：`local` 表示本机帮助/能力已确认；`official` 表示官方文档确认但本机未确认；`unverified` 表示用法仍待核实。不能将“官方有这个功能”标成本机可用。
+- `availability`：`local` 仅用于当前上下文已有本机确认依据的能力；`official` 表示已读官方文档支持但本机未确认；`unverified` 表示用法仍待核实。日常调用不额外探测本机能力。
+- `features[].checked_at` 填来源所对应的资料日期；没有核实来源的建议用本次整理日期，并在 `source.title` 中明确待核实。这个字段不表示执行过功能测试。
 - `latest.status`：`checked` 为已完成相关官方查询；`partial` 为只完成部分；`unavailable` 为开启但无法查询；`off` 为主动关闭。前两种必须填写查询日期和实际读取的官方 URL。`enabled` 与 `off` 须一致；默认开启并不预设成功。
 - 官方链接限 OpenAI 官方域名或 `github.com/openai/codex` 下的 HTTPS 页面。禁止将私人记录、查询词或凭据放进链接。没有远程 URL 的本机帮助来源保留 `title`，不伪造网页链接。
 - `reviewed_sessions` 只记录实际深入阅读的会话；看到统计或短摘录不算全文审核。它决定网页展示的阅读样本量，不改动采集统计。
-- 示例数据由 `scripts/demo.py` 在独立目录生成，并强制标记为合成示例；不能当成用户的真实分析。
 
-`render.py` 检查证据引用、日期范围、状态一致性、计数类型和来源 URL，拒绝覆盖输出文件。结构检查不能证明模型推断、官方查询或阅读声明真实，仍须由执行代理核实。
+`render.py` 在生成时自动校验证据引用、日期范围、状态一致性、计数类型和来源 URL，并拒绝覆盖输出文件。这些内置保护随生成执行，无需额外检查命令；它们不证明模型推断、官方查询或阅读声明真实。按实际依据填写字段，生成后直接交付。
