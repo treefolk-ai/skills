@@ -4,24 +4,16 @@
 
 # Treefolk Skills
 
-Treefolk AI 的个人 AI 工作流库，把真实使用中反复出现的需求，整理成少数清楚、可直接调用的技能。每个入口围绕一个完整的用户目标，帮助人减少重复解释、作出取舍，并看清 AI 实际交付了什么。
+Treefolk AI 的个人 AI 工作流库，把反复出现的需求整理成可直接调用的技能。
 
-工作流按用户希望得到的结果组织为 **`think` → `make` → `share`**：
-
-- **think · 想清楚：** 判断什么值得做、下一步做什么，以及已有结果是否符合目标。
-- **make · 做出来：** 把明确的意图变成可使用、可验证的代码、内容、设计说明或图表。
-- **share · 交付出去：** 把成果送到目标仓库或运行环境，并核对实际交付状态。
-
-分类取决于最终目标。同样是写文档，帮助人判断结果的证据记录属于 `think`，产出组件设计说明属于 `make`。这些阶段可以往返，每个技能都能直接调用。
-
-工作流库随着使用成长：当生产力提高、项目增多，新的协调和判断需求会逐渐浮现。先看清具体摩擦，再决定它值得一个独立入口，还是由已有工作流承担。
+`think` 想清楚 · `make` 做出来 · `share` 交付出去。按目标选择，自由组合。
 
 ## 技能
 
-| 分类 | 技能 | 希望得到的结果 |
+| 分类 | 技能 | 结果与预览 |
 | --- | --- | --- |
 | `think` | [`$grill`](skills/grill/SKILL.md) | 逐题盘问想法，检验需求、复杂度和替代方案，形成有依据的取舍 |
-| `think` | [`$insights`](skills/insights/SKILL.md) | 回顾 AI 使用方式，给出有依据的改进与功能建议，生成可筛选的本地网页 |
+| `think` | [`$insights`](skills/insights/SKILL.md) | 回顾 AI 使用方式，生成含行动建议与用量统计的本地报告。<br><a href="docs/assets/insights/overview.png"><img src="docs/assets/insights/overview.png" width="320" alt="Insights 报告概览，点击查看原图"></a><details><summary>更多截图：行动建议 · 使用统计</summary><a href="docs/assets/insights/suggestions.png"><img src="docs/assets/insights/suggestions.png" width="280" alt="Insights 行动建议与可展开的会话依据"></a> <a href="docs/assets/insights/usage.png"><img src="docs/assets/insights/usage.png" width="280" alt="Insights 日期与项目筛选、token 用量及缓存统计"></a></details> |
 | `think` | [`$todo`](skills/todo/SKILL.md) | 从当前项目的任务文档中选出一个有出处、可着手的下一步 |
 | `think` | [`$human-in-the-loop`](skills/human-in-the-loop/SKILL.md) | 留下简短证据与验收反馈，让人看清结果是否可信，并让纠正影响后续工作 |
 | `make` | [`$build`](skills/build/SKILL.md) | 把明确需求实现为可运行、经过验证的代码，优先可读性和真实失败处理 |
@@ -36,7 +28,7 @@ Treefolk AI 的个人 AI 工作流库，把真实使用中反复出现的需求�
 | `share` | [`$pr`](skills/pr/SKILL.md) | 将工作交付为一个经过核对的 Pull Request，按目标创建或复用 |
 | `share` | [`$deploy`](skills/deploy/SKILL.md) | 将选定源码或产物部署到已有目标，并验证实际运行结果 |
 
-分类帮助发现能力；领域和工作形式用于进一步说明每个技能处理什么、如何交付价值，完整划分见 [产品设计](DESIGN.md)。上表对应当前源码，固定版本的技能以该版本内容为准。
+上表对应当前源码；固定版本以该版本包含的技能为准。
 
 ## 使用
 
@@ -44,23 +36,13 @@ Treefolk AI 的个人 AI 工作流库，把真实使用中反复出现的需求�
 
 ```text
 $grill 退出会话时自动关闭启动的终端，值得加吗？
-$insights 90 天，最新功能开
-$todo
+$insights
 $build 给设置页增加语言选择，刷新后保留选择
-$loop 5 可读性>=9：优化这篇文档
 ```
 
-`$grill`、`$insights`、`$repo`、`$push`、`$pr`、`$deploy`、`$loop` 需要明确输入技能名。其他技能也可由 AI 根据需求选择。详细用法见上表链接。
+`$insights` 默认回顾最近 90 天，最新功能查询关闭，需要 Python 3.9+。
 
-`$grill` 一次追问一个关键问题，帮助你决定做、缩小、先验证或暂缓。讨论默认在对话中完成；记忆整理交给宿主，不自动生成文档或修改全局规则。
-
-`$insights` 默认回顾 Codex 最近 90 天，可指定日期或项目。结合当前卡点与历史发现新用法，再随机提示少量有价值的候选；已知内容可勾选排除。网页含折叠历史、会话依据、App / CLI 速查，以及按日期/项目筛选的 token、缓存率和使用统计。
-
-最新功能查询默认**关闭**，复用带来源和日期的本地摘要；显式 `$insights 30 天，最新功能开` 才查询相关官方页面并保存摘要。没有新发现时直接说明。需要 Python 3.9+，当前仅采集 Codex JSONL；AI 分析由当前宿主完成，日常生成后直接交付，不做能力探测、测试或浏览器验收。
-
-报告存于 `~/.treefolk/insights/<生成时间>-<唯一后缀>/report.html`，随 `TREEFOLK_HOME` 调整。每次附网页与文件夹链接，整夹可删除。
-
-“整理建议”进入批量选择模式，点击保存时才选择并授权同一根目录的 `known.md`；已知项下次自动排除，也可撤销。无需服务；新报告可能需要重新选择，无法保存时保留选择并明确提示。删除单份报告保留共享记录、技能源码和原始会话。
+详细参数见上表技能链接；自动选择与显式调用的区别见 [调用规则](docs/skill-priority.md)。
 
 ## 安装与更新
 
