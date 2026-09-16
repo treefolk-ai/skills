@@ -5,11 +5,9 @@ import argparse
 from datetime import date
 import json
 from pathlib import Path
-from urllib.parse import urlsplit
 
 from storage import new_file
-from context import ID, effective_knowledge, history_view, require, source, text_fields
-from feedback import advice_id, checkbox_item, known_ids, shown_features, shown_findings
+from context import ID, advice_id, effective_knowledge, require, source, text_fields
 from tokens import FIELDS
 
 
@@ -52,10 +50,6 @@ def validate(usage, analysis):
     reviewed = analysis.get("reviewed_sessions")
     require(isinstance(reviewed, list) and set(reviewed) <= sessions, "reviewed_sessions must reference collected sessions")
     require(len(reviewed) == len(set(reviewed)), "duplicate reviewed sessions")
-    for finding in analysis.get("findings", []):
-        text_fields(finding, ["title", "observation", "interpretation", "action", "check", "confidence"])
-        require(finding["confidence"] in {"high", "medium", "low"}, "invalid confidence")
-        require(bool(finding.get("refs")) and set(finding["refs"]) <= refs, "finding has missing or unknown evidence")
     latest = analysis["latest"]
     require(type(latest.get("enabled")) is bool, "latest.enabled must be boolean")
     require(latest.get("status") in {"checked", "partial", "unavailable", "off"}, "invalid latest status")
@@ -68,65 +62,42 @@ def validate(usage, analysis):
         require(latest.get("checked_at") is None and not latest.get("sources"), "an unperformed query cannot have a checked date or sources")
     for item in latest.get("sources", []):
         source(item)
-    for feature in analysis.get("features", []):
-        text_fields(feature, ["title", "why", "command", "availability", "version", "checked_at"])
-        require(feature["availability"] in {"local", "official", "reference", "unverified"}, "invalid feature availability")
-        date.fromisoformat(feature["checked_at"])
-        require(bool(feature.get("refs")) and set(feature["refs"]) <= refs, "feature has missing or unknown evidence")
-        source(feature["source"])
-    docs = effective_knowledge(usage.get("knowledge", []), analysis)
-    doc_index = {item["id"]: item for item in docs}
-    history = history_view(usage, analysis)
-    for item in history:
-        text_fields(item, ["title", "action", "first_seen", "last_seen"])
-        require(date.fromisoformat(item["first_seen"]) <= date.fromisoformat(item["last_seen"]), "invalid history dates")
-        for src in item["sources"]:
-            require(src.get("origin") in {"report", "user_confirmation"}, "invalid history origin")
-            date.fromisoformat(src["date"])
-            if src.get("url"):
-                url = urlsplit(src["url"])
-                require(not url.scheme and not url.netloc and not url.query and not url.fragment and not url.path.startswith("/") and url.path.endswith("/report.html") and "\\" not in url.path, "history links must be relative report paths")
-            else:
-                require(src["origin"] == "user_confirmation", "missing original report link")
-    if "history" in usage:
-        prior_topics = {item["topic_id"] for item in history}
-        prior_actions = {item["id"] for item in usage["history"].get("items", [])}
-        for item in analysis.get("findings", []) + analysis.get("features", []):
-            text_fields(item, ["topic_id"])
-            require(bool(ID.fullmatch(item["topic_id"])), "invalid advice topic")
-            action = item.get("action", item.get("command", ""))
-            if item["topic_id"] in prior_topics or advice_id(action) in prior_actions:
-                text_fields(item, ["new_detail"])
-        for feature in analysis.get("features", []):
-            text_fields(feature, ["when", "benefit"])
-            doc_refs = feature.get("knowledge_refs", [])
-            for ident in doc_refs:
-                require(ident in doc_index, "unknown documentation reference")
-            if doc_refs:
-                require(any(feature["source"].get("url") == doc_index[ident]["source"]["url"] and feature["checked_at"] == doc_index[ident]["source_date"] for ident in doc_refs), "feature must retain the reference date and source")
+    items = analysis.get("suggestions")
+    require(isinstance(items, list) and len(items) <= 3, "expected at most three suggestions")
+    docs = {d["id"]: d for d in effective_knowledge(usage.get("knowledge", []), analysis)}
+    history = usage.get("history", {}).get("items", [])
+    prior_topics = {i["topic_id"] for i in history}
+    prior_actions = {i["id"] for i in history}
+    actions = set()
+    for item in items:
+        text_fields(item, ["topic_id", "title", "why", "action"])
+        require(bool(ID.fullmatch(item["topic_id"])), "invalid advice topic")
+        require(bool(item.get("refs")) and set(item["refs"]) <= refs, "suggestion has missing or unknown evidence")
+        ident = advice_id(item["action"])
+        require(ident not in actions, "duplicate suggestion")
+        actions.add(ident)
+        if item["topic_id"] in prior_topics or ident in prior_actions:
+            text_fields(item, ["new_detail"])
+        doc_refs = item.get("knowledge_refs", [])
+        require(isinstance(doc_refs, list) and all(isinstance(i, str) and i in docs for i in doc_refs), "unknown documentation reference")
+        if "try" in item:
+            text_fields(item["try"], ["where", "text", "expect"])
     require(all(isinstance(item, str) for item in analysis.get("limitations", [])), "limitations must be text")
 
 
 def render(usage, analysis):
     validate(usage, analysis)
-    # Keep private source paths out of the webpage. It retains session IDs and
-    # line references; the locally retained usage.json maps them to source files.
-    public_usage = {key: value for key, value in usage.items() if key not in {"sessions", "history", "knowledge", "known_topics", "feedback"}}
+    public_usage = {key: value for key, value in usage.items() if key in {"schema_version", "host", "status", "generated_at", "period", "scope", "coverage", "activity", "evidence", "token_usage", "demo"}}
     public_usage["sessions"] = [{"id": item["id"], "project": item["project"]} for item in usage["sessions"]]
-    public_analysis = {key: value for key, value in analysis.items() if key not in {"history_groups", "confirmed_advice", "known_topics", "knowledge_updates"}}
-    public_analysis["features"] = [dict(item, feedback=[checkbox_item(item)]) for item in shown_features(usage, analysis)]
-    public_analysis["findings"] = [dict(item, feedback=[checkbox_item(item)]) for item in shown_findings(usage, analysis)]
-    history = [{**{key: value for key, value in item.items() if key not in {"projects", "refs", "feedback_items"}}, "feedback": [checkbox_item(member) for member in item.get("feedback_items", [item])]} for item in history_view(usage, analysis)]
-    docs = [{key: value for key, value in item.items() if key != "text"} for item in effective_knowledge(usage.get("knowledge", []), analysis)]
-    feedback = {key: value for key, value in usage.get("feedback", {}).items() if key in {"status", "path", "store_id"}}
-    feedback["known"] = sorted(known_ids(usage))
-    data = json.dumps({"usage": public_usage, "analysis": public_analysis, "history": history, "history_coverage": usage.get("history", {}).get("coverage", {}), "knowledge": docs, "feedback": feedback}, ensure_ascii=False)
+    public_analysis = {key: value for key, value in analysis.items() if key in {"summary", "reviewed_sessions", "suggestions", "latest", "limitations"}}
+    used_docs = {ident for item in analysis["suggestions"] for ident in item.get("knowledge_refs", [])}
+    docs = [{key: d[key] for key in ("id", "source", "source_date")} for d in effective_knowledge(usage.get("knowledge", []), analysis) if d["id"] in used_docs]
+    data = json.dumps({"usage": public_usage, "analysis": public_analysis, "knowledge": docs}, ensure_ascii=False)
     data = data.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
     template = (Path(__file__).resolve().parents[1] / "assets" / "report.html").read_text(encoding="utf-8")
     require(template.count("__INSIGHTS_DATA__") == 1, "invalid report template")
-    script = (Path(__file__).resolve().parents[1] / "assets" / "feedback.js").read_text(encoding="utf-8")
-    require(template.count("__INSIGHTS_FEEDBACK__") == 1, "invalid feedback template")
-    return template.replace("__INSIGHTS_FEEDBACK__", script).replace("__INSIGHTS_DATA__", data)
+    return template.replace("__INSIGHTS_DATA__", data)
+
 
 
 def main():

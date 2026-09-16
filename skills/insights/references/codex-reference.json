@@ -3,49 +3,48 @@
   "documents": [
     {
       "id": "cli-interaction",
-      "source": {"title": "CLI 交互操作", "url": "https://learn.chatgpt.com/docs/developer-commands#interactive-shortcuts"},
+      "source": {
+        "title": "CLI 交互操作",
+        "url": "https://learn.chatgpt.com/docs/developer-commands#interactive-shortcuts"
+      },
       "source_date": "2026-09-15",
-      "text": "CLI 工作中，Enter 将补充指令加入当前轮，Tab 留到下一轮。输入框为空时连按两次 Esc 可编辑上一条用户消息并从该处分叉对话。Ctrl+R 搜索提示历史，Enter 使用结果，Esc 取消。Ctrl+O 或 /copy 复制最近一次已完成的输出。@ 搜索文件并加入路径。分叉对话不等于撤销磁盘改动或创建 worktree。",
-      "quick_reference": [
-        {"host":"cli","platform":"all","keys":"Enter / Tab","action":"加入当前轮 / 留到下一轮","when":"Codex 正在工作，输入框已有补充内容"},
-        {"host":"cli","platform":"all","keys":"Esc → Esc","action":"编辑上一条消息并分叉对话","when":"输入框为空；不会因此回滚文件"},
-        {"host":"cli","platform":"all","keys":"Ctrl+R","action":"搜索提示历史","when":"Enter 使用结果，Esc 取消"},
-        {"host":"cli","platform":"all","keys":"Ctrl+O / /copy","action":"复制最近的完整输出","when":"最近一次回答已经完成"}
-      ]
+      "text": "CLI 工作中，Enter 将补充指令加入当前轮，Tab 留到下一轮。输入框为空时连按两次 Esc 可编辑上一条用户消息并从该处分叉对话。Ctrl+R 搜索提示历史，Enter 使用结果，Esc 取消。Ctrl+O 或 /copy 复制最近一次已完成的输出。@ 搜索文件并加入路径。分叉对话不等于撤销磁盘改动或创建 worktree。"
     },
     {
       "id": "cli-editor",
-      "source": {"title": "CLI 自定义", "url": "https://learn.chatgpt.com/docs/cli-customization"},
+      "source": {
+        "title": "CLI 自定义",
+        "url": "https://learn.chatgpt.com/docs/cli-customization"
+      },
       "source_date": "2026-09-15",
-      "text": "在 CLI 输入框按 Ctrl+G 可用外部编辑器编辑提示。编辑器取自 VISUAL，未设置时回退到 EDITOR；保存并关闭后回到 CLI。",
-      "quick_reference": [{"host":"cli","platform":"all","keys":"Ctrl+G","action":"用外部编辑器修改提示","when":"已配置可用的 VISUAL 或 EDITOR；默认绑定"}]
+      "text": "在 CLI 输入框按 Ctrl+G 可用外部编辑器编辑提示。编辑器取自 VISUAL，未设置时回退到 EDITOR；保存并关闭后回到 CLI。"
     },
     {
       "id": "app-follow-ups",
-      "source": {"title": "补充与排队", "url": "https://learn.chatgpt.com/docs/prompting#steering-and-queuing"},
+      "source": {
+        "title": "补充与排队",
+        "url": "https://learn.chatgpt.com/docs/prompting#steering-and-queuing"
+      },
       "source_date": "2026-09-15",
-      "text": "App 的 Settings → General → Follow-up behavior 控制补充消息默认加入当前任务还是排队。设置也显示仅对一条消息使用另一种行为的快捷键。排队消息在输入框上方，可编辑、重排、发送或删除。这里不套用 CLI 的 Enter / Tab 绑定。",
-      "quick_reference": [{"host":"app","platform":"all","keys":"Follow-up behavior","action":"切换补充消息的处理方式","when":"Settings → General；单次切换快捷键以设置显示为准"}]
+      "text": "App 的 Settings → General → Follow-up behavior 控制补充消息默认加入当前任务还是排队。设置也显示仅对一条消息使用另一种行为的快捷键。排队消息在输入框上方，可编辑、重排、发送或删除。这里不套用 CLI 的 Enter / Tab 绑定。"
     },
     {
       "id": "app-shortcuts",
-      "source": {"title": "App 快捷键", "url": "https://learn.chatgpt.com/docs/reference/commands#keyboard-shortcuts"},
+      "source": {
+        "title": "App 快捷键",
+        "url": "https://learn.chatgpt.com/docs/reference/commands#keyboard-shortcuts"
+      },
       "source_date": "2026-09-15",
-      "text": "macOS 默认绑定：⌘⌥A 跳到下一个需要处理的 Codex 对话；空输入框按 ↑ 恢复上一条输入。⌘K 打开命令菜单，但内置终端获得焦点时会清空终端。⌘/ 查看快捷键，⌘P 搜索项目文件，⌘F 在当前对话查找。可在快捷键设置中按命令名或按键查找和自定义。其他平台以官方对应表为准。",
-      "quick_reference": [
-        {"host":"app","platform":"macos","keys":"⌘⌥A","action":"下一个需要处理的对话","when":"Codex；macOS 默认绑定"},
-        {"host":"app","platform":"macos","keys":"↑","action":"恢复上一条输入","when":"输入框为空"},
-        {"host":"app","platform":"macos","keys":"⌘K","action":"命令菜单","when":"焦点离开终端；终端内是清空操作"},
-        {"host":"app","platform":"macos","keys":"⌘/","action":"查看快捷键","when":"macOS 默认绑定；可查看自定义配置"},
-        {"host":"app","platform":"macos","keys":"⌘P / ⌘F","action":"搜索项目文件 / 当前对话","when":"Codex 项目 / 当前对话；macOS 默认绑定"}
-      ]
+      "text": "macOS 默认绑定：⌘⌥A 跳到下一个需要处理的 Codex 对话；空输入框按 ↑ 恢复上一条输入。⌘K 打开命令菜单，但内置终端获得焦点时会清空终端。⌘/ 查看快捷键，⌘P 搜索项目文件，⌘F 在当前对话查找。可在快捷键设置中按命令名或按键查找和自定义。其他平台以官方对应表为准。"
     },
     {
       "id": "worktrees",
-      "source": {"title": "Worktrees", "url": "https://learn.chatgpt.com/docs/environments/git-worktrees"},
+      "source": {
+        "title": "Worktrees",
+        "url": "https://learn.chatgpt.com/docs/environments/git-worktrees"
+      },
       "source_date": "2026-09-15",
-      "text": "Git worktree 提供同一仓库的独立文件副本，共享 Git 元数据。App 新对话可选择 Worktree 与起始分支；Handoff 能在 Local 和 Worktree 之间移动对话与工作。一个分支不能同时检出到两个 worktree。忽略的文件不会普遍随 Handoff 移动；环境依赖需要考虑。",
-      "quick_reference": []
+      "text": "Git worktree 提供同一仓库的独立文件副本，共享 Git 元数据。App 新对话可选择 Worktree 与起始分支；Handoff 能在 Local 和 Worktree 之间移动对话与工作。一个分支不能同时检出到两个 worktree。忽略的文件不会普遍随 Handoff 移动；环境依赖需要考虑。"
     }
   ]
 }

@@ -13,7 +13,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的需求整理成可直�
 | 分类 | 技能 | 结果与预览 |
 | --- | --- | --- |
 | `think` | [`$grill`](skills/grill/SKILL.md) | 逐题盘问想法，检验需求、复杂度和替代方案，形成有依据的取舍 |
-| `think` | [`$insights`](skills/insights/SKILL.md) | 回顾 AI 使用方式，生成含行动建议与用量统计的本地报告。<br><a href="docs/assets/insights/overview.png"><img src="docs/assets/insights/overview.png" width="320" alt="Insights 报告概览，点击查看原图"></a><details><summary>更多截图：行动建议 · 使用统计</summary><a href="docs/assets/insights/suggestions.png"><img src="docs/assets/insights/suggestions.png" width="280" alt="Insights 行动建议与可展开的会话依据"></a> <a href="docs/assets/insights/usage.png"><img src="docs/assets/insights/usage.png" width="280" alt="Insights 日期与项目筛选、token 用量及缓存统计"></a></details> |
+| `think` | [`$insights`](skills/insights/SKILL.md) | 回顾 AI 使用方式，每次最多三条新建议；适用时可复制试用，附用量统计。<br><a href="docs/assets/insights/overview.png"><img src="docs/assets/insights/overview.png" width="320" alt="Insights 报告概览，点击查看原图"></a><details><summary>更多截图：行动建议 · 使用统计</summary><a href="docs/assets/insights/suggestions.png"><img src="docs/assets/insights/suggestions.png" width="280" alt="Insights 行动建议与可展开的会话依据"></a> <a href="docs/assets/insights/usage.png"><img src="docs/assets/insights/usage.png" width="280" alt="Insights 日期与项目筛选、token 用量及缓存统计"></a></details> |
 | `think` | [`$todo`](skills/todo/SKILL.md) | 从当前项目的任务文档中选出一个有出处、可着手的下一步 |
 | `think` | [`$human-in-the-loop`](skills/human-in-the-loop/SKILL.md) | 留下简短证据与验收反馈，让人看清结果是否可信，并让纠正影响后续工作 |
 | `make` | [`$build`](skills/build/SKILL.md) | 把明确需求实现为可运行、经过验证的代码，优先可读性和真实失败处理 |
@@ -40,7 +40,7 @@ $insights
 $build 给设置页增加语言选择，刷新后保留选择
 ```
 
-`$insights` 默认回顾最近 90 天，最新功能查询关闭，需要 Python 3.9+。
+`$insights` 默认回顾最近 90 天，最新功能查询关闭，需要 Python 3.9+。每次最多三条建议；有现实适用场景才附可复制指令，无需整理历史或标记已知。
 
 详细参数见上表技能链接；自动选择与显式调用的区别见 [调用规则](docs/skill-priority.md)。
 

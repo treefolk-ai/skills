@@ -1,6 +1,6 @@
 # 报告数据格式
 
-本文件定义 UTF-8 JSON 输入和共享记录协议；完整工作流在 `SKILL.md`。
+UTF-8 JSON 输入；完整工作流在 `SKILL.md`。
 
 ## 文件位置
 
@@ -12,7 +12,7 @@
 
 | 字段 | 含义 |
 | --- | --- |
-| `generated_at` | 本次生成时间，也是新用法抽样种子 |
+| `generated_at` | 本次生成时间 |
 | `period` | 含首尾的 `since`、`until` 及 `timezone` |
 | `activity` | 按日期/项目聚合的请求、外层工具调用、显式失败、命令族和 `$name` 技能请求 |
 | `sessions` | 会话与源文件索引；`cwd` 供本地项目归属，网页移除源路径 |
@@ -42,86 +42,50 @@
 - 重复快照不累加；计数回退记 `counter_resets` 并重建基线。其余缺口包括 `missing_usage`、`invalid_usage`、`out_of_order`。仅计主会话；缺失可能低估，未知分叉可能重复。
 - 筛选共用日期/项目范围。长时间段合并相邻日期，缓存率按合并后的 token 数计算，不平均百分比。数据不代表完整账单或本次报告的生成成本。
 
-### 历史与资料
+### 生成上下文
 
-采集器一次遍历最多 200 份旧报告、每个 JSON 16 MiB、200 项精确去重建议，只读普通文件。跳过示例、残缺及不可追溯报告；不读取 HTML 正文或递归导入复制的历史。
+`history.items[]` 仅供避免重复，含 `id/topic_id/title/action/last_seen/report_id`；不嵌入网页。最多读取 200 份旧报告、每个 JSON 16 MiB，保留最近 200 项去重建议。只导入实际展示过的原建议，跳过示例、残缺和不可追溯记录，不递归导入历史清单。跨日期但按项目归属过滤；缺口保留在 `history.coverage`。
 
-- `history.items[]`：`id`、`topic_id`、`title`、`action`、`first_seen`、`last_seen`、`sources[]`。来源含 `report_id`、`date`、`origin`（`report` / `user_confirmation`）和原报告相对 `url`。仅导入实际展示的原始建议，按归一化动作精确去重。
-- 历史跨日期但按项目过滤；用旧 `cwd` 或当前同 ID 会话定位，归属不明时不混入单项目报告。`history.coverage` 保留未导入数量。
-- `knowledge[]`：`id`、官方 `source`、`source_date`、事实摘要 `text`；可带 `quick_reference[]`，行字段为 `host`、`platform`、`keys`、`action`、`when`。`host` 为 `app/cli`，平台为 `all/macos/windows/linux`。文档按资料日期及报告时间合并，网页只嵌入速查、日期和来源。
-- `context.py --history` 分别分页返回历史与已知建议，每页 20 项，含总数和 `feedback_status`；`--offset` 翻页。`--ids` 读取指定文档，不传则列资料目录。
-
-### 已知记录
-
-`feedback` 从报告根目录的 `known.md` 读取：`status` 为 `ready/missing/unavailable`，`path` 为原文件绝对路径；可用时附 `store_id` 和 `entries[]`（`id`、`label`、布尔 `known`）。仅有会话且文件缺失时新建；上限 512 KiB，拒绝非普通文件、符号链接、损坏格式和重复 ID，失败保留原件及覆盖缺口。
-
-文件首行为 `<!-- treefolk-insights-known:v1:<32 位十六进制标识> -->`；条目为 `- [x] 具体用法 <!-- insights:advice-<16 位十六进制标识> -->`。动作 ID 取归一化动作 SHA-256 前 16 位；编辑 `[x]/[ ]` 时保留标识和其他文字。
-
-网页的 checkbox 数据由渲染器生成，嵌入路径、文件标识及已知 ID 快照。阅读模式隐藏逐条控件；“整理建议”进入选择模式，选择只保存在当前页面，点击保存后才申请权限并把全部更改放在一次独占写入中。句柄缓存仅供复用授权；浏览器不能核对绝对路径，同标识副本不会同步回采集路径。每次保存先重读，再只改选择涉及的条目，保留笔记，关闭写入流成功才确认；取消丢弃页面草稿，失败保留草稿和原文件。不保证与外部编辑器并发修改的事务安全。
-
-支持及授权依据：[文件访问](https://developer.chrome.com/docs/capabilities/web-apis/file-system-access)、[权限延续](https://developer.chrome.com/blog/persistent-permissions-for-the-file-system-access-api)。不支持或失败时保留阅读并提示未保存，不自动下载副本。
+`knowledge[]` 为本地官方摘要：`id/source/source_date/text`，来源为 `title/url`。按资料日期复用随包或旧报告的新摘要。`context.py --history` 每页给 20 条旧建议，`--offset` 翻页；不传则列资料目录，`--ids` 返回指定正文。
 
 ## analysis.json
 
-由模型编写，字符串按纯文本显示；数组允许为空。下例展示结构：
+模型只写本文件，统计沿用采集结果。所有文字作为纯文本显示；`suggestions` 合计 **0–3 项**，按价值排序。
 
 ```json
 {
-  "summary": "本期有依据的结论",
+  "summary": "一句话概括本次值得注意的事",
   "reviewed_sessions": ["实际深入阅读的会话 ID"],
-  "findings": [{
-    "topic_id": "stable-topic",
-    "title": "行动建议",
-    "observation": "观察事实",
-    "interpretation": "原因推测",
-    "action": "下一次做法",
-    "check": "下次如何观察效果，本次不执行",
-    "confidence": "medium",
-    "refs": ["真实证据 ID"]
-  }],
-  "features": [{
+  "suggestions": [{
     "topic_id": "specific-usage",
-    "title": "用法",
-    "why": "与用户需要的关系",
-    "when": "宿主、平台及触发条件",
-    "benefit": "具体收益",
-    "command": "具体操作",
-    "availability": "reference",
-    "version": "本机支持未知",
-    "checked_at": "2026-09-15",
-    "source": {"title": "资料名称", "url": "官方 HTTPS 页面"},
-    "refs": ["真实证据 ID"]
+    "title": "简短标题",
+    "why": "与本次记录的联系；推测须明示",
+    "action": "具体建议，允许只是意见",
+    "refs": ["真实证据 ID"],
+    "try": {
+      "where": "仅在什么条件成立时，复制到哪里使用",
+      "text": "可直接复制的命令或提示词",
+      "expect": "试用后可以观察到的结果"
+    },
+    "knowledge_refs": ["所依据的本地文档 ID"]
   }],
   "latest": {
     "enabled": false,
     "status": "off",
     "checked_at": null,
     "sources": [],
-    "note": "本次未联网"
+    "note": "本次未查询最新资料"
   },
-  "limitations": ["覆盖、抽样或来源缺口"]
+  "limitations": ["实际存在的覆盖或分析限制"]
 }
 ```
 
-- `confidence` 为 `high/medium/low`，表示判断把握，不是个人评分。
-- `availability`：`local` 为当前上下文已有本机确认；`official` 为实际已读官方依据；`reference` 为本地官方摘要；`unverified` 为待核实。`features[].checked_at` 是资料日期；未核实用法用本次整理日期，并在来源标题明示待核实。
-- `latest.status`：`checked/partial` 须填查询日期及实际官方来源；`unavailable/off` 的日期为 `null`、来源为空。`enabled` 与是否 `off` 对应。
-- 来源使用 OpenAI 官方域名或 `github.com/openai/codex` 下的 HTTPS 页面，不带私人记录、查询词或凭据；本机材料无 URL 时保留标题，用 `null` 表示缺失。
-- `reviewed_sessions` 只计实际深入阅读，不计仅看概览或短摘录。
-- 新采集结果带 `suggestion_selection: "random-v1"`：渲染器对功能候选排除已知动作并去重，按 `SHA-256(generated_at + advice_id)` 排序取至多 3 项；行动只排除已知动作，顺序不变。重渲染和历史导入均用原快照恢复展示；旧报告无标记时保持原展示。
+- `try` **可省略**。任务可能已经结束；没有现实适用条件、无需操作或无法给出可复制内容时，只保留意见。复制不会执行命令，也不记录使用状态。
+- `knowledge_refs` 可省略；具体产品用法引用对应官方摘要，渲染器附资料日期与来源。工作方法的推测不需要伪造产品资料。
+- `topic_id` 为开放的稳定标识。同主题或同动作重现时必须有 `new_detail` 解释新增价值；非空字段不能代替语义判断。
+- `latest.status` 为 `off/checked/partial/unavailable`。只有实际查询成功或部分成功才填 `checked_at`、官方 `sources`；其他状态日期为空、来源为空。
+- 可选 `knowledge_updates[]` 与 knowledge 文档同结构，至多 20 项；仅 `checked/partial` 可写，日期与 URL 必须匹配本次实际查询。网页只嵌入被引用的来源及日期。
 
-### 可选分析字段
+新分析只使用 `suggestions`。旧 HTML 保持原样；旧 `findings/features` 只在导入历史时还原实际展示项。无需迁移或重写旧报告，旧 `known.md` 保留且不读写。
 
-有 `history` 的新采集结果要求每条建议带稳定 `topic_id`，用法另需 `when/benefit`；ID 不受资料目录限制。
-
-| 字段 | 数据与约束 |
-| --- | --- |
-| `new_detail` | 与历史主题/动作重合时必填，说明新增操作、场景或限制；非空不等于语义上确实新颖 |
-| `history_groups[]` | `topic_id/title/action/items`；items 引用原建议 ID，每项最多一组，日期/来源由脚本保留 |
-| `confirmed_advice[]` | 当前用户明确回忆的旧意见：`topic_id/title/action/confirmed_at/note`，可选绝对项目路径 `projects`；无原报告时标“用户确认” |
-| `knowledge_refs` | 文档 ID 数组；来源 URL 及资料日期须与引用一致 |
-| `knowledge_updates[]` | 与 knowledge 文档同结构，至多 20 项；日期等于本次查询日期，URL 在实际查询来源中，仅 `checked/partial` 可写 |
-
-旧 `known_topics` 忽略、不导入；已知状态取 `feedback.entries`，不自动持久化模型推断。原始建议、确认及资料更新各写一次；统计、来源与日期由脚本保留。旧 schema-v1 报告兼容缺失的扩展字段。
-
-渲染器内置校验证据、日期、状态、计数及来源，并拒绝覆盖；这些保护不证明分析、查询和阅读声明真实。
+内置校验拒绝超额建议、重复动作、伪造证据 ID、无效日期/来源及覆盖写入。转义防止文本成为脚本；这些保护不能证明建议有效或任务仍在进行。

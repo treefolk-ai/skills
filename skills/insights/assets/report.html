@@ -53,35 +53,26 @@
   section { margin-top: 40px; }
   .section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
   .section-note { color: var(--muted); font-size: 12px; }
-  .findings { border-top: 1px solid var(--line); }
-  .finding { display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+  .suggestions { border-top: 1px solid var(--line); }
+  .suggestion { display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--line); }
   .ordinal { color: #8590a2; font-size: 13px; padding-top: 2px; font-variant-numeric: tabular-nums; }
-  .finding-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
-  .confidence { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .suggestion-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
   .action { font-size: 14px; line-height: 2; }
-  .action-label { color: var(--muted); font-size: 12px; margin-right: 10px; white-space: nowrap; }
   details { font-size: 13px; color: var(--muted); }
   summary { display: flex; align-items: center; gap: 7px; list-style: none; width: fit-content; min-height: 32px; font-size: 12px; }
   summary::-webkit-details-marker { display: none; }
   summary::before { content: ""; width: 5px; height: 5px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); margin-right: 2px; transition: transform .15s; flex-shrink: 0; }
   details[open] > summary::before { transform: rotate(45deg); }
   summary:hover { color: var(--blue-ink); }
-  .finding details { margin-top: 10px; }
+  .suggestion details { margin-top: 10px; }
   .reasoning { margin: 12px 0 16px; padding-left: 14px; border-left: 2px solid var(--line); }
-  .reasoning p + p { margin-top: 8px; }
-  .reasoning b { color: #475467; font-weight: 600; }
   .evidence { background: var(--soft); border-radius: 6px; padding: 12px 15px; margin: 8px 0; }
   .evidence small { display: block; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
   .evidence p { margin-top: 6px; color: #475467; font-size: 13px; overflow-wrap: anywhere; }
   .status { padding: 3px 9px; border-radius: 5px; font-size: 11px; color: var(--muted); background: var(--soft); }
-  .status[data-state="checked"], .status[data-state="local"] { color: var(--blue-ink); background: var(--blue-soft); }
-  .status[data-state="partial"], .status[data-state="unavailable"], .status[data-state="unverified"], .status[data-state="official"] { color: var(--amber); background: var(--amber-soft); font-weight: 600; }
-  .feature { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; padding: 24px; border: 1px solid var(--line); border-radius: 10px; }
-  .feature + .feature { margin-top: 14px; }
-  .feature-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 9px; }
-  .feature p { color: var(--muted); font-size: 13px; line-height: 1.85; }
+  .status[data-state="checked"] { color: var(--blue-ink); background: var(--blue-soft); }
+  .status[data-state="partial"], .status[data-state="unavailable"] { color: var(--amber); background: var(--amber-soft); font-weight: 600; }
   .code { font: 12px/1.8 "SFMono-Regular", Consolas, "Liberation Mono", monospace; white-space: pre-wrap; overflow-wrap: anywhere; color: #344054; background: var(--soft); border: 1px solid var(--line); border-radius: 7px; padding: 13px 15px; }
-  .feature .code { color: var(--blue-ink); font-size: 13px; background: #f5f7fc; }
   .source { margin: 10px 0 4px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
   .source span { display: block; }
   .query-details { margin-top: 12px; }
@@ -151,55 +142,18 @@
   .coverage { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 20px; padding-top: 12px; font-size: 11px; }
   footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding: 20px 0 30px; color: #7c8798; font-size: 11px; }
   .hidden { display: none !important; }
-  .section-tools { display: flex; align-items: center; gap: 10px; }
-  .manage-known, .feedback-secondary, .known-undo { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--muted); }
-  .manage-known { min-height: 32px; padding: 5px 10px; font-size: 12px; }
-  .manage-known:hover, .manage-known[aria-pressed="true"] { border-color: #b8c5ef; color: var(--blue-ink); }
-  .known-choice { display: none; align-items: center; gap: 7px; width: fit-content; min-height: 36px; margin-top: 10px; color: var(--muted); font-size: 12px; cursor: pointer; }
-  .known-managing .known-choice { display: flex; }
-  .known-choice input { width: 15px; height: 15px; margin: 0; accent-color: var(--blue); cursor: pointer; }
-  .known-result { display: inline-flex; align-items: center; gap: 2px; margin-top: 10px; color: var(--muted); font-size: 11px; }
-  .known-result[hidden] { display: none; }
-  .known-undo { border: 0; padding: 3px 4px; color: var(--blue-ink); font-size: 11px; }
-  .feedback-manager { position: fixed; z-index: 20; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(760px, calc(100% - 36px)); display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 16px; border: 1px solid #dce3f5; border-radius: 10px; background: #fff; box-shadow: 0 12px 36px #17254a24; }
-  .feedback-manager[hidden] { display: none; }
-  .feedback-manager:focus { outline: none; }
-  .feedback-manager-copy { min-width: 0; }
-  .feedback-manager-copy strong { display: block; font-size: 13px; }
-  #feedback-status { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
-  .feedback-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .feedback-help { position: relative; }
-  .feedback-help > summary { min-height: 36px; padding: 4px 8px; }
-  .feedback-help-body { position: absolute; right: 0; bottom: calc(100% + 12px); width: min(420px, calc(100vw - 36px)); padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 12px 30px #17254a1c; }
-  .feedback-help-body p { margin-bottom: 8px; font-size: 11px; color: var(--muted); }
-  .feedback-help-body code { display: block; margin: 8px 0; overflow-wrap: anywhere; font-size: 10px; }
-  .feedback-secondary, #feedback-save { min-height: 36px; padding: 6px 11px; font-size: 12px; white-space: nowrap; }
-  #feedback-save { border: 0; border-radius: 6px; background: var(--blue); color: #fff; }
-  #feedback-save:hover { background: #294ac1; }
-  .feedback-toast { position: fixed; z-index: 21; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: calc(100% - 36px); padding: 10px 14px; border: 1px solid #dce3f5; border-radius: 8px; background: #fff; box-shadow: 0 10px 28px #17254a20; color: var(--blue-ink); font-size: 12px; }
-  .feedback-toast[hidden], .known-managing .feedback-toast { display: none; }
-  .feedback-toast[data-state="error"] { border-color: #ead7b9; color: var(--amber); }
-  .known-managing { padding-bottom: 88px; }
-  .history-panel { margin: 24px 0 20px; border: 1px solid var(--line); border-radius: 8px; padding: 15px 18px; }
-  .history-item { padding: 16px 0; border-bottom: 1px solid var(--line); }
-  .history-item:last-child { border: 0; padding-bottom: 0; }
-  .history-item h3 { font-size: 14px; margin-bottom: 6px; }
-  .history-item p { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
-  .history-item small { display: block; color: var(--muted); font-size: 11px; margin-top: 8px; }
-  .quick-reference { margin-top: 20px; }
-  .quick-reference h3 { margin-top: 20px; font-size: 14px; }
-  .quick-reference table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-  .quick-reference th, .quick-reference td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 10px 8px 10px 0; overflow-wrap: anywhere; }
-  .quick-reference th:first-child { width: 28%; }
-  .quick-reference th:nth-child(2) { width: 29%; }
-  .quick-reference td small { display: block; color: var(--muted); margin-top: 5px; }
+  .try { margin-top: 16px; padding: 16px; background: #f8faff; border: 1px solid #e2e9fb; border-radius: 8px; }
+  .try h4 { margin: 0 0 6px; font-size: 13px; color: var(--blue-ink); }
+  .try p { color: var(--muted); font-size: 12px; }
+  .try .command-row { margin-top: 10px; }
+  .copy-status { color: var(--blue-ink); font-size: 12px; margin-top: 8px; }
+  .copy-status:empty { display: none; }
   .token-box { margin-top: 18px; padding: 0 20px 20px; background: #f8faff; border: 1px solid #e2e9fb; border-radius: 10px; }
   .token-box .stat strong { font-size: 29px; }
   .token-box .stat small { display: block; color: var(--muted); font-size: 11px; margin-top: 6px; }
   .token-note, .token-method { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
   .token-method p { margin-top: 8px; }
   #token-metric { width: auto; min-width: 125px; }
-  .feature-benefit { color: var(--blue-ink) !important; margin-top: 8px; }
   @media (max-width: 760px) {
     .wrap { width: calc(100% - 40px); }
     .topbar { height: 68px; }
@@ -212,15 +166,11 @@
     .hero-summary { padding: 16px 18px; }
     #summary { font-size: 15px; }
     section { margin-top: 32px; }
-    .feature { grid-template-columns: 1fr; gap: 18px; padding: 20px; }
     .project-filter { margin-left: 0; }
     .distributions { gap: 22px; }
     .new-run { padding: 20px; }
     .command-row { flex-direction: column; }
     .copy { align-self: flex-end; min-height: 40px; }
-    .feedback-manager { align-items: stretch; flex-direction: column; gap: 10px; }
-    .feedback-actions { justify-content: flex-end; flex-wrap: wrap; }
-    .feedback-help { margin-right: auto; }
   }
   @media (max-width: 480px) {
     .wrap { width: calc(100% - 36px); }
@@ -228,13 +178,11 @@
     h2 { font-size: 19px; }
     .hero-meta { display: block; font-size: 11px; }
     #scope { display: block; border: 0; padding: 0; margin-top: 4px; }
-    .finding { grid-template-columns: 20px minmax(0, 1fr); gap: 10px; padding: 21px 0; }
-    .finding-heading { align-items: flex-start; gap: 8px; }
-    .finding h3 { font-size: 15px; }
-    .confidence { font-size: 11px; padding-top: 2px; }
+    .suggestion { grid-template-columns: 20px minmax(0, 1fr); gap: 10px; padding: 21px 0; }
+    .suggestion-heading { align-items: flex-start; gap: 8px; }
+    .suggestion h3 { font-size: 15px; }
     .action { font-size: 13px; }
-    .action-label { display: block; margin-bottom: 3px; }
-    .finding details { margin-top: 9px; }
+    .suggestion details { margin-top: 9px; }
     .filters { gap: 10px; }
     .presets { width: 100%; }
     .presets button { flex: 1; padding-inline: 8px; }
@@ -252,8 +200,6 @@
     .run-heading { gap: 16px; }
     .switch-row { width: 100%; justify-content: space-between; }
     .coverage { grid-template-columns: 1fr; }
-    .known-choice, .manage-known, .feedback-secondary, #feedback-save { min-height: 44px; }
-    .known-managing { padding-bottom: 168px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -262,7 +208,7 @@
   @media print {
     .wrap { width: 100%; }
     nav, .filters, .new-run { display: none; }
-    .finding, .feature, .stats { break-inside: avoid; }
+    .suggestion, .feature, .stats { break-inside: avoid; }
   }
 </style>
 </head>
@@ -274,24 +220,17 @@
   </header>
   <main>
     <div class="hero">
-      <h1>你的 AI 使用回顾</h1>
+      <h1>这次，值得知道的几件事</h1>
       <div class="hero-meta"><span id="period"></span><span id="scope"></span></div>
       <p id="demo" class="demo-note hidden"><mark>合成示例</mark><span>仅展示报告效果，不代表你的真实使用。</span></p>
       <p id="coverage-notice" class="demo-note hidden"><mark>采集不完整</mark><span>结论仅适用于已读取的记录，详情见页尾的数据来源。</span></p>
-      <details id="history-panel" class="history-panel"><summary id="history-heading">曾经给过的意见</summary><div id="history-list"></div><p id="history-note" class="source"></p></details>
       <div class="hero-summary"><span class="summary-label">本次结论</span><p id="summary"></p></div>
     </div>
 
     <section id="ideas" aria-labelledby="ideas-title">
-      <div class="section-head"><h2 id="ideas-title">下一次，可以这样做</h2><div class="section-tools"><span id="findings-count" class="section-note"></span><button type="button" class="manage-known" data-feedback-manage aria-pressed="false" hidden>整理建议</button></div></div>
-      <div id="findings" class="findings"></div>
-    </section>
-
-    <section id="features" aria-labelledby="features-title">
-      <div class="section-head"><h2 id="features-title">本次值得尝试的新用法</h2><div class="section-tools"><span id="latest-status" class="status"></span><button type="button" class="manage-known" data-feedback-manage aria-pressed="false" hidden>整理建议</button></div></div>
-      <div id="feature-list" class="feature-list"></div>
-      <details class="query-details"><summary>查询说明与来源</summary><p id="latest-note"></p><div id="latest-sources" class="sources"></div></details>
-      <details class="quick-reference" id="quick-reference"><summary>快捷键与命令速查 · App / CLI</summary><p class="source">以下是参考资料，不计作本次新建议。绑定可能随版本、自定义配置和焦点变化；资料日期不代表本机验证日期。</p><div id="quick-tables"></div></details>
+      <div class="section-head"><h2 id="ideas-title">本次建议</h2><span id="suggestions-count" class="section-note"></span></div>
+      <div id="suggestions" class="suggestions"></div>
+      <details class="query-details"><summary>资料说明与来源 <span id="latest-status" class="status"></span></summary><p id="latest-note"></p><div id="latest-sources" class="sources"></div></details>
     </section>
 
     <section id="usage" aria-labelledby="usage-title">
@@ -359,35 +298,17 @@
         <details><summary>查看采集覆盖情况</summary><div id="coverage" class="coverage"></div></details>
       </div>
     </details>
-    <aside id="feedback-manager" class="feedback-manager" tabindex="-1" hidden>
-      <div class="feedback-manager-copy"><strong id="feedback-selection">选择要调整的建议</strong><span id="feedback-status" role="status" aria-live="polite"></span></div>
-      <div class="feedback-actions">
-        <details class="feedback-help"><summary>记录文件</summary><div class="feedback-help-body">
-          <p>第一次保存时请选择下面位置的原文件并允许写入。新报告或权限失效时可能需要重新选择。</p>
-          <code id="feedback-path"></code>
-          <p>macOS 文件选择窗口可按 ⌘⇧G 粘贴路径；也可以直接编辑文件里的 Markdown checkbox。</p>
-          <button id="feedback-connect" class="feedback-secondary" type="button">重新选择记录文件</button>
-        </div></details>
-        <button id="feedback-cancel" class="feedback-secondary" type="button">完成</button>
-        <button id="feedback-save" type="button" disabled>保存更改</button>
-      </div>
-    </aside>
-    <div id="feedback-toast" class="feedback-toast" role="status" aria-live="polite" hidden></div>
   </main>
   <footer><span>Treefolk · Insights</span><span>本地报告</span></footer>
 </div>
 <script id="report-data" type="application/json">__INSIGHTS_DATA__</script>
 <script>
   'use strict';
-  __INSIGHTS_FEEDBACK__
-  const {usage, analysis, history=[], history_coverage={}, knowledge=[], feedback={}} = JSON.parse(document.getElementById('report-data').textContent);
-  const feedbackUI = InsightsFeedback.mount(feedback);
+  const {usage, analysis, knowledge=[]} = JSON.parse(document.getElementById('report-data').textContent);
   const $ = id => document.getElementById(id);
   const node = (tag, text, cls) => {const el=document.createElement(tag);if(text!==undefined)el.textContent=String(text);if(cls)el.className=cls;return el;};
   const addText = (parent, tag, text, cls) => {const el=node(tag,text,cls);parent.append(el);return el;};
   const evidence = new Map(usage.evidence.map(item=>[item.id,item]));
-  const confidence = {high:'较高把握',medium:'仍需验证',low:'初步线索'};
-  const availability = {local:'本机已核实',official:'官方已确认 · 本机待核实',reference:'本地参考资料 · 本机未核实',unverified:'待核实'};
   const latestLabels = {checked:'最新功能已查询',partial:'最新功能仅部分核实',unavailable:'最新功能尚未核实',off:'最新功能查询已关闭'};
   function sourceLink(parent,item){if(item.url){const a=addText(parent,'a',item.title);a.href=item.url;a.target='_blank';a.rel='noreferrer noopener';}else addText(parent,'span',item.title);}
   function showEvidence(parent,refs){for(const ref of refs){const item=evidence.get(ref);const block=addText(parent,'div',undefined,'evidence');addText(block,'small',item.date+' · '+item.project+' · '+item.id);addText(block,'p',item.text);}}
@@ -396,73 +317,42 @@
   $('scope').textContent='Codex · '+usage.scope;
   if(usage.demo){$('demo').classList.remove('hidden');document.title='Insights 合成示例 · Treefolk';}
   if(usage.status==='PARTIAL')$('coverage-notice').classList.remove('hidden');
-  $('history-heading').textContent='曾经给过的意见（'+history.length+' 项）';
-  for(const item of history){
-    const article=addText($('history-list'),'article',undefined,'history-item');
-    addText(article,'h3',item.title);addText(article,'p',item.action);
-    addText(article,'small','首次 '+item.first_seen+' · 最近 '+item.last_seen+' · 给过建议不代表已经采用');
-    const links=addText(article,'div',undefined,'sources');const seen=new Set();
-    for(const src of item.sources){const label=(src.origin==='user_confirmation'?'用户确认':'原报告')+' · '+src.date;const key=label+src.url;if(seen.has(key))continue;seen.add(key);sourceLink(links,{title:label,url:src.url});if(src.note)addText(article,'small',src.note);}
-    feedbackUI.add(article,item.feedback);
-  }
-  const historyGaps=Object.entries(history_coverage).filter(([key,n])=>n&&!['scanned_reports','imported_reports','demo_reports'].includes(key));
-  $('history-note').textContent=(history.length?'历史覆盖已读取的旧报告，不随下方日期筛选变化。':'尚无可导入的历史建议。')+(historyGaps.length?' 有 '+historyGaps.reduce((n,[,v])=>n+v,0)+' 项报告或建议因不完整、范围或读取限额未纳入。':'');
-  $('findings-count').textContent=analysis.findings?.length ? analysis.findings.length+' 条有依据的建议' : '';
-  (analysis.findings||[]).forEach((finding,i)=>{
-    const card=addText($('findings'),'article',undefined,'finding');
+  const docs = new Map(knowledge.map(item=>[item.id,item]));
+  $('suggestions-count').textContent=analysis.suggestions.length ? analysis.suggestions.length+' 条 · 挑适合自己的试试' : '';
+  analysis.suggestions.forEach((item,i)=>{
+    const card=addText($('suggestions'),'article',undefined,'suggestion');
     addText(card,'span',String(i+1).padStart(2,'0'),'ordinal');
     const body=addText(card,'div');
-    const heading=addText(body,'div',undefined,'finding-heading');
-    addText(heading,'h3',finding.title);
-    addText(heading,'span',confidence[finding.confidence],'confidence');
+    addText(body,'h3',item.title,'suggestion-heading');
     const action=addText(body,'p',undefined,'action');
-    addText(action,'span','建议','action-label');
-    addText(action,'mark',finding.action);
-    const details=addText(body,'details');
-    addText(details,'summary','查看原因与 '+finding.refs.length+' 条依据');
-    const reasoning=addText(details,'div',undefined,'reasoning');
-    for(const [label,value] of [['观察',finding.observation],['推测',finding.interpretation],['如何验证',finding.check]]){
-      const line=addText(reasoning,'p');
-      addText(line,'b',label+'：');
-      line.append(document.createTextNode(value));
+    addText(action,'mark',item.action);
+    if(item.try){
+      const trial=addText(body,'div',undefined,'try');
+      addText(trial,'h4','马上试试');
+      addText(trial,'p',item.try.where);
+      const row=addText(trial,'div',undefined,'command-row');
+      const code=addText(row,'pre',item.try.text,'code');
+      const button=addText(row,'button','复制','copy');button.type='button';
+      button.setAttribute('aria-label','复制：'+item.title);
+      const status=addText(trial,'p',undefined,'copy-status');status.setAttribute('role','status');
+      button.addEventListener('click',()=>copyText(code.textContent,button,status));
+      addText(trial,'p','预期：'+item.try.expect);
     }
-    showEvidence(details,finding.refs);
-    if(finding.new_detail)addText(body,'p','本次新增：'+finding.new_detail,'feature-benefit');
-    feedbackUI.add(body,finding.feedback);
+    const details=addText(body,'details');
+    addText(details,'summary','为什么建议 · '+item.refs.length+' 条依据');
+    addText(details,'p',item.why,'reasoning');
+    if(item.new_detail)addText(details,'p','这次的不同：'+item.new_detail);
+    showEvidence(details,item.refs);
+    for(const id of item.knowledge_refs||[]){
+      const doc=docs.get(id),ref=addText(details,'p',undefined,'source');
+      sourceLink(ref,doc.source);addText(ref,'span','资料日期：'+doc.source_date);
+    }
   });
-  if(!analysis.findings?.length)addText($('findings'),'p','目前没有足够依据建议改变。已有的使用概览仍可帮助你回顾。','empty');
+  if(!analysis.suggestions.length)addText($('suggestions'),'p','本次没有足够依据推荐新的做法。','empty');
   $('latest-status').textContent=latestLabels[analysis.latest.status];
   $('latest-status').dataset.state=analysis.latest.status;
-  $('latest-note').textContent=(analysis.latest.note||'')+(analysis.latest.checked_at?' · 核实于 '+analysis.latest.checked_at:'');
+  $('latest-note').textContent=(analysis.latest.note||'')+(analysis.latest.checked_at?' · 查询于 '+analysis.latest.checked_at:'');
   for(const item of analysis.latest.sources||[])sourceLink($('latest-sources'),item);
-  for(const feature of analysis.features||[]){
-    const article=addText($('feature-list'),'article',undefined,'feature');
-    const intro=addText(article,'div');
-    const title=addText(intro,'div',undefined,'feature-title');
-    addText(title,'h3',feature.title);
-    const status=addText(title,'span',availability[feature.availability],'status');
-    status.dataset.state=feature.availability;
-    addText(intro,'p',feature.why);
-    if(feature.when)addText(intro,'p','触发条件：'+feature.when);
-    if(feature.benefit)addText(intro,'p','能帮你省掉：'+feature.benefit,'feature-benefit');
-    if(feature.new_detail)addText(intro,'p','与之前不同：'+feature.new_detail);
-    const detail=addText(article,'div');
-    addText(detail,'pre',feature.command,'code');
-    const src=addText(detail,'div',undefined,'source');
-    addText(src,'span',feature.version+' · '+feature.checked_at);
-    sourceLink(src,feature.source);
-    const refs=addText(detail,'details');addText(refs,'summary','与你有关的会话依据');showEvidence(refs,feature.refs);
-    feedbackUI.add(intro,feature.feedback);
-  }
-  if(!analysis.features?.length)addText($('feature-list'),'p','本次没有足够有价值的新发现；无需重复已有建议。','empty');
-  const platformNames={macos:'macOS',windows:'Windows',linux:'Linux',all:'各平台'};
-  for(const [host,label] of [['app','App'],['cli','CLI']]){
-    const rows=knowledge.flatMap(doc=>(doc.quick_reference||[]).filter(row=>row.host===host).map(row=>({...row,doc})));
-    if(!rows.length)continue;addText($('quick-tables'),'h3',label);
-    const table=addText($('quick-tables'),'table');const head=addText(table,'thead');const tr=addText(head,'tr');for(const text of ['操作','作用','触发条件与来源']){const th=addText(tr,'th',text);th.scope='col';}
-    const body=addText(table,'tbody');for(const row of rows){const line=addText(body,'tr');addText(line,'td',row.keys);addText(line,'td',row.action);const detail=addText(line,'td',platformNames[row.platform]+' · '+row.when);const src=addText(detail,'small');sourceLink(src,{title:'资料 '+row.doc.source_date,url:row.doc.source.url});}
-  }
-  if(!knowledge.length)addText($('quick-tables'),'p','这份旧报告没有保存速查资料。','empty');
   const projects=[...new Set(usage.activity.map(item=>item.project))].sort();for(const project of projects){const option=addText($('project'),'option',project);option.value=project;}
   const since=$('since'),until=$('until');for(const el of [since,until]){el.min=usage.period.since;el.max=usage.period.until;}
   since.value=usage.period.since;until.value=usage.period.until;
@@ -514,14 +404,15 @@
   for(const button of document.querySelectorAll('[data-days]'))button.addEventListener('click',()=>{for(const b of document.querySelectorAll('[data-days]'))b.setAttribute('aria-pressed',String(b===button));until.value=usage.period.until;let start=usage.period.since;if(button.dataset.days!=='all'){const d=new Date(until.value+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-Number(button.dataset.days)+1);start=d.toISOString().slice(0,10);}since.value=start<usage.period.since?usage.period.since:start;update();});
   for(const element of [since,until])element.addEventListener('change',()=>{for(const b of document.querySelectorAll('[data-days]'))b.setAttribute('aria-pressed','false');update();});
   $('project').addEventListener('change',update);$('token-metric').addEventListener('change',update);$('latest-toggle').addEventListener('change',nextCommand);
-  $('copy-command').addEventListener('click',async()=>{
-    const text=$('next-command').textContent;let copied=false;
+  async function copyText(text,button,status){
+    let copied=false;
     try{await navigator.clipboard.writeText(text);copied=true;}catch{
       const field=node('textarea');field.value=text;field.readOnly=true;field.style.cssText='position:fixed;left:-9999px;top:0';document.body.append(field);field.select();
-      try{copied=document.execCommand('copy');}catch{}finally{field.remove();$('copy-command').focus();}
+      try{copied=document.execCommand('copy');}catch{}finally{field.remove();button.focus();}
     }
-    $('copy-status').textContent=copied?'已复制。粘贴到 Codex 后开始新的分析。':'浏览器未允许复制，请手动复制上方指令。';
-  });
+    status.textContent=copied?'已复制，按上方说明使用。':'浏览器未允许复制，请手动选择并复制上方内容。';
+  }
+  $('copy-command').addEventListener('click',()=>copyText($('next-command').textContent,$('copy-command'),$('copy-status')));
   $('sample-size').textContent='采集 '+usage.sessions.length+' 个会话；深入阅读 '+analysis.reviewed_sessions.length+' 个会话；保留 '+usage.evidence.length+' 条证据样例。分析期间：'+usage.period.since+' — '+usage.period.until+'。';
   for(const item of analysis.limitations||[])addText($('limitations'),'li',item);
   const coverageNames={discovered_files:'发现的文件',scanned_files:'扫描文件',file_limit_excluded:'因文件数限额未读',truncated_files:'截断文件',oversized_or_cut_lines:'超长或截断行',malformed_lines:'解析失败行',undated_records:'时间缺失记录',unreadable_files:'无法读取的文件',unreadable_directories:'无法读取的目录',unsupported_files:'格式不支持文件',subagent_files:'排除的子代理文件',outside_project:'范围外项目文件',outside_window_or_empty:'窗口外或空文件',duplicate_session_files:'重复会话文件',duplicate_calls:'重复工具调用',duplicate_results:'重复失败结果',unsupported_call_ids:'无法识别的调用 ID',unknown_tool_names:'无法识别的工具名',unknown_project_files:'项目缺失文件',fallback_message_files:'用户消息回退文件',skipped_links:'跳过的目录链接',skipped_links_or_special_files:'跳过的文件链接或特殊文件'};

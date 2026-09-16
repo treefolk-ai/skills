@@ -14,12 +14,10 @@ from pathlib import Path
 import re
 import shlex
 import stat
-import sys
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from storage import create_report_dir, ensure_report_root, new_file, report_root
+from storage import create_report_dir, new_file, report_root
 from context import load_context
-from feedback import load_feedback
 from tokens import TokenCounter, add_tokens, empty_totals, summarize
 
 MAX_FILE_BYTES = 32 * 1024 * 1024
@@ -341,15 +339,8 @@ def main():
         result = collect(args.source, start, end, tz, project)
         output = Path(args.output).expanduser().absolute() if args.output else create_report_dir() / "usage.json"
         result.update(load_context(report_root(), output.parent, project, result["sessions"]))
-        if result["sessions"]:
-            result["suggestion_selection"] = "random-v1"
-            if result["feedback"]["status"] == "missing":
-                result["feedback"] = load_feedback(ensure_report_root(), create=True)
-            if result["feedback"]["status"] != "ready":
-                result["status"] = "PARTIAL"
-                result["coverage"]["feedback_unavailable"] = 1
         new_file(output, json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-        print(json.dumps({"status": result["status"], "period": result["period"], "sessions": len(result["sessions"]), "requests": sum(row["requests"] for row in result["activity"]), "evidence_samples": len(result["evidence"]), "coverage": result["coverage"], "token_usage": result["token_usage"], "history_items": len(result["history"]["items"]), "feedback_status": result["feedback"]["status"], "known_advice": sum(i["known"] for i in result["feedback"]["entries"]), "output": str(output), "report_dir": str(output.parent)}, ensure_ascii=False))
+        print(json.dumps({"status": result["status"], "period": result["period"], "sessions": len(result["sessions"]), "requests": sum(row["requests"] for row in result["activity"]), "evidence_samples": len(result["evidence"]), "coverage": result["coverage"], "token_usage": result["token_usage"], "history_items": len(result["history"]["items"]), "output": str(output), "report_dir": str(output.parent)}, ensure_ascii=False))
     except (OSError, ValueError, OverflowError, ZoneInfoNotFoundError) as error:
         parser.exit(2, "collect: " + str(error) + "\n")
 

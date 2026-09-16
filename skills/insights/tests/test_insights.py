@@ -20,8 +20,7 @@ from collect import collect, command_family, excerpt
 from fixtures import make_report
 from render import render
 from storage import create_report_dir, new_file
-from context import bundled_knowledge, effective_knowledge, history_view, load_context
-from feedback import advice_id, load_feedback, shown_features
+from context import advice_id, bundled_knowledge, effective_knowledge, load_context
 
 
 class InsightsTests(unittest.TestCase):
@@ -212,7 +211,7 @@ class InsightsTests(unittest.TestCase):
         usage, analysis = make_report(self.root / "demo")
         self.assertEqual(len(usage["sessions"]), 15)
         self.assertEqual(sum(r["requests"] for r in usage["activity"]), 45)
-        analysis["summary"] = '</script><script>window.__injected=true</script> __INSIGHTS_FEEDBACK__'
+        analysis["summary"] = '</script><script>window.__injected=true</script>'
         html = render(usage, analysis)
         self.assertNotIn(analysis["summary"], html)
         self.assertIn("\\u003c/script\\u003e", html)
@@ -224,17 +223,17 @@ class InsightsTests(unittest.TestCase):
     def test_render_rejects_fabricated_refs_status_and_unsafe_links(self):
         usage, analysis = make_report(self.root / "demo")
         fabricated = copy.deepcopy(analysis)
-        fabricated["findings"][0]["refs"] = ["nonexistent:L1"]
+        fabricated["suggestions"][0]["refs"] = ["nonexistent:L1"]
         with self.assertRaises(ValueError):
             render(usage, fabricated)
         bad_switch = copy.deepcopy(analysis)
         bad_switch["latest"]["enabled"] = True
         with self.assertRaises(ValueError):
             render(usage, bad_switch)
-        unsafe = copy.deepcopy(analysis)
-        unsafe["features"][0]["source"]["url"] = "javascript:alert(1)"
+        unsafe = copy.deepcopy(usage)
+        unsafe["knowledge"][0]["source"]["url"] = "javascript:alert(1)"
         with self.assertRaises(ValueError):
-            render(usage, unsafe)
+            render(unsafe, analysis)
 
     def test_cli_default_90_days_and_invalid_range_has_no_output(self):
         self.save("one.jsonl", [self.meta(), self.event()])
@@ -326,7 +325,7 @@ class InsightsTests(unittest.TestCase):
         if cwd is not None:
             session["cwd"] = cwd
         usage = {"schema_version": 1, "host": "codex", "status": "COLLECTED", "demo": demo, "generated_at": day + "T00:00:00Z", "sessions": [session], "evidence": [{"id": sid + ":L2", "session": sid}]}
-        analysis = {"summary": "Prior report", "findings": [{"title": "A useful suggestion", "action": action, "refs": [sid + ":L2"]}], "features": [], **(analysis_extra or {})}
+        analysis = {"summary": "Prior report", "suggestions": [{"title": "A useful suggestion", "action": action, "refs": [sid + ":L2"]}], **(analysis_extra or {})}
         new_file(folder / "usage.json", json.dumps(usage))
         new_file(folder / "analysis.json", json.dumps(analysis))
         new_file(folder / "report.html", "<!doctype html><title>Prior synthetic report</title>")
@@ -335,15 +334,13 @@ class InsightsTests(unittest.TestCase):
     def context(self, **kwargs):
         return load_context(self.root / "reports", self.root / "reports" / "current", **kwargs)
 
-    def test_history_exact_dedup_keeps_dates_links_and_ignores_copied_history(self):
+    def test_history_dedup_keeps_latest_source_and_ignores_copied_history(self):
         self.prior("one", day="2026-08-01")
         self.prior("two", action="  USE a separate   checkout ", day="2026-09-02", analysis_extra={"history_groups": [{"title": "DO NOT REIMPORT COPIED HISTORY"}]})
         context = self.context()
         items = context["history"]["items"]
         self.assertEqual(len(items), 1)
-        self.assertEqual((items[0]["first_seen"], items[0]["last_seen"]), ("2026-08-01", "2026-09-02"))
-        self.assertEqual(len(items[0]["sources"]), 2)
-        self.assertTrue(all(s["url"].startswith("../") for s in items[0]["sources"]))
+        self.assertEqual((items[0]["last_seen"], items[0]["report_id"]), ("2026-09-02", "two"))
         self.assertNotIn("DO NOT REIMPORT", json.dumps(context))
 
     def test_history_skips_demos_incomplete_invalid_and_linked_reports(self):
@@ -370,30 +367,8 @@ class InsightsTests(unittest.TestCase):
         self.assertEqual(len(recovered["history"]["items"]), 2)
         self.assertEqual(self.context(max_reports=1)["history"]["coverage"]["report_limit_excluded"], 2)
 
-    def test_user_confirmed_history_is_distinct_from_report_provenance(self):
-        confirmed = {"topic_id": "ascii-design", "title": "Sketch", "action": "Draw the flow first", "confirmed_at": "2026-09-10", "note": "The user explicitly recalled this advice.", "projects": ["/demo/project"]}
-        self.prior("confirmation", analysis_extra={"confirmed_advice": [confirmed]})
-        items = self.context(project="/demo/project")["history"]["items"]
-        item = next(i for i in items if i["topic_id"] == "ascii-design")
-        self.assertEqual(item["sources"][0]["origin"], "user_confirmation")
-        current = history_view({}, {"confirmed_advice": [confirmed]})
-        self.assertIsNone(current[0]["sources"][0]["url"])
-        self.assertEqual(current[0]["sources"][0]["origin"], "user_confirmation")
-
-    def test_history_semantic_groups_preserve_sources_and_refuse_reuse(self):
-        self.prior("first", action="Plan before coding", day="2026-08-01")
-        self.prior("second", action="Settle open decisions first", day="2026-09-01")
-        usage = self.context()
-        group = {"topic_id": "plan-first", "title": "Planning", "action": "Confirm the plan", "items": [i["id"] for i in usage["history"]["items"]]}
-        grouped = history_view(usage, {"history_groups": [group]})
-        self.assertEqual(len(grouped), 1)
-        self.assertEqual(len(grouped[0]["sources"]), 2)
-        self.assertEqual(grouped[0]["first_seen"], "2026-08-01")
-        with self.assertRaises(ValueError):
-            history_view(usage, {"history_groups": [group, group]})
-
     def test_offline_context_and_arbitrary_new_document_snapshots(self):
-        doc = {"id": "a-new-document-not-in-the-package", "source": {"title": "An official page", "url": "https://learn.chatgpt.com/docs/prompting"}, "source_date": "2026-09-14", "text": "Older saved facts", "quick_reference": []}
+        doc = {"id": "a-new-document-not-in-the-package", "source": {"title": "An official page", "url": "https://learn.chatgpt.com/docs/prompting"}, "source_date": "2026-09-14", "text": "Older saved facts"}
         def queried(item):
             return {"latest": {"enabled": True, "status": "checked", "checked_at": item["source_date"], "sources": [item["source"]]}, "knowledge_updates": [item]}
         self.prior("z-older", analysis_extra=queried(doc))
@@ -413,7 +388,7 @@ class InsightsTests(unittest.TestCase):
 
     def test_repeated_advice_requires_specific_increment_and_topics_are_open(self):
         usage, analysis = make_report(self.root / "novelty")
-        feature = analysis["features"][0]
+        feature = analysis["suggestions"][0]
         feature["topic_id"] = "a-useful-new-approach-outside-the-reference-index"
         render(usage, analysis)  # No allowlist of recommendation topics.
         feature["topic_id"] = "plan-first"
@@ -423,93 +398,75 @@ class InsightsTests(unittest.TestCase):
         render(usage, analysis)
         feature.pop("new_detail")
         feature["topic_id"] = "renaming-does-not-hide-the-same-action"
-        feature["command"] = usage["history"]["items"][0]["action"]
+        feature["action"] = usage["history"]["items"][0]["action"]
         with self.assertRaisesRegex(ValueError, "new_detail"):
             render(usage, analysis)
 
-    def test_checkbox_file_creation_preserves_existing_records_and_rejects_links(self):
-        first = load_feedback(self.root, create=True)
-        self.assertEqual(first["status"], "ready")
-        path = self.root / "known.md"
-        text = path.read_text() + "- [x] 我已知的具体操作 <!-- insights:advice-1234567890abcdef -->\n"
-        path.write_text(text)
-        self.assertEqual(load_feedback(self.root, create=True)["entries"][0]["known"], True)
-        self.assertEqual(path.read_text(), text)
-        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
-        path.write_text("a different document")
-        self.assertEqual(load_feedback(self.root, create=True)["status"], "unavailable")
-        self.assertEqual(path.read_text(), "a different document")
-        path.unlink()
-        path.symlink_to(self.root / "missing-private-file")
-        self.assertEqual(load_feedback(self.root, create=True)["status"], "unavailable")
-        self.assertFalse((self.root / "missing-private-file").exists())
+    def test_three_suggestions_and_optional_trial_require_a_real_instruction(self):
+        usage, analysis = make_report(self.root / "simple")
+        self.assertEqual(sum("try" in i for i in analysis["suggestions"]), 1)
+        for field in ("where", "text", "expect"):
+            broken = copy.deepcopy(analysis)
+            broken["suggestions"][1]["try"].pop(field)
+            with self.assertRaisesRegex(ValueError, field):
+                render(usage, broken)
+        too_many = copy.deepcopy(analysis)
+        too_many["suggestions"].append(dict(too_many["suggestions"][0], action="A fourth idea"))
+        with self.assertRaisesRegex(ValueError, "at most three"):
+            render(usage, too_many)
+        duplicate = copy.deepcopy(analysis)
+        duplicate["suggestions"][1] = duplicate["suggestions"][0]
+        with self.assertRaisesRegex(ValueError, "duplicate suggestion"):
+            render(usage, duplicate)
+        self.assertIn('"suggestions": []', render(usage, dict(analysis, suggestions=[])))
 
-    def test_browser_checkbox_is_read_by_next_collection_and_can_be_undone(self):
-        import shutil
-        node = shutil.which("node")
-        if not node:
-            self.skipTest("Node is needed for the browser/Python format interoperability check")
-        root = self.root / "reports"
-        root.mkdir()
-        feedback = load_feedback(root, create=True)
-        script = Path(__file__).resolve().parents[1] / "assets" / "feedback.js"
-        program = """
-const fs = require('node:fs');
-const {update} = require(process.argv[1]);
-const [file, store, checked] = process.argv.slice(2);
-const next = update(fs.readFileSync(file, 'utf8'), store,
-  [{id:'advice-1234567890abcdef',label:'具体技巧：保留这个说明'}], checked === 'true');
-fs.writeFileSync(file, next);
-"""
-        for checked in (True, False):
-            subprocess.run([node, "-e", program, str(script), feedback["path"], feedback["store_id"], str(checked).lower()], check=True, capture_output=True, text=True)
-            current = self.context()["feedback"]
-            self.assertEqual(current["entries"], [{"id": "advice-1234567890abcdef", "label": "具体技巧：保留这个说明", "known": checked}])
-        self.prior("old-inference", analysis_extra={"known_topics": [{"topic_id": "inferred", "basis": "observed", "reason": "Must not restore knowledge"}]})
-        self.assertNotIn("Must not restore knowledge", json.dumps(self.context()))
+    def test_collect_leaves_retired_known_file_untouched(self):
+        self.save("one.jsonl", [self.meta(), self.event()])
+        base = self.root / "treefolk" / "insights"
+        base.mkdir(parents=True)
+        result = subprocess.run([sys.executable, "-B", str(SCRIPTS / "collect.py"), "--source", str(self.root), "--until", "2026-09-15"], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((base / "known.md").exists())
+        new_file(base / "known.md", "Private handwritten notes; not a valid old feedback file")
+        # A retired file must neither change nor make a valid collection partial.
+        result = subprocess.run([sys.executable, "-B", str(SCRIPTS / "collect.py"), "--source", str(self.root), "--until", "2026-09-15"], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        info = json.loads(result.stdout)
+        self.assertEqual(info["status"], "COLLECTED")
+        self.assertNotIn("feedback", json.loads(Path(info["output"]).read_text()))
+        self.assertEqual((base / "known.md").read_text(), "Private handwritten notes; not a valid old feedback file")
 
-    def test_random_selection_excludes_only_checked_actions_and_history_matches(self):
-        usage, analysis = make_report(self.root / "sampling")
-        analysis["features"] = [dict(analysis["features"][0], command="Concrete action " + str(i)) for i in range(8)]
-        selected = shown_features(usage, analysis)
-        self.assertEqual(len(selected), 3)
-        self.assertEqual(selected, shown_features(usage, analysis))
-        choices = {tuple(f["command"] for f in shown_features(dict(usage, generated_at=str(i)), analysis)) for i in range(10)}
-        self.assertGreater(len(choices), 1)
-        excluded = selected[0]["command"]
-        usage["feedback"]["entries"] = [{"id": advice_id(excluded), "label": excluded, "known": True}]
-        self.assertNotIn(excluded, [f["command"] for f in shown_features(usage, analysis)])
-        # All candidates have the same topic; only this concrete action is known.
-        self.assertEqual(len(shown_features(usage, analysis)), 3)
-        root = self.root / "reports"
-        folder = root / "sampled"
-        folder.mkdir(parents=True)
-        usage["demo"] = False
-        new_file(folder / "usage.json", json.dumps(usage))
-        new_file(folder / "analysis.json", json.dumps(dict(analysis, findings=[], confirmed_advice=[])))
-        new_file(folder / "report.html", "saved report")
-        history = self.context()["history"]["items"]
-        self.assertEqual({i["action"] for i in history}, {i["command"] for i in shown_features(usage, analysis)})
+    def test_legacy_history_imports_only_original_displayed_advice(self):
+        folder = self.prior("legacy")
+        usage = json.loads((folder / "usage.json").read_text())
+        usage.update(suggestion_selection="random-v1", feedback={"entries": [{"id": advice_id("Already hidden"), "known": True}]})
+        analysis = {"findings": [{"title": "Hidden finding", "action": "Already hidden", "refs": ["old:L2"]}], "features": [{"title": command, "command": command, "refs": ["old:L2"]} for command in ["Already hidden", "Visible one", "Visible two"]], "history_groups": [{"action": "Copied history"}], "confirmed_advice": [{"action": "Copied confirmation"}]}
+        (folder / "usage.json").write_text(json.dumps(usage))
+        (folder / "analysis.json").write_text(json.dumps(analysis))
+        result = self.context()
+        self.assertEqual({i["action"] for i in result["history"]["items"]}, {"Visible one", "Visible two"})
+        self.assertNotIn("feedback", result)
 
-    def test_legacy_report_and_hostile_new_fields_render_safely(self):
-        usage, analysis = make_report(self.root / "legacy")
+    def test_private_context_stays_out_of_html_and_trial_text_is_escaped(self):
+        usage, analysis = make_report(self.root / "private")
         hostile = '</script><img src=x onerror=alert(1)>'
-        usage["history"]["items"][0]["title"] = hostile
-        usage["knowledge"][0]["quick_reference"][0]["action"] = hostile
+        usage["history"]["items"][0]["title"] = "PRIVATE PRIOR ADVICE"
+        usage["knowledge"][0]["text"] = "FULL LOCAL DOCUMENT TEXT"
+        usage["feedback"] = {"path": "/private/known.md", "entries": []}
+        analysis["suggestions"][1]["try"]["text"] = hostile
         html = render(usage, analysis)
-        self.assertNotIn(hostile, html)
-        self.assertNotIn('/demo/music-notes', html)
-        bad = copy.deepcopy(usage)
-        bad["history"]["items"][2]["sources"][0]["url"] = "javascript:alert(1)/report.html"
-        with self.assertRaises(ValueError):
-            render(bad, analysis)
-        for key in ("history", "knowledge", "token_usage"):
+        for private in (hostile, "PRIVATE PRIOR ADVICE", "FULL LOCAL DOCUMENT TEXT", "/private/known.md", "/demo/music-notes"):
+            self.assertNotIn(private, html)
+        embedded = json.loads(html.split('<script id="report-data" type="application/json">', 1)[1].split('</script>', 1)[0])
+        self.assertEqual(embedded["analysis"]["suggestions"][1]["try"]["text"], hostile)
+        self.assertNotIn("history", embedded)
+        self.assertNotIn("feedback", embedded)
+        # Earlier usage exports may lack token snapshots or history.
+        for key in ("history", "token_usage"):
             usage.pop(key, None)
         for row in usage["activity"]:
             row.pop("tokens", None)
-        for key in ("history_groups", "confirmed_advice", "known_topics"):
-            analysis.pop(key, None)
-        self.assertIn('"history": []', render(usage, analysis))
+        render(usage, analysis)
 
 
 if __name__ == "__main__":
