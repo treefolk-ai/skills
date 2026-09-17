@@ -29,7 +29,7 @@ Deliver the current task's reviewed changes as a meaningful commit on the curren
 
 - Required: no value beyond access to the intended local repository.
 - Optional: target directory, task scope, explicit paths, and a commit message.
-- Default: fast — current directory, current branch, its configured upstream, and task-related reviewed changes only; start immediately without a plan or confirmation when scope and upstream are unambiguous; inspect and classify in one pass, stage and commit in one pass, and push in one pass, relying on the commit and push outputs instead of separate re-verification; stop quickly and suggest `$push safe` when scope or destination is ambiguous.
+- Default: fast — current directory, current branch, its configured upstream, and task-related reviewed changes only; start immediately without a plan or confirmation when scope and upstream are unambiguous; commit as soon as possible — inspect and classify in one pass, stage and commit in one pass, and push in one pass, relying on the commit and push outputs instead of separate re-verification; stop quickly and suggest `$push safe` when scope or destination is ambiguous.
 - Optional `$push safe`: full verification — present a plan and confirm first; add pre-push history comparison, commit-style lookup, identity preflight, full staged-diff re-read, separate commit inspection, and post-push ahead/behind confirmation.
 
 ## Preconditions
