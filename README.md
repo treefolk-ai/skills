@@ -24,7 +24,7 @@ Treefolk AI 的个人 AI 工作流库，把反复出现的需求整理成可直�
 | `make` | [`$seo`](skills/seo/SKILL.md) | 改善网站、仓库及已有包入口的搜索可发现性，并验证相关改动 |
 | `make` | [`$geo`](skills/geo/SKILL.md) | 改善内容的答案准确性与来源支持，区分内容验证和实际 AI 引用 |
 | `share` | [`$repo`](skills/repo/SKILL.md) | 完成 Git 仓库的首次发布，确认目标远端并验证发布状态 |
-| `share` | [`$push`](skills/push/SKILL.md) | 检查、提交并推送本次改动，核对提交和远端状态 |
+| `share` | [`$push`](skills/push/SKILL.md) | 检查、提交并推送本次改动（默认快速三步，`$push safe` 完整核验） |
 | `share` | [`$pr`](skills/pr/SKILL.md) | 将工作交付为一个经过核对的 Pull Request，按目标创建或复用 |
 | `share` | [`$deploy`](skills/deploy/SKILL.md) | 将选定源码或产物部署到已有目标，并验证实际运行结果 |
 
