@@ -29,40 +29,11 @@ Deliver the current task's reviewed changes as a meaningful commit on the curren
 
 - Required: no value beyond access to the intended local repository.
 - Optional: target directory, task scope, explicit paths, and a commit message.
-- Optional mode: `safe`, invoked as `$push safe`, for full pre-push and post-push verification.
-- Defaults: the streamlined path; current directory, current branch, its configured upstream, task-related reviewed changes only, and a concise message derived from the actual diff in the repository's existing style.
-
-## Default mode
-
-By default, `$push` runs the streamlined path: start immediately without presenting a plan or asking for workflow confirmation when the scope and configured upstream are unambiguous.
-
-- Keep all Safety and Stop conditions.
-- Inspect repository state and candidate paths once, with no extra scans.
-- Stage only reviewed task paths and run `git diff --cached --check`.
-- Commit only when needed, then perform one normal non-force push.
-- Avoid pre-commit staged/unstaged diff repetition, skip pre-push fetch/history comparison, detailed commit metadata verification, commit-style lookup, and identity preflight.
-- After pushing, prefer a lightweight reachability check only (`git ls-remote` against the target branch). Do not run additional history comparisons.
-- Keep the completion report brief.
-- If scope or destination is ambiguous, stop quickly and suggest `$push safe`.
-
-## Safe mode
-
-When the user invokes `$push safe`, run the full verification path for extra care on shared or complex repositories.
-
-- Present a plan and confirm the workflow before acting.
-- Re-read repository state and staged/unstaged diffs as needed to confirm the commit contains only the intended change.
-- Look up the repository's recent commit style before deriving the message, and preflight Git identity.
-- Fetch and compare local and remote history before pushing; push only a new branch or a fast-forward update.
-- Verify the new commit's hash, message, parent, and exact changed paths.
-- After pushing, refresh or query the remote and confirm its branch tip contains the delivered commit with no unexpected ahead/behind state.
-- Produce a detailed completion report.
+- Default: streamlined — current directory, current branch, its configured upstream, task-related reviewed changes only, and a concise message derived from the actual diff; start immediately without a plan or confirmation when scope and upstream are unambiguous; skip pre-push history comparison and detailed commit metadata checks; verify delivery with a lightweight `git ls-remote`; stop quickly and suggest `$push safe` when scope or destination is ambiguous.
+- Optional `$push safe`: full verification — present a plan and confirm first; add pre-push history comparison, commit-style lookup, identity preflight, full staged-diff re-read, and post-push ahead/behind confirmation.
 
 ## Preconditions
 
-- Confirm the target is a Git repository and identify its root, current branch, `HEAD`, remotes, and upstream in a single repo/branch snapshot; avoid repeated or auxiliary checks.
-- Stop on detached `HEAD`; do not switch branches automatically.
-- Read `git status` and candidate paths once before staging anything.
-- Skip listing all untracked names and skip a separate staged-diff pre-read unless explicitly required for an already-staged commit.
 - Separate current-task changes from obvious unrelated work. Inspect mixed files carefully rather than assuming each whole file belongs in one commit.
 - Check candidate files and diffs for `.env` data, tokens, credentials, private keys, generated output, logs, and unexplained large files without echoing secret values.
 - When a commit is needed, confirm Git identity and account for repository hooks or contribution rules.
