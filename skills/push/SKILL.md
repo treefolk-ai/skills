@@ -29,44 +29,55 @@ Deliver the current task's reviewed changes as a meaningful commit on the curren
 
 - Required: no value beyond access to the intended local repository.
 - Optional: target directory, task scope, explicit paths, and a commit message.
-- Optional mode: `fast`, invoked as `$push fast`.
-- Defaults: current directory, current branch, its configured upstream, task-related reviewed changes only, and a concise message derived from the actual diff in the repository's existing style.
+- Optional mode: `safe`, invoked as `$push safe`, for full pre-push and post-push verification.
+- Defaults: the streamlined path; current directory, current branch, its configured upstream, task-related reviewed changes only, and a concise message derived from the actual diff in the repository's existing style.
 
-## Fast mode
+## Default mode
 
-When the user invokes `$push fast`, start immediately without presenting a plan or asking for workflow confirmation when the scope and configured upstream are unambiguous.
+By default, `$push` runs the streamlined path: start immediately without presenting a plan or asking for workflow confirmation when the scope and configured upstream are unambiguous.
 
 - Keep all Safety and Stop conditions.
-- Inspect repository state and candidate paths once (and no extra scans).
+- Inspect repository state and candidate paths once, with no extra scans.
 - Stage only reviewed task paths and run `git diff --cached --check`.
 - Commit only when needed, then perform one normal non-force push.
-- In fast mode, avoid pre-commit staged/unstaged diff repetition, skip pre-push fetch/history comparison, detailed commit metadata verification, commit-style lookup, and identity preflight.
-- After pushing, prefer a lightweight reachability check only (`git ls-remote` against target branch). Do not run additional history comparisons.
+- Avoid pre-commit staged/unstaged diff repetition, skip pre-push fetch/history comparison, detailed commit metadata verification, commit-style lookup, and identity preflight.
+- After pushing, prefer a lightweight reachability check only (`git ls-remote` against the target branch). Do not run additional history comparisons.
 - Keep the completion report brief.
-- If scope or destination is ambiguous, stop quickly and suggest normal `$push`.
+- If scope or destination is ambiguous, stop quickly and suggest `$push safe`.
+
+## Safe mode
+
+When the user invokes `$push safe`, run the full verification path for extra care on shared or complex repositories.
+
+- Present a plan and confirm the workflow before acting.
+- Re-read repository state and staged/unstaged diffs as needed to confirm the commit contains only the intended change.
+- Look up the repository's recent commit style before deriving the message, and preflight Git identity.
+- Fetch and compare local and remote history before pushing; push only a new branch or a fast-forward update.
+- Verify the new commit's hash, message, parent, and exact changed paths.
+- After pushing, refresh or query the remote and confirm its branch tip contains the delivered commit with no unexpected ahead/behind state.
+- Produce a detailed completion report.
 
 ## Preconditions
 
-- Confirm the target is a Git repository and identify its root, current branch, `HEAD`, remotes, and upstream.
-- In fast mode, gather this in a single repo/branch snapshot and avoid repeated/auxiliary checks.
+- Confirm the target is a Git repository and identify its root, current branch, `HEAD`, remotes, and upstream in a single repo/branch snapshot; avoid repeated or auxiliary checks.
 - Stop on detached `HEAD`; do not switch branches automatically.
 - Read `git status` and candidate paths once before staging anything.
-- Fast mode: skip listing all untracked names and skip a separate staged-diff pre-read unless explicitly required for an already-staged commit.
+- Skip listing all untracked names and skip a separate staged-diff pre-read unless explicitly required for an already-staged commit.
 - Separate current-task changes from obvious unrelated work. Inspect mixed files carefully rather than assuming each whole file belongs in one commit.
 - Check candidate files and diffs for `.env` data, tokens, credentials, private keys, generated output, logs, and unexplained large files without echoing secret values.
 - When a commit is needed, confirm Git identity and account for repository hooks or contribution rules.
+  - Safe mode: preflight identity and hook configuration explicitly before committing.
 
 ## Workflow
 
-1. Resolve the repository and current branch. Inspect remotes and upstream, then refresh the relevant remote-tracking state when network access is needed and available. Before classifying pending work, inspect the configured upstream branch when one exists; otherwise inspect the same-named branch on the one clearly intended remote. Determine whether that destination exists and how its tip relates to `HEAD`. Stop if the destination cannot be determined safely.
-   - Fast mode: determine repository/root/branch/upstream in one pass and only check destination exists enough to avoid ambiguous routing.
-2. Classify the state after reviewing status and both diffs.
-   - Fast mode: classify from status/candidate diff once; do not re-read staged/unstaged diffs or status after each branch decision.
+1. Resolve the repository, current branch, remotes, and upstream in one pass; determine whether the destination exists enough to avoid ambiguous routing. Stop if the destination cannot be determined safely.
+   - Safe mode: also refresh the relevant remote-tracking state and inspect how the destination tip relates to `HEAD` before classifying pending work.
+2. Classify the state after reviewing status and the candidate diff once.
    - **Changes exist:** identify one coherent commit scope. Leave unrelated changes untouched and report them. If unrelated work is already staged, do not silently unstage or reset it; stop for direction unless a safe, explicitly authorized isolation is available. If the intended changes represent multiple independent tasks, stop for scope guidance or create only the clearly authorized commit; do not combine them for convenience.
    - **Worktree is clean, commits are ahead:** skip commit creation and continue to the push checks. With no upstream, an absent intended remote branch makes existing local commits pending as a new-branch push; do not misclassify that state as a no-op.
    - **Worktree is clean, no commits are ahead:** return a successful no-op stating that nothing needs committing or pushing.
-3. For a commit, stage only explicit, reviewed paths or safely selected hunks. Never use a blanket `git add .`. Re-read the staged diff and ensure it contains the complete intended change, no unrelated work, and no suspected secret.
-   - Fast mode: do one staged diff check (`git diff --cached --check`) and avoid any extra staged diff re-reads unless explicitly required.
+3. For a commit, stage only explicit, reviewed paths or safely selected hunks. Never use a blanket `git add .`. Run one staged diff check (`git diff --cached --check`) and ensure the staged content contains the complete intended change, no unrelated work, and no suspected secret.
+   - Safe mode: re-read the staged diff in full and confirm the complete intended change without unrelated work before committing.
 4. Derive a short, accurate message from the staged diff. Prefer an established recent repository style when it was inspected. When no style lookup was performed or history is inconsistent, use:
    ```text
    <icon> <type>(<scope>): <summary>
@@ -74,12 +85,14 @@ When the user invokes `$push fast`, start immediately without presenting a plan 
    <body>
    ```
    Choose a conventional icon/type pair for the dominant change, keep the type in English, omit the scope only for truly global work, and follow the user's language for the summary and body. Keep the title concise. For a non-trivial commit, include concise bullets covering every material change point; a trivial one-point change may omit the body. Use a user-supplied message only when it still describes the staged content. Create a new commit without amending.
-5. Verify the new commit by inspecting its hash, message, parent, and exact changed paths. Ensure any unstaged or untracked files remain as expected.
+   - Safe mode: look up recent repository commit style before deriving the message.
+5. Verify the new commit by inspecting its hash and basic staged intent. Ensure any unstaged or untracked files remain as expected.
+   - Safe mode: also verify the commit's message, parent, and exact changed paths.
 6. Determine the push destination. Use the configured upstream when present. Without one, establish an upstream for the same current branch only when `origin` is the unique, clearly intended remote and the same-named remote branch is absent or safely related. Stop on multiple plausible remotes or branch ambiguity.
-7. Compare local and fetched remote history. Push only a new branch or fast-forward update. If the remote is ahead, divergent, inaccessible, or rejects the push, stop without force, merge, rebase, reset, branch switching, or repeated speculative pushes.
-   - Fast mode: skip the pre-push remote-history comparison, but still stop if destination is clearly invalid/unreachable.
-8. Verify the remote branch tip and upstream after the push. Confirm the intended commit is reachable remotely and report any remaining local changes.
-   - Fast mode: perform a lightweight tip presence check (for example via `git ls-remote` on target branch), not full ahead/behind history comparison.
+7. Push with one normal non-force push. Stop if the destination is clearly invalid or unreachable, or if the remote rejects the push; do not force, merge, rebase, reset, switch branches, or repeat speculative pushes.
+   - Safe mode: before pushing, fetch and compare local and remote history. Push only a new branch or fast-forward update; stop if the remote is ahead, divergent, or inaccessible.
+8. Verify the remote branch tip after the push with a lightweight presence check (for example via `git ls-remote` on the target branch). Confirm the intended commit is reachable remotely and report any remaining local changes.
+   - Safe mode: also refresh or query the remote and confirm the branch tip contains the delivered commit with no unexpected ahead/behind state.
 
 ## Stop conditions
 
@@ -100,13 +113,16 @@ When the user invokes `$push fast`, start immediately without presenting a plan 
 
 ## Verification
 
-- For a new commit, verify its hash, message, parent, and exact file set against the reviewed staged diff.
-  - Fast mode: verify only commit hash and basic staged intent; skip extra parent/message cross-checks unless an explicit integrity concern is raised.
+- For a new commit, verify its hash and basic staged intent.
+  - Safe mode: also verify the message, parent, and exact file set against the reviewed staged diff.
 - Verify the current branch and its intended remote/upstream did not change unexpectedly.
-- After pushing, refresh or query the remote and confirm its branch tip contains the delivered commit with no unexpected ahead/behind state.
+- After pushing, perform a lightweight remote check and confirm the target branch tip contains the delivered commit.
+  - Safe mode: refresh or query the remote and confirm no unexpected ahead/behind state.
 - Verify and enumerate remaining modified, staged, or untracked files.
 - For a no-op, verify both that the worktree is clean and that no local commit is waiting to be pushed.
 
 ## Completion report
 
 Report the branch, files committed, commit hash, commit message, remote and branch, push result, remaining local changes, and all warnings or stopped conditions. For a push-only result, identify the pushed commit range. For a no-op, explicitly state that there was nothing to commit and nothing to push.
+
+- Keep the report brief by default; use the detailed report for `$push safe`.
