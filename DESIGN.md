@@ -1,229 +1,222 @@
-# Treefolk Skills design
+# Treefolk Skills 设计
 
-## Product map
+## 产品地图
 
-The product map has three categories: `think` → `make` → `share`. Choose from the user's immediate goal; users invoke a skill directly without choosing a category first.
+产品地图分三类：`think` → `make` → `share`。按用户的直接目标选，不需要先选分类再调用 skill。
 
-| Category | User job | Current skills |
+| 分类 | 用户的活 | 当前 skill |
 | --- | --- | --- |
-| `think` | Decide what to do and assess whether results meet the user's goals | `grill`, `insights`, `todo`, `human-in-the-loop` |
-| `make` | Create or improve a usable artifact | `loop`, `build`, `context-shrink`, `ui-to-desc`, `to-mmd`, `seo`, `geo` |
-| `share` | Deliver work to a repository or running environment | `repo`, `push`, `pr`, `deploy` |
+| `think` | 决定做什么，并判断结果是否符合目标 | `grill`、`insights`、`todo`、`human-in-the-loop` |
+| `make` | 创建或改进一件可用的产物 | `loop`、`build`、`context-shrink`、`ui-to-desc`、`to-mmd`、`seo`、`geo` |
+| `share` | 把成果交付到仓库或运行环境 | `repo`、`push`、`pr`、`deploy` |
 
-The earlier `core` mixed generality with workflow outcomes; its code and diagram skills now belong to `make`, and Git delivery belongs to `share`. The earlier `learn` emphasized evidence retention, while the user's immediate job is judging AI's results against their goals; `human-in-the-loop` therefore belongs to `think`. These changes simplify discovery without merging skills or changing their workflows. Each skill defines its own completion boundary.
+早先的 `core` 把通用性和工作流结果混在一起：代码与图表类 skill 归入 `make`，Git 交付归入 `share`。早先的 `learn` 侧重留存证据，而用户的直接目标是判断 AI 结果是否符合自己的目标，因此 `human-in-the-loop` 归入 `think`。这些调整只改善可发现性，不合并 skill，也不改各自的工作流。
 
-### Classification axes
+### 分类轴
 
-| Axis | Question it answers | Current examples |
+| 轴 | 回答的问题 | 当前取值 |
 | --- | --- | --- |
-| Category | Where does this outcome belong in the user's AI workflow? | `think`, `make`, `share` |
-| Domain | What subject, system, or artifact does it operate on? | `git`, `project-planning`, `project-progress`, `format`, `ui-design`, `source-code`, `hosting`, `discoverability` |
-| Kind | What form of work does the skill perform? | `workflow`, `triage`, `transform`, `synthesis` |
-| Invocation tier | How may the host select it? This is policy, not taxonomy. | P0 explicit, P1 implicit-capable, P2 disabled |
+| Category | 这个结果属于用户 AI 工作流的哪一段？ | `think`、`make`、`share` |
+| Domain | 作用于什么主题、系统或产物？ | `git`、`project-planning`、`project-progress`、`format`、`ui-design`、`source-code`、`hosting`、`discoverability` |
+| Kind | 这项 skill 做的是哪种工作？ | `workflow`、`triage`、`transform`、`synthesis` |
 
-### Current classification
+### 当前分类
 
-| Skill | Category | Domain | Kind | Primary user outcome |
+| Skill | Category | Domain | Kind | 用户的直接结果 |
 | --- | --- | --- | --- | --- |
-| `grill` | `think` | `project-planning` | `workflow` | Stress-test one proposed decision and reach an evidence-backed recommendation about value, complexity, alternatives and timing |
-| `insights` | `think` | `ai-workflow` | `synthesis` | Review a selected period of personal AI work and deliver evidence-backed improvements and source-backed feature suggestions in a local HTML report |
-| `todo` | `think` | `project-planning` | `triage` | Choose one source-backed next action from the current project's task documents |
-| `human-in-the-loop` | `think` | `project-progress` | `workflow` | Let the user assess AI's actual results and evidence limits with little attention, and carry their corrections into subsequent work |
-| `loop` | `make` | `artifact-quality` | `workflow` | Declare a scoped outcome and reconcile observed gaps within a finite iteration budget, with verifiable acceptance and a clear stopping result |
-| `build` | `make` | `source-code` | `workflow` | Turn one clear feature request or specification into working code with proportionate verification and only necessary new structure |
-| `context-shrink` | `make` | `source-code` | `workflow` | Reduce the maintenance context of one bounded source-code scope without changing external behavior |
-| `ui-to-desc` | `make` | `ui-design` | `synthesis` | Turn multi-turn UI evidence into one reviewable component design description |
-| `to-mmd` | `make` | `format` | `transform` | Produce faithful, editable Mermaid source |
-| `seo` | `make` | `discoverability` | `workflow` | Improve search discovery, crawl and index readiness, result presentation, and platform metadata with verified local changes or a read-only audit |
-| `geo` | `make` | `discoverability` | `workflow` | Improve answer accuracy and source support in controlled content, distinguishing content verification from observed generative-search citations |
-| `repo` | `share` | `git` | `workflow` | Initialize and publish a repository safely, reusing or creating its intended remote |
-| `push` | `share` | `git` | `workflow` | Deliver one reviewed change to its intended remote |
-| `pr` | `share` | `git` | `workflow` | Publish work as exactly one verified pull request |
-| `deploy` | `share` | `hosting` | `workflow` | Deploy one reviewed source state or artifact to one existing hosting target and verify the live result |
+| `grill` | `think` | `project-planning` | `workflow` | 盘问一个待定决定，就价值、复杂度、替代方案和时机给出有依据的建议 |
+| `insights` | `think` | `ai-workflow` | `synthesis` | 回顾一段个人 AI 使用记录，在本地 HTML 报告里给出有依据的改进和有来源的新功能建议 |
+| `todo` | `think` | `project-planning` | `triage` | 从当前项目的任务文档里选出一个有依据的下一步 |
+| `human-in-the-loop` | `think` | `project-progress` | `workflow` | 让人用很少精力判断 AI 的实际结果与证据边界，并把纠正带进后续工作 |
+| `loop` | `make` | `artifact-quality` | `workflow` | 声明一个有边界的目标，在有限轮次内收敛差距，验收可查、停止结果明确 |
+| `build` | `make` | `source-code` | `workflow` | 把一条明确的功能需求或规格变成可运行代码，验证与改动相称，只加必要结构 |
+| `context-shrink` | `make` | `source-code` | `workflow` | 在不改外部行为的前提下，缩小一段源码范围的维护上下文 |
+| `ui-to-desc` | `make` | `ui-design` | `synthesis` | 把多轮 UI 证据整理成一份可审阅的组件设计描述 |
+| `to-mmd` | `make` | `format` | `transform` | 产出忠实、可编辑的 Mermaid 源文本 |
+| `seo` | `make` | `discoverability` | `workflow` | 用已验证的本地改动或只读审查，改善搜索发现、抓取索引、结果呈现与平台元信息 |
+| `geo` | `make` | `discoverability` | `workflow` | 改善可控内容的答案准确性与来源支持，并区分内容验证和观察到的生成式搜索引用 |
+| `repo` | `share` | `git` | `workflow` | 安全地初始化和发布仓库，复用或创建既定远端 |
+| `push` | `share` | `git` | `workflow` | 把一次已审阅的改动交付到既定远端 |
+| `pr` | `share` | `git` | `workflow` | 把成果发布为恰好一个经过核对的 Pull Request |
+| `deploy` | `share` | `hosting` | `workflow` | 把一份已审阅的源码状态或产物部署到一个既有托管目标，并验证线上结果 |
 
-## Product intent
+## 产品意图
 
-Treefolk Skills is the evolving product layer for a personal AI workflow. It turns recurring user goals into named, maintainable workflows so the user can ask for an outcome naturally, trust the decisions made along the way, and improve the process once for future agents and hosts.
+Treefolk Skills 是个人 AI 工作流的产品层。它把反复出现的用户目标固化成有名字、可维护的工作流，让用户能自然地要一个结果、信任过程中的决定，并且只需改进一次，后续的 agent 和宿主都能受益。
 
-The library is not a catalog of everything an agent can do. It should contain the smallest coherent set of workflows that noticeably reduces repeated explanation, decision effort, and execution risk.
+它不是 agent 能力的目录，而是**明显减少重复解释、决策负担和执行风险的最小工作流集合**。
 
-“Verifiable” is a design property: the result can be checked from a produced artifact or authoritative state. It is not a claim that every skill has an automated end-to-end test.
+「可验证」是设计属性：结果能从产物或权威状态核对，而不是说每个 skill 都有端到端自动化测试。
 
-## Category design
+## 分类设计
 
-Choose a category from the user's primary reason for invoking the skill, not from the tools or intermediate steps it happens to use.
+按用户调用这项 skill 的**主要理由**分类，不按它恰好用到的工具或中间步骤分类。产品地图的表格给出三个分类各自的用户目标；边界情况看结果归谁所有：只写了一份文档不构成 `make`，发布或分发产物属于 `share`（除非发布与自然结果不可分割），只做物料仍是 `make`。
 
-- `think` helps the user understand, decide and assess work against their goals. A plan or evidence record may be its artifact; writing a document alone does not make the outcome `make`.
-- `make` owns creation and transformation of the artifact. Publishing or distributing that artifact belongs to `share` unless publication is inseparable from the natural outcome.
-- `share` owns observable communication, publication, distribution, adoption, or growth. Creating collateral alone remains `make`.
+只有当真实存在、反复出现的 skill 能改善可发现性或路线图判断时，才新增或改名分类。不要按工具、客户、内容类型或实现技术分类。证据和反馈可以改进每个阶段，但不必各自占一个分类。
 
-Activate or rename a category only when real recurring skills make it improve discovery or roadmap decisions. Do not create one category per tool, customer, content type, or implementation technology. Evidence and feedback can improve every stage without requiring their own category.
+## 包布局
 
-## Package layout
+所有公开包直接放在 `skills/<name>/` 下，与仓库级的 `docs/`、`scripts/`、`templates/` 分开。每个包拥有完整的 `SKILL.md`，以及配套的脚本、references、examples、templates 和宿主 adapter。分类元数据不产生子目录；重新分类不得移动包或改变调用名。
 
-All public packages live directly under `skills/<name>/`, separate from repository-level `docs/`, `scripts/` and `templates/`. Each package owns its complete `SKILL.md` and supporting scripts, references, examples, templates and host adapters. Category metadata does not create subdirectories; reclassification must not move a package or change its invocation name.
+`setup`、`uninstall`、源码获取和包校验都按 `skills/*/SKILL.md` 发现包，与分类无关。宿主链接平铺在选定的激活目录，例如 `~/.agents/skills/<name>`。检出路径和包目录是两回事：默认检出在 `~/.treefolk/skills` 时，包位于 `~/.treefolk/skills/skills/<name>`。
 
-`setup`, `uninstall`, source acquisition and package validation discover `skills/*/SKILL.md` independently of classification. Host links remain flat at the selected activation directory, such as `~/.agents/skills/<name>`. The checkout path and package directory are separate: a default checkout at `~/.treefolk/skills` contains its packages at `~/.treefolk/skills/skills/<name>`.
+包从旧仓库根目录迁到 `skills/` 下时，已有安装靠按归属检查的链接迁移保住：只迁移能证明指向本检出、且源码路径已不存在的链接，他人链接、真实目录和被复用的旧源码路径一律保留。迁移与卸载的具体规则见 `AGENTS.md` 的安装器契约。
 
-Moving packages from the old repository root must preserve existing installations through ownership-checked link migration. `setup` may retarget an exact link to this checkout's absent former package path, including existing links in the legacy Codex directory. It must preserve unrelated links, real files and directories, and any former source path that has been reused. Dry-run reports planned changes without writing; `uninstall` can remove a proven old link directly. Changing the source layout does not itself run installation, change global configuration or prove that a host has refreshed discovery.
+## 便利模型
 
-## Convenience model
+当用户不必编排实现细节就能表达想要的结果时，这个 skill 就是便利的。
 
-A skill is convenient when the user can express the desired outcome without orchestrating implementation details.
+- 用一个入口承担完整结果，优于一串小的公开命令。
+- 用简短、面向目标的名称，以及能和相邻选项区分开的触发描述。
+- 让常见的安全路径成为默认；把空操作做成成功且明确的结果。
+- 只问那些会实质改变结果、授权或安全性的信息。
+- 高影响或高度重叠的工作流保持显式调用；只有范围聚焦、描述唯一、已被当前请求授权，并用有限范围、停止条件和验证控制住风险的流程，才允许隐式调用。
+- 让部分完成有用：保留已完成的安全工作，说清边界，以及还剩什么。
+- 调用 skill 不需要用户了解 category、domain、kind、宿主 adapter 或内部分工。
 
-- Prefer one entry point that owns the natural outcome over a chain of small public commands.
-- Use short, goal-oriented names and triggering descriptions that distinguish nearby choices.
-- Default the common safe path and make no-op behavior successful and explicit.
-- Ask only for information that materially changes the result, authorization, or safety.
-- Keep high-impact or overlapping workflows explicit; allow implicit matching only when the workflow is focused, uniquely described, authorized by the current request, and keeps risk controlled through a bounded scope, stop conditions, and verification.
-- Make partial completion useful: preserve completed safe work, identify the exact boundary, and say what remains.
-- Do not require users to know category, domain, kind, host adapter, or internal composition in order to invoke a skill.
+便利不等于隐藏有后果的行为，而是把决定放在合适的层级：skill 处理例行判断，不可逆、模糊或对外可见的选择留给用户。
 
-Convenience does not mean hiding consequential behavior. It means placing decisions at the right level: the skill handles routine judgment, while the user retains control over irreversible, ambiguous, or externally visible choices.
+安装与更新属于仓库基础设施，不新增公开 skill，也不隐含开启自动更新的授权。README 以一段可复制的请求作为安装入口，终端命令和固定版本选项是次要路径；复用已有安装前必须核对来源，冲突保留现场。
 
-README leads installation with one copyable request for the coding host to acquire source, activate it through the existing `setup`, and verify the result. Reuse an existing installation only after checking its source; preserve conflicts. Terminal commands and fixed-version options are secondary. Installation and update remain repository infrastructure, without a new public skill or implied authorization to enable automatic updates.
+## 能力边界
 
-## Capability boundaries
-
-| Concept | Product role |
+| 概念 | 产品角色 |
 | --- | --- |
-| Skill | A user-invokable workflow that owns a complete, observable outcome |
-| Step | One operation inside that workflow |
-| Script | Deterministic implementation or verification support |
-| Resource | A template, reference, schema, or example used by a workflow |
+| Skill | 可被用户调用、承担完整可观察结果的工作流 |
+| Step | 该工作流内部的一步操作 |
+| Script | 确定性的实现或验证支撑 |
+| Resource | 工作流用到的模板、参考、schema 或示例 |
 
-For example, `git add` is a step; “review, commit, push, and verify this change” may be a skill. Reuse alone does not make a step, script, or resource a public product entry.
+例如 `git add` 是一步；「审查、提交、推送并核验这次改动」可以是一个 skill。仅仅被复用，不足以让一个 step、script 或 resource 成为公开产品入口。
 
-## Public skill admission
+## 公开 skill 的准入
 
-Before adding a public skill, require clear answers to all of these questions:
+新增公开 skill 前，以下问题都要有明确答案：
 
-1. Would a user naturally request this outcome directly and repeatedly?
-2. Can the result be checked independently of the agent's completion claim?
-3. Does the workflow contain meaningful judgment, safety boundaries, or branching?
-4. Is an existing skill an equally natural and more convenient owner?
-5. Is the proposed name distinct enough to deserve space in the user's mental model?
+1. 用户会自然地、反复地直接要这个结果吗？
+2. 结果能独立于 agent 的完成声明被核对吗？
+3. 工作流里是否包含有意义的判断、安全边界或分支？
+4. 是否已有一个同样自然、而且更便利的 skill 承担它？
+5. 拟用的名字是否足够独立，值得占用户心智里的一格？
 
-A new skill should normally pass questions 1–3 and 5, with question 4 answered no. Otherwise keep the capability as a step, script, resource, private workflow, or addition to an existing skill until real use proves a separate entry point.
+新 skill 通常应通过 1–3 和 5，且第 4 题回答「否」。否则先把它做成 step、script、resource、私有工作流，或并入已有 skill，等真实使用证明需要独立入口。
 
-## Scope and composition
+## 范围与组合
 
-Compose capabilities inside the natural user outcome before splitting them into public entries. A selected skill may use commands, scripts, resources, or host capabilities, but it remains responsible for authorization, stopping, verification, and reporting across the complete outcome.
+先把能力组合进用户的自然结果里，再考虑拆成公开入口。一个被选中的 skill 可以使用命令、脚本、资源或宿主能力，但它要为完整结果的授权、停止、验证和报告负责。
 
-`grill` owns the recurring decision “is this worth doing?” across features, architecture, defaults, automation and collaboration rules. Actual examples include adding a Codex hook, cleaning up terminals at session exit, choosing dev-server reuse or a new port, and recording every discussion. The user chose the short name for its direct, probing tone. `todo` selects from documented work, `build` implements an already-clear behavior, and `human-in-the-loop` records result evidence; none owns challenging a proposed decision. The result is an inspectable argument with sources, assumptions, tradeoffs and a next step, rather than a claim that discussion proves future value. It belongs to `think / project-planning / workflow`.
+`grill` 承担「这件事值得做吗」这个反复出现的决定，覆盖功能、架构、默认值、自动化和协作规则。实际例子包括加一个 Codex hook、退出会话时清理终端、开发服务器复用还是换端口、要不要每次讨论都记录。名字取它直接追问的语气。`todo` 从已有文档里选任务，`build` 实现已经清楚的行为，`human-in-the-loop` 记录结果证据，都不负责挑战一个待定决定。它的结果是可审阅的论证——来源、假设、取舍和下一步，而不是「讨论过就说明未来有价值」。归属 `think / project-planning / workflow`。
 
-The interaction borrows one-question-at-a-time probing, recommended answers for decisions, and independent fact lookup from `grilling`, but is self-contained and does not require that package. The questions follow consequential uncertainty rather than an exhaustive interview. Scrutiny is proportional to consequences and reversibility, treats the proposal and alternatives symmetrically, and ends when further questions would not change the recommendation. New working conditions can create real needs, as described in [productivity and needs](docs/productivity-and-needs.md); absent history alone does not invalidate them. Learning and enjoyment can be legitimate benefits. Maintaining the status quo is a successful outcome when supported, missing evidence produces a conditional recommendation, and an unidentified target requires only the smallest clarifying question. Repeated use must establish how useful the questioning is.
+交互借用了 `grilling` 的一次一问、为决定给出推荐答案、独立查证事实，但自成一体，不依赖那个包。问题跟着有后果的不确定性走，不做穷尽式访谈。盘问的力度与后果和可逆性相称，对提案和替代方案一视同仁，问到再问也不会改变建议时就停。新的工作条件可以产生真实需求（见 [产品心得](docs/productivity-and-needs.md)），仅凭没有历史记录不能否定它；学习和乐趣本身可以是正当收益。维持现状若证据支持就是成功结果，证据不足给出有条件建议，目标不清楚只问最小的澄清问题。盘问有没有用，要靠重复使用来验证。
 
-`grill` is P0 because the user deliberately chooses scrutiny that overlaps ordinary implementation and planning conversations. Invocation authorizes discussion and relevant local read-only inspection; external research needs explicit task authorization, and implementation is subsequent work. Its complete workflow lives only in `skills/grill/SKILL.md`. Conversation is the default deliverable, with memory organization left entirely to the host. The package adds no discussion-document requirement, shared preference store, cross-project synchronization, global guidance edits or hooks, and makes no persistence guarantee. Source creation does not install or replace the separately available `grilling` skill.
+`grill` 要求显式调用，因为用户是主动选择了一种会和日常实现、规划对话重叠的审视。调用授权的是讨论和相关的本地只读检查；外部调研需要当前任务单独授权，实现是后续工作。完整工作流只在 `skills/grill/SKILL.md`。对话是默认交付物，记忆整理完全交给宿主。这个包不引入讨论文档要求、共享偏好库、跨项目同步、全局规则改写或 hook，也不保证持久化。创建源码不会安装或替换另有的 `grilling` skill。
 
-`insights` owns the recurring job “what could improve how I work with AI?” It combines personal usage review, recurring friction, feature discovery and an inspectable HTML report, inspired by Claude Code’s `/insights`. This is distinct from `todo` selecting project work, `human-in-the-loop` recording task acceptance, and `grill` challenging a decision. It belongs to `think / ai-workflow / synthesis` and is P0 because cross-project personal history must be deliberately selected. The initial adapter supports Codex rollouts; Python standard-library helpers implement deterministic collection and rendering. Invocation does not authorize applying advice, changing global guidance, installation, publication or Git delivery.
+`insights` 承担「我该怎么改进和 AI 的协作」这个反复出现的任务：个人使用回顾、反复出现的摩擦、新功能发现，以及一份可检查的 HTML 报告，灵感来自 Claude Code 的 `/insights`。它区别于 `todo` 选项目任务、`human-in-the-loop` 记录任务验收、`grill` 挑战决定。归属 `think / ai-workflow / synthesis`，要求显式调用，因为跨项目的个人历史必须被主动选择。初版 adapter 支持 Codex rollout；Python 标准库脚本负责确定性的收集与渲染。调用不授权采纳建议、修改全局规则、安装、发布或 Git 交付。
 
-Default to 90 calendar days without first-run tracking, reusing an explicit period from the conversation. Latest-feature queries default off: bundled official summaries and newer snapshots from prior reports supply dated references. Only explicit `最新功能开` authorizes relevant official queries with generic keywords. Private transcripts are not uploaded for research; query failures remain visible. The active host performs model analysis, so local helpers being offline does not make the whole workflow offline.
+默认回顾 90 个自然日，不做首次运行追踪，对话里给了明确区间就用它。最新功能查询默认关闭：内置的官方摘要和此前报告里的较新快照提供带日期的参考。只有显式说 `最新功能开` 才授权用通用关键词查官方资料。私人对话记录不会为调研上传；查询失败保持可见。模型分析由当前宿主完成，所以本地脚本离线不等于整个工作流离线。
 
-Each run selects at most three useful suggestions from current evidence, combining workflow advice and feature discovery. Dated references support claims without defining a fixed recommendation pool. Prior original suggestions stay in generation context to avoid repetition; the report has no history inventory, quick-reference catalog or known-state management. The user found accumulated advice burdensome, so the workflow no longer asks them to classify, save or confirm knowledge. Existing reports and `known.md` are preserved; new runs do not access the latter.
+每次运行最多从当前证据里挑三条有用建议，兼顾工作流建议和新功能发现。带日期的参考用于支撑结论，不构成固定的推荐池。此前的原创建议留在生成上下文里以避免重复；报告不做历史清单、速查目录或已知状态管理。用户觉得累积的建议是负担，所以工作流不再要求分类、保存或确认知识。已有报告和 `known.md` 都保留，新运行不读后者。
 
-A recorded task may already be complete. Copyable “try it” instructions are optional and require practical conditions, a clear destination and an observable result; other suggestions remain concise advice. Copying never executes anything or proves adoption. Recurring topics require new value, and fewer than three suggestions is a valid result. Scripts retain token deltas, weighted cache rates and date/project filters; counts do not measure efficiency. Narrative keeps its original analysis period.
+可复制的「试一下」指令是可选的，需要具备现实条件、明确目的地和可观察结果；其余建议保持简洁，少于三条也是合法结果。复制不会执行任何东西，也不代表已采纳。
 
-Reports remain private, independent folders at `${TREEFOLK_HOME:-~/.treefolk}/insights/<generation-time>-<unique-suffix>/`, containing data and HTML. Earlier data and permissions are preserved, writes refuse overwrites, and failures never redirect silently. There is no service, feedback store, automatic retention, index or uninstall-time data deletion. The white template highlights suggestions in blue, shows necessary limitations in amber and expands evidence on demand.
+报告是私有的独立目录 `${TREEFOLK_HOME:-~/.treefolk}/insights/<生成时间>-<唯一后缀>/`，内含数据和 HTML。既有数据与权限保留，写入拒绝覆盖，失败不会静默改道。没有服务、反馈存储、自动留存、索引，卸载时也不删数据。正常调用在成功生成并返回路径和状态后结束，不做探针、测试、演示或浏览器验收；内置的校验、转义、脱敏和防覆盖保留。
 
-Normal invocation ends after successful generation and returned paths/statuses, without probes, separate checks, tests, demos or browser acceptance. Built-in validation, escaping, redaction and overwrite protection remain. Runtime helpers live in `scripts/`, maintenance tests and synthetic fixtures in `tests/`. Maintenance uses `python3 -B skills/insights/tests/test_insights.py`, isolated rendered desktop/narrow-screen checks when the template changes, and the repository checks in `AGENTS.md`; these do not establish advice effectiveness.
+`loop` 是一个显式请求的独立入口，跨产物类型持续迭代，职责是让用户不必每轮都催。设计结合了 [Ralph Wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) 的迭代和 [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/) 的期望状态与调谐概念；它不依赖其他 skill，也不继承任何领域的工作流。短名字对应的是用户会反复调用。固定的验收条件、候选证据，以及成功、空操作、部分完成、受阻这几种不同结果，让过程可检查、可恢复。选对验收条件和下一步纠正措施，涉及命令包装之外的判断。归属 `make / artifact-quality / workflow`，要求显式调用，因为它会主动和日常生产流程重叠。
 
-`loop` is an explicitly requested, independent entry point for sustained iteration across artifact types. Its recurring job is to finish a bounded task without requiring the user to prompt every round. The design combines [Ralph Wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) iteration with the desired-state and reconciliation concepts of [Kubernetes controllers](https://kubernetes.io/docs/concepts/architecture/controller/); it does not require another skill or inherit one domain's workflow. The short name reflects the user's recurring invocation. Fixed acceptance, candidate evidence and distinct success, no-op, partial and blocked outcomes make results inspectable and recoverable. Choosing appropriate criteria and the next corrective action involves judgment beyond a command wrapper. It belongs to `make / artifact-quality / workflow`, with P0 selection because it deliberately overlaps ordinary production workflows.
+对外有两种用法：`$loop [轮次] [验收条件…] [：任务]` 和 `$loop help [任务或顾虑]`。这些是 agent 解释的对话输入，不是 shell 语法。用户声明目标，agent 根据观察到的差距选择动作。轮次通常设上限，默认十轮，可提前完成。明确要求固定检查次数时尊重该意图，不强行改写。任务描述省略时，只继承唯一没有歧义的当前目标。验收条件保留比较方向、原生单位和证据要求；缺条件不授权做通用评分表或投机性的扩展工作。
 
-The public interaction teaches two forms: `$loop [rounds] [acceptance conditions…] [：task]` and `$loop help [task or concern]`. These are conversation inputs interpreted by the agent, not a shell grammar. Users declare the goal; the agent chooses actions from observed gaps. Rounds normally set an upper bound, defaulting to ten, with early completion. An explicit request for a fixed number of checks preserves that intent without forcing edits. Omitted task text inherits only an unambiguous current target. Conditions keep their comparison direction, native units and evidence requirements; missing criteria do not authorize a universal scorecard or speculative extensibility work.
+`help` 是只读的调用构造器：用对话上下文和包内参考，给出几条相关条件和一个可直接使用的调用，然后停止，不新增例行审批关卡。状态和取消属于当前任务的控制，不是要额外学习的入口。
 
-Help is a read-only invocation builder: it uses conversation context and packaged references, suggests a few relevant criteria and a ready-to-use invocation, then stops. The full ten-term industry menu is disclosed on request. This keeps the common path convenient without adding routine approval gates. Status and cancellation remain controls of the active task, rather than additional entry points to learn. Runtime language, configuration schemas and model selection stay out of ordinary help.
+完整工作流在 `skills/loop/SKILL.md`，只由调用元数据和条件参考支撑。迭代依赖当前 agent 遵循工作流；包内不含独立命令执行器，也不提供宿主强制的续跑、后台执行或自动恢复。只有服务于真实执行路径的脚本才放进来，而不是新增一个没人用的接口。显式调用只授权范围内的本地工作和必要的记录；外部动作和 Git 交付仍需当前任务单独授权。进度和完成要有产物证据。结果质量是否优于基线，是待验证的经验问题，不是采用了这些设计参考就自动成立。
 
-The complete workflow lives in `skills/loop/SKILL.md`, supported only by invocation metadata and the criteria reference. Iteration depends on the active agent following the workflow; the package does not include a standalone command runner or provide host-enforced continuation, background execution or automatic recovery. A script belongs here only when it serves an actual execution path, rather than introducing a separate unused interface. Explicit invocation authorizes scoped local work and necessary records only; external actions and Git delivery still need task-specific authorization. Progress and completion require artifact evidence. Better outcome quality than a baseline remains an empirical question, not a consequence of adopting these design references.
+`repo` 端到端承担首次发布。确定唯一的托管仓库身份后，查询服务商，并在确认不存在时最多创建一个空仓库。创建默认私有，要公开必须在当前调用里明确说明。复用已有仓库不会隐式改变它的可见性。
 
-`repo` owns first publication end to end. After resolving one unambiguous hosted-repository identity, it queries the provider and may create exactly one empty repository when absence is confirmed. Creation defaults to private; public visibility requires an explicit instruction in the current invocation. Reusing an existing repository never changes its visibility implicitly.
+`push` 默认走快速三 pass：立即开始，一趟检查并归类状态，一趟暂存并提交，一趟推送，用提交和推送的输出作为交付确认，不做额外的远端检查。这个默认仍保留全部 Safety 和 Stop 条件，包括禁止强推、检查暂存区里的密钥、禁止暂存未审阅内容；它用更少的 agent 往返换取常见单人快进场景下少一层远端核对。`$push safe` 走完整核验路径（计划、推送前历史比对、提交风格查询、身份预检、单独的提交检查、推送后 ahead/behind 确认），用于共享或复杂仓库。这是有意偏向速度的默认，不放松禁止强推和禁止未审阅暂存。
 
-`push` defaults to a fast three-pass path: it starts immediately, inspects and classifies state in one pass, stages and commits in one pass, and pushes in one pass, relying on the commit and push outputs as delivery confirmation instead of a separate remote check. This default still keeps every Safety and Stop condition, including the non-force push, the staged-diff secret check, and the prohibition on unreviewed staging; it trades the belt-and-suspenders remote verification for fewer agent round-trips on the common single-author fast-forward case. `$push safe` opts into the full verification path (plan, pre-push history comparison, commit style lookup, identity preflight, separate commit inspection, and post-push ahead/behind confirmation) for shared or complex repositories. This is a deliberate default favoring speed; it does not weaken the prohibition on force pushes or unreviewed staging.
+`deploy` 在项目准备好之后承担部署。用户没有指定服务商、且项目证据不冲突时，默认选 Cloudflare——但不默认 Pages 或 Workers、账号、项目、环境或生产。常规路径更新一个明确的既有目标，并核验服务商的权威状态和对应的线上入口；明确指定非 Cloudflare 服务商时，只在项目已有完整部署与验证路径的前提下支持。开通、Git 发布、路由、域名、密钥、迁移、结果不确定后的重试、回滚和删除都仍是单独的显式工作。`$deploy plan` 只做本地静态检查，不构建、不联网、不改文件、不产生外部变更。
 
-`deploy` owns deployment after a project is prepared. When the user does not name a provider and project evidence does not conflict, it defaults provider selection to Cloudflare—but not to Pages or Workers, an account, a project, an environment, or production. Its normal path updates one exact existing target and verifies authoritative provider state plus the applicable live endpoint; an explicitly named non-Cloudflare provider is supported only through a complete existing project-owned deployment and verification path. Provisioning, Git publication, routing, domains, secrets, migrations, retries after an indeterminate result, rollback, and deletion remain separate explicit work. The `$deploy plan` modifier performs static local inspection only, with no build, network access, file change, or external mutation.
+中间产物在满足以下条件时可以成为一个 skill：用户会直接要它，产出它需要语义判断，并且通过同一套准入检验。`to-mmd` 符合，因为选对图模型并保住关系，不是改名或机械转换文件。
 
-An intermediate artifact can qualify as a skill when users request it directly, producing it requires semantic judgment, and it passes the same admission test. `to-mmd` qualifies because selecting a diagram model and preserving relationships is more than renaming or mechanically converting a file.
+`context-shrink` 在一个用户指定的仓库目录内做保持行为的上下文缩减。它必须先确立受保护行为和基线，扫描归类发现项，改动前完成 MAP，逐项验证，再验证最终结果。范围缺失、性能调优、类型或架构重构、业务行为变更、Git 交付和外部副作用都在边界之外。MAP 为空是成功的空操作，关键验证失败或无法进行是诚实的部分完成，而不是 DONE。
 
-`context-shrink` owns behavior-preserving context reduction inside one user-selected repository directory. It must establish protected behavior and a baseline, scan and classify findings, complete a MAP before mutation, verify every item, and verify the final result. Missing scope, performance tuning, type or architecture redesign, business-behavior changes, Git delivery, and external side effects remain outside its boundary. An empty MAP is a successful no-op, while failed or unavailable critical verification is an honest partial result rather than DONE.
+`build` 取代 `code-craft`，成为「把一条明确的功能需求或规格变成可运行、已验证的代码」的入口。它的反复任务是增加功能或改变行为，口语化的需求就足够，用户不必另外要求可维护性。早先那个偏向质量的名称在实际使用中没能传达这个场景。用户选了 `build`，取它的建设含义；描述明确排除了只运行编译器或打包器这类请求。它仍是 `make / source-code / workflow`，允许隐式调用，用于已被当前请求授权的、有边界的本地实现。
 
-`build` replaces `code-craft` as the entry for turning one clear feature request or specification into working, verified code. The recurring job is adding a feature or changing behavior, with ordinary spoken requirements as sufficient input; users need not separately request maintainability. The earlier quality-oriented name failed to reveal that situation in actual use. The user chose `build` for its construction meaning; the description excludes requests merely to run a compiler or bundler. The skill remains `make / source-code / workflow` and P1 for already-authorized, bounded local implementation.
+留存一个实现工作流的理由是：用户反复要功能；行为和 diff 可独立检查；复用、工具选型、范围控制和验证在本地任务内涉及有后果的判断。`context-shrink` 保持行为、简化既有范围，`loop` 承担持续迭代，都不是它的自然替代。新名称、描述和具体示例把「实现」这个结果点明。便利来自默认值——尽量少加结构和提问。DONE 和 NO-OP 要有对应证据；PARTIAL 保留实现进度和未满足的验收；BLOCKED 在实现推进前指出缺失的前提。改名后的入口是否真的更好发现，仍要看实际重复使用。
 
-The admission decision is to retain one implementation workflow: users repeatedly ask for features; behavior and diffs are independently inspectable; reuse, tool selection, scope control and verification involve consequential judgment within the local task. `context-shrink` preserves behavior while simplifying an existing scope, and `loop` owns sustained iteration, so neither is the natural replacement. The new name, description and concrete examples identify the implementation outcome. Convenience comes from defaults that minimize extra structure and questions. DONE and NO-OP require applicable evidence; PARTIAL preserves implementation progress with unmet acceptance; BLOCKED identifies missing prerequisites before implementation progress. Actual repeated use must still establish whether the renamed entry improves discovery.
+用户最高的实现原则是可读性优先、异常优先。异常优先指先找出真实失败路径，定义拒绝、传播、恢复和资源清理，再展开正常流程；它不要求编造异常或在每层都写 `try/catch`。用户体验、只引入必要复杂度、本地可移除、避免过早抽象，在已确认的需求、正确性、兼容性和授权约束内支撑这些原则。可移除不构成专门做一层接口或插件的理由，表面相似的代码也不构成抽出不同业务规则的理由。比较项目现有能力、成熟生态方案和本地实现时看总维护成本，验证与改动相称。能自己手写不构成排除依赖的理由，流行也不构成采用的理由。VueUse 和 Tailwind CSS 是相关时值得评估的例子，不是指定技术栈。文件长度、改动理由多、有副作用，是判断信号，不是自动拆分规则。
 
-The user's highest implementation principles are readability first and exceptions first. Exceptions first means identifying actual failure paths and defining rejection, propagation, recovery and resource cleanup before expanding the normal flow; it does not require invented exceptions or `try/catch` at every layer. User experience, introducing only necessary complexity, local removability and avoiding premature abstraction support these principles within agreed requirements, correctness, compatibility and authorization constraints. Removability does not justify a dedicated interface or plugin layer, and superficially similar code does not justify abstracting distinct business rules. Compare project capabilities, mature ecosystem solutions and local implementation by total maintenance cost, and keep verification proportional. Being able to handwrite a solution does not by itself rule out a dependency; popularity does not justify adoption either. VueUse and Tailwind CSS are examples to evaluate when relevant, not a required stack. File length, multiple change reasons and side effects are signals for judgment, not automatic splitting rules.
+实现前，`build` 把当前请求、项目约束和可用的、与任务相关的用户记忆与习惯结合起来。当前明确选择优先于旧偏好；与项目约束冲突时，先解决冲突再做依赖它的工作。记忆不可用不阻塞实现，也不允许声称读过；这条策略不假设宿主有某种记忆能力。只在上下文无法解决、且该决定会实质改变结果、兼容性、交付或授权时才提问；这不是每个任务前的例行审批关卡。读取偏好是实现内部的判断，不新增公开 skill，也不授权安装、联网或迁移。
 
-Before implementation, `build` combines the current request and project constraints with available, task-relevant user memories and habits. Current explicit choices supersede older preferences; conflicts with project constraints must be resolved before dependent work. Unavailable memory does not block implementation or permit claims that it was read, and this policy does not assume a particular host's memory capability. Ask only when context cannot resolve a decision that materially changes the result, compatibility, delivery or authorization; this is not a routine approval gate before every task. Preference reading remains an internal implementation decision, not a new public skill or authorization to install, access the network or migrate.
+已有工具链优先于个人默认；只有在 JavaScript/TypeScript 工作里既没有既定包管理器、也没有当前选择或适用偏好，且约束兼容时，才回退到 pnpm。失败验证只针对真实受影响的失败语义。完整决定和工作流在 `skills/build/SKILL.md`；大范围保持行为的清理、需求探索、只读审查、Git 交付和部署是另外的结果。
 
-Existing toolchains take precedence over personal defaults; pnpm is the fallback only for JavaScript/TypeScript work with neither an established package manager nor a current user choice or applicable preference, and with compatible constraints. Failure verification applies only to real affected failure semantics. The complete decisions and workflow live in `skills/build/SKILL.md`; broad behavior-preserving cleanup, requirements exploration, read-only review, Git delivery and deployment are separate outcomes.
+改名不保留第二个公开包或工作流别名。`build` 在共享目标里成功激活后，`setup` 可以删除明确属于本检出、指向已不存在的旧包路径的 `code-craft` 链接；被复用的源码路径、他人链接或真实目录保持不动。改源码不会激活新名字，也不会改写个人宿主配置。
 
-The rename does not retain a second public package or workflow alias. After successful activation of `build` in the shared target, setup may remove exact owned `code-craft` links to this checkout's absent former root or `skills/` package path, including in an existing legacy Codex target. A reused source path, foreign link or real directory remains untouched; a new-name conflict prevents cleanup. Direct uninstall recognizes the same owned historical paths. Source edits do not activate the new name or rewrite personal host configuration.
+`human-in-the-loop` 属于 `think`：帮人用很少精力判断 AI 的实际结果是否符合目标。反复出现的「保留证据」或「写回对目标、验收、取舍的判断」这类请求，支撑了这个入口；名字反映的正是人的这个角色。`todo` 选当前项目里的任务，这项 skill 为已选中的任务保留证据和纠正。隐式选择适用于这类记录请求。日常开发、问进度和恢复 AI 上下文都不触发写文件。
 
-`human-in-the-loop` belongs to `think`: it helps a person judge whether AI's actual results fit their goals, with little attention. Repeated requests to retain evidence or write back judgments about goals, acceptance and tradeoffs justify this entry; the name reflects that human role. `todo` selects a task within the current project; this skill preserves evidence and corrections for the already-selected task. P1 selection applies to those recording requests. Ordinary development, progress questions and AI context recovery do not trigger file writes.
+根目录一份 `evidence.md`，默认四个字段——目标、已验证结果、未解决问题、下一步验证——提供一个可预期的阅读入口。这些是判断所需的信息，不是死格式：含义清楚的等价写法不必重写。人可以写粗略的笔记，AI 保留其含义和不确定度，未改动的记录不碰。压缩时必须保住决策所需的证据和约束。价值判断看的是：人能否分清实际结果和未知项、能否判断工作是否符合目标、能否看到纠正影响了后续工作，且没有增加维护负担。记录维护既不打断也不扩大既有任务授权。完整工作流只在 `skills/human-in-the-loop/SKILL.md`。
 
-One root `evidence.md` defaults to four fields—goal, verified result, unresolved issues and next verification—for a predictable reading entry. These are the information needed for judgment, not a rigid format: clear equivalent layouts need no rewrite. People can contribute rough notes; AI preserves their meaning and uncertainty, and leaves unchanged records untouched. Compression must retain the evidence and constraints needed for a decision. Judge value by whether the person can distinguish actual results from unknowns, decide whether the work meets their goals, and see corrections affect subsequent work without added upkeep. Record maintenance neither interrupts nor expands existing task authorization. The complete workflow lives only in `skills/human-in-the-loop/SKILL.md`.
+`seo` 和 `geo` 是两个独立工作流，因为用户会分别提出「搜索发现」和「生成式搜索里的答案准确且有依据」这两类请求。`seo` 负责搜索意图、抓取与索引就绪、结果呈现，以及仓库或包的元信息。`geo` 负责从问题到结论的证据、实体与版本清晰度、可控内容的修正，以及观察到的引用支持。这是产品边界，不是说搜索服务商用了完全独立的排序系统。两者都不需要安装或运行对方。
 
-`seo` and `geo` are separate public workflows because users independently ask for search discovery and for accurate, supported answers in generative search. `seo` owns search intent, crawl/index readiness, result presentation, and repository or package metadata. `geo` owns question-to-claim evidence, entity and version clarity, corrections to controlled content, and observed citation support. This is a product boundary, not a claim that search providers use wholly separate ranking systems. Neither skill requires the other to be installed or run.
+当公开 `AGENTS.md` 的内容有助于回答目标读者的问题时，它归属 `geo`，和现有 README、文档来源并列。目的、安装、运行、验证和局限是可选的内容视角，不是必须的文件或五字段模板。复用权威事实，不要重复维护；保留开发说明和授权边界。列出命令不证明执行过，有文件名不证明排名或引用提升。内部 `evidence.md` 可以用于事实核对，但不自动发布，也不当作可公开访问的来源。完整的 Agent 环境配置在这个结果之外。
 
-Public `AGENTS.md` content belongs in `geo` when it helps answer the target reader's questions, alongside existing README and documentation sources. Purpose, installation, running, verification and limits are optional content perspectives, not a required file or five-field template. Reuse authoritative facts without duplicating their maintenance; preserve development instructions and authorization boundaries. Listing a command does not prove execution, and a filename does not prove ranking or citation gains. Internal `evidence.md` may inform fact checking but is not automatically published or treated as a publicly accessible source. Full Agent environment setup remains outside this outcome.
+两者都被要求时，共享项目事实和访问观察，技术性与元信息改动归 `seo`，答案与证据改动归 `geo`。共享文稿只合并一次修改，并验证合并结果。明确指定的目标优先于从当前项目推断，没有「一律 GitHub 优先」的默认。两者都是 `make / discoverability / workflow`，允许隐式调用，因为默认交付物是经过验证的本地产物或只读审查，附带具体的远端建议。选中 skill 不授权公开曝光、远端变更、Git 交付、部署、发布或对外联系；已授权的动作保持原有范围。
 
-When both are requested, share the project facts and access observations, assign technical and metadata changes to `seo`, and assign answer-evidence changes to `geo`. Merge edits to shared prose once and verify the combined result. Explicit targets override inference from the current project; there is no universal GitHub-first default. Both are `make / discoverability / workflow` and P1 because their default deliverable is a verified local artifact or read-only audit, with concrete remote recommendations. Skill selection does not authorize public exposure, remote mutations, Git delivery, deployment, publication, or outreach; an already authorized action retains its original scope.
+只有当用户反复需要独立拿到子结果、新名字比原来更清楚、且两个入口都不需要用户手动拼回旧流程时，才拆分已有 skill。
 
-Split an existing skill only when users repeatedly want the sub-outcomes independently, the resulting names are clearer than the original, and neither entry requires the user to reconstruct the old workflow manually.
+## 工作流契约
 
-## Workflow contract
+每个公开 skill 必须定义：
 
-Every public skill must define:
+- 一个可观察的结果；
+- 自然的使用与不使用场景；
+- 必需输入、可选输入和默认值；
+- 前置条件，以及有序的判断分支；
+- 成功时的空操作行为；
+- 停止条件和禁止动作；
+- 针对产物或权威状态的验证；
+- 完成报告，区分成功、部分完成、警告和未触及的工作。
 
-- one observable outcome;
-- natural use and non-use cases;
-- required inputs, optional inputs, and defaults;
-- preconditions and ordered decision branches;
-- successful no-op behavior;
-- stop conditions and prohibited actions;
-- verification against the artifact or authoritative state;
-- a completion report that distinguishes success, partial completion, warnings, and untouched work.
+任何会改动文件、历史、远端状态或外部系统的工作流，都必须先检查再动手，事后验证。绝不只凭命令退出码推断成功。上面 `insights` 的报告生成例外，用的是打包脚本返回的产物路径和状态，不做额外的逐次检查。
 
-Any workflow that changes files, history, remote state, or an external system must inspect before acting and verify afterward. Never infer success from a command exit code alone. The `insights` report-generation exception above uses the bundled helpers' returned artifact paths and statuses without additional per-run checks.
+证据层级要分清：
 
-Keep evidence levels distinct:
+- 包校验证明结构和必需的元数据。
+- 安装器测试只证明在临时文件系统里跑过的场景。
+- 逐次验证证明该次执行观察到的结果。
+- 端到端或真实宿主的兼容性需要单独的行为证据。
 
-- Package validation proves structure and required metadata.
-- Installer tests prove only the scenarios exercised in temporary filesystems.
-- Per-run verification proves the observed outcome of that execution.
-- End-to-end or live-host compatibility requires separate behavioral evidence.
+## 调用归属
 
-## Invocation ownership
+调用策略决定宿主如何选中 skill；它不决定 category 或工作流范围。
 
-Invocation policy decides how a host may select a skill; it does not determine category or workflow scope.
+- 只允许显式调用，适合有后果或高度重叠的工作流：宿主只在用户写出 `$name` 时选中它。
+- 允许隐式调用，还适合范围聚焦、结果已被当前请求授权，并用有限范围、停止条件和验证控制住风险的工作流。
+- 宿主配置可以整体停用一个 skill，让它两种方式都不参与选择。
 
-- P0 requires explicit invocation for consequential or substantially overlapping workflows.
-- P1 allows explicit or description-based selection for focused workflows whose outcome is already authorized by the current request and whose risk is controlled through a bounded scope, stop conditions, and verification.
-- P2 disables a workflow through host configuration when it should not participate in selection.
+`grill`、`insights`、Git 三件套 `repo`、`push`、`pr`、`deploy` 和跨领域迭代的 `loop` 只允许显式调用；`build`、`todo`、`human-in-the-loop`、`to-mmd`、`ui-to-desc`、`context-shrink`、`seo`、`geo` 也允许隐式调用。完整约定和宿主配置见 `docs/skill-priority.md`。
 
-The decision-challenging workflow `grill`, personal usage review `insights`, the Git workflows `repo`, `push`, and `pr`, the deployment workflow `deploy`, and the cross-domain iteration workflow `loop` are P0. `build`, `todo`, `human-in-the-loop`, `to-mmd`, `ui-to-desc`, `context-shrink`, `seo`, and `geo` are P1. The full convention and host configuration live in `docs/skill-priority.md`.
+一旦被选中，一个入口就承担完整结果。有副作用的 skill 不得依赖宿主隐式发现并串联另一个有副作用的 skill 来完成授权、安全检查、验证或报告。
 
-Once selected, one entry point owns its complete outcome. A side-effecting skill must not depend on a host implicitly discovering and chaining another side-effecting skill to finish authorization, safety checks, verification, or reporting.
+## 命名与演进
 
-## Naming and evolution
+- 用小写 kebab-case，目录名与 frontmatter 的 `name` 一致。
+- 优先选用户会自然记住的短动词或目标。
+- 命名结果，不命名实现命令或每个内部步骤。
+- 名称和描述一起检查是否有搜索冲突和触发歧义。
+- 改名、启用分类、迁移分类和改动调用方式都是产品决定。要在同一次改动里更新表达它们的元数据、README、DESIGN、adapter 和校验。
+- 让重复使用暴露缺失的边界。不要预建占位 skill 或空分类目录。
+- 整库用不可变的注解 Git tag 打版本，形如 `vMAJOR.MINOR.PATCH`，每个 tag 指向一个包含全部 skill、安装器和文档的提交。bootstrap URL 和它的 `--ref` 要指向同一个发布 tag；`main` 明确描述为移动的开发通道。
 
-- Use lowercase kebab-case and match the directory name to frontmatter `name`.
-- Prefer a short verb or goal the user would naturally remember.
-- Name the outcome, not the implementation command or every internal step.
-- Check names and descriptions together for search collisions and ambiguous triggering.
-- Treat renames, category activation, category migration, and invocation changes as product decisions. Update the metadata, README, DESIGN, adapters, and checks that express them in the same change.
-- Let repeated use expose missing boundaries. Do not pre-create placeholder skills or empty category directories.
-- Version the library as a whole with immutable annotated Git tags named `vMAJOR.MINOR.PATCH`. Each tag identifies one repository commit containing all skills, installers, and documentation. Pin both the bootstrap URL and its `--ref` to the same release tag; keep `main` explicitly described as a moving development channel.
+## 反模式
 
-## Anti-patterns
-
-- A public wrapper for one command or one trivial parameter choice.
-- Many atomic skills that make the user orchestrate the original workflow.
-- A general-purpose category that becomes a dumping ground for unrelated outcomes.
-- Categories based on tools rather than user outcomes.
-- Empty categories, speculative packages, or placeholder resource trees.
-- Copies of one workflow body for different hosts.
-- Taxonomy encoded as nested installation paths or activation filters.
-- Side effects without preflight checks, stop conditions, and post-action verification.
-- A default that saves a question by silently increasing risk.
-- Empty commits, forced work for an already-correct state, or no-op results reported as failures.
-- Claims of compatibility, validation, or delivery that were not actually verified.
+- 为一条命令或一个无关紧要的参数选择做一个公开包装。
+- 拆出大量原子 skill，反而让用户去编排原来的工作流。
+- 把通用分类变成不相关结果的倾倒场。
+- 按工具而不是按用户结果分类。
+- 空分类、投机性的包，或占位的资源目录树。
+- 为不同宿主复制同一份工作流正文。
+- 把分类编码成嵌套安装路径或激活过滤器。
+- 没有事前检查、停止条件和事后验证的副作用。
+- 用悄悄提高风险来省下一个提问的默认值。
+- 空提交、对已经正确的状态硬做功，或把空操作当成失败上报。
+- 声称兼容、验证或交付，但实际没验证过。

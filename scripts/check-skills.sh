@@ -376,7 +376,7 @@ validate_explicit_only_adapter() {
   local expected_mention
 
   if [ ! -f "$adapter_file" ]; then
-    report_error "$relative_adapter" "P0 skill '$skill_name' requires a Codex adapter"
+    report_error "$relative_adapter" "explicit-only skill '$skill_name' requires a Codex adapter"
     return
   fi
 
@@ -429,7 +429,7 @@ validate_explicit_only_adapter() {
   else
     raw_value=$(direct_nested_raw_value "$adapter_file" policy allow_implicit_invocation)
     if [ "$raw_value" != "false" ]; then
-      report_error "$relative_adapter" "P0 skill '$skill_name' requires unquoted policy.allow_implicit_invocation: false"
+      report_error "$relative_adapter" "explicit-only skill '$skill_name' requires unquoted policy.allow_implicit_invocation: false"
     fi
   fi
 }
@@ -444,7 +444,7 @@ fi
 
 for explicit_only_skill in "${explicit_only_skills[@]}"; do
   if [ ! -f "$repo_root/skills/$explicit_only_skill/SKILL.md" ]; then
-    report_error "scripts/check-skills.sh" "P0 skill '$explicit_only_skill' does not name an existing package in skills/"
+    report_error "scripts/check-skills.sh" "explicit-only skill '$explicit_only_skill' does not name an existing package in skills/"
   fi
 done
 

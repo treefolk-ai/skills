@@ -1,62 +1,79 @@
-# Skill 调用参与层级与启用策略
+# Skill 调用规则
 
-## 结论
+这份文档回答两个问题：**用 skill 时要不要手写 `$name`？** 和 **不想用某个 skill 时怎么关掉？**
 
-Codex 没有公开的数字型 skill 优先级字段。Treefolk 使用 P0、P1、P2 作为维护约定，描述一个 skill 是否参与选择，以及它在启用时是否允许隐式匹配，而不是声明它比另一个 skill “更重要”。
+从开头到「关掉某个 skill」是使用说明，再往后是维护者要看的配置和约定。
 
-- **P0：已启用，仅显式调用。** 用户必须写出 `$skill-name`。适合会提交代码、推送远端、创建仓库、发起 Pull Request 或部署到外部运行环境的高影响工作流，以及 `loop` 的持续迭代、`grill` 的决策盘问等与普通任务重叠、应由用户主动选择的入口。
-- **P1：已启用，允许隐式匹配。** 用户没有点名 skill 时，Codex 可以根据 `name` 和 `description` 判断是否使用。适合风险可控、边界清楚且无需额外授权的只读、转换或有界本地工作流；本地写入必须由当前请求覆盖，并具备明确范围、停止条件和验证。
-- **P2：由 host 配置禁用。** Skill 可以保留在本地并继续由仓库 installer 建立链接，但不参与显式或隐式选择。适合低频、暂时不用或与其他 skill 高度重叠的能力。
+## 先记住两句话
 
-P0、P1、P2 不是 Codex 配置字段，也不属于 `treefolk-category`、`treefolk-domain` 或 `treefolk-kind`。这些 `treefolk-*` 值只负责分类，不控制安装或调用。
+1. **手写 `$name` 一定生效。** `$push`、`$grill` 这种写法，只要 skill 已安装就会调用它。
+2. **不写 `$name` 时，只有一部分 skill 会被自动选中。** 其余的即使描述很贴合，也不会自己跑起来。
 
-> **P0 用户须知：** 安装或启用 P0 skill，不代表它会参与基于描述的自动语义匹配。普通自然语言请求不会让模型自动选中它；用户必须输入准确命令。P0 skill 仍可出现在宿主的 skill 列表或命令补全中。当前 Codex adapter 使用 `$grill`、`$insights`、`$repo`、`$push`、`$pr`、`$deploy` 和 `$loop`。当前 `setup` 尚不支持 Claude Code，也不安装 Ralph Wiggum 或 `loop` 的宿主 Stop hook。
+这两句话就是两种调用方式的区别：
 
-P0 不禁止组合。一个被用户显式调用的 P0 工作流可以组合多个内部步骤，但它必须为完整结果统一承担授权、安全检查、停止条件、验证与报告。它不能依赖基于描述的自动匹配去发现并串联另一个 P0 工作流。
+- **显式调用**：你自己写出 `$name`。任何时候都有效。
+- **隐式调用**：你不写名字，Codex 拿 `name` 和 `description` 去匹配，替你决定用哪个。
 
-## Codex 如何选择 skill
-
-Codex 选择 skill 时先使用可用 skill 的名称和描述，只在选中 skill 后加载完整的 `SKILL.md`。显式 `$skill-name` 调用最确定；没有显式点名时，只有允许隐式调用的 skill 才进入语义匹配。
+不写 `$name` 时会发生什么：
 
 ```mermaid
-flowchart TD
-    request["收到用户请求"] --> enabled{"Skill 是否已启用？"}
-    enabled -- "否：P2" --> skip["不参与本次选择"]
-    enabled -- "是" --> explicit{"用户是否显式写出 $skill-name？"}
-    explicit -- "是" --> load["加载目标 Skill 的完整 SKILL.md"]
-    explicit -- "否" --> implicit{"是否允许隐式调用？"}
-    implicit -- "否：P0" --> wait["不进入语义匹配；本次不加载"]
-    implicit -- "是：P1" --> match["根据 name 与 description 语义匹配"]
-    match --> selected{"是否明确匹配用户目标？"}
-    selected -- "是" --> load
-    selected -- "否" --> skip
+flowchart LR
+    allow{"它允许隐式调用吗？"} -- "不允许" --> skip["不会自动选中"]
+    allow -- "允许" --> match{"描述和目标对得上吗？"}
+    match -- "对得上" --> auto["自动选中"]
+    match -- "对不上" --> miss["这次不用"]
 ```
 
-这张流程图表达调用与启用关系，不表示多个 P1 skill 之间存在稳定的数值排序。多个描述同时匹配时，不应依赖未公开的选择顺序，而应收紧描述边界或改成 P0。
+隐式调用不是「最像的那个一定赢」。多个 skill 的描述都沾边时，选择顺序没有公开保证；办法是收紧描述，或者把它改成只允许显式调用。
 
-## 当前分层
+## 全部 skill
 
-| Skill | 层级 | 调用方式 | 原因 |
-| --- | --- | --- | --- |
-| `grill` | P0 | `$grill` | 主动选择逐题盘问，检验需求、复杂度与取舍；默认只读对话，普通实现不进入盘问，记忆交给宿主，不自动落盘或修改全局规则 |
-| `insights` | P0 | `$insights` | 主动选择跨会话的个人使用回顾；默认 90 天，可筛选期间与项目，并用开关控制官方最新功能查询；只交付私有报告，不应用建议 |
-| `build` | P1 | 显式调用或语义匹配 | 根据明确需求构建功能并完成适用验证；匹配新增或改变代码行为，不匹配仅运行编译命令、需求探索或只读审查；工具偏好不授权安装、联网或迁移 |
-| `repo` | P0 | `$repo` | 会初始化仓库、查询并可能创建托管仓库、创建提交并推送远端 |
-| `push` | P0 | `$push` | 会暂存、提交并推送当前任务改动 |
-| `pr` | P0 | `$pr` | 会创建分支、提交、推送并创建或复用 Pull Request |
-| `deploy` | P0 | `$deploy` | 普通模式可能把源码或构建产物部署到外部运行环境，provider 在项目证据不冲突时默认 Cloudflare；`$deploy plan` 仍须显式调用，但只做本地静态检查 |
-| `loop` | P0 | `$loop` | 显式选择跨领域的持续执行、评价和改进；`help` 只读，普通任务不会自动进入循环，本地默认不授权 Git 交付或外部副作用 |
-| `todo` | P1 | 显式调用或语义匹配 | 只读查询当前项目的任务文档并推荐一个可审阅的下一步；`$todo adhd` 仅压缩输出，不增加副作用 |
-| `human-in-the-loop` | P1 | 显式调用或语义匹配 | 留证据或写回目标、验收、取舍反馈，让人看清 AI 结果与可信边界并校正后续工作；普通开发、问进度或恢复 AI 上下文不触发写入 |
-| `to-mmd` | P1 | 显式调用或语义匹配 | 只生成可审阅的 Mermaid 文本；未设置策略时，隐式调用默认为开启 |
-| `ui-to-desc` | P1 | 显式调用或语义匹配 | 低风险地整理组件设计证据；只有路径和写入意图明确后才落盘 |
-| `context-shrink` | P1 | 显式调用或语义匹配 | 只在用户明确要求缩小维护上下文并给出仓库内目录后修改该范围；先 MAP、逐项验证，不提交或推送 |
-| `seo` | P1 | 显式调用或语义匹配 | 在请求范围内修复搜索发现、抓取索引与元信息；`audit` 只读，不自动应用远端设置或发布 |
-| `geo` | P1 | 显式调用或语义匹配 | 在请求范围内核实答案与来源、修正可控内容；`audit` 只读，不把内容验证当作 AI 引用或自动发布 |
+**只允许显式调用**——必须手写名字。会提交、推送、建仓库、发 Pull Request、部署这类影响外部结果的流程都在这一组：
 
-## 配置 P0
+| Skill | 用途 |
+| --- | --- |
+| `$grill` | 逐题盘问一个决定是否值得做，适合「这是伪需求吗」「会不会过度设计」 |
+| `$insights` | 回顾最近的 AI 使用记录，给最多三条改进建议并生成本地网页 |
+| `$repo` | 首次发布：初始化仓库、找到或创建远端、完成第一次推送 |
+| `$push` | 检查、提交并推送本次改动；`$push safe` 做完整核验 |
+| `$pr` | 创建分支、提交、推送，并新建或复用 Pull Request |
+| `$deploy` | 把选定的源码或产物部署到已有目标并验证；`$deploy plan` 只做本地静态检查 |
+| `$loop` | 按验收条件反复迭代一项产物，直到达标或到达执行边界；`$loop help` 只帮你选标准 |
 
-在源码包内添加 `skills/<name>/agents/openai.yaml`。字符串保持引号，`default_prompt` 必须显式包含该 skill 的 `$name`：
+**显式或隐式都行**——可以手写名字，也可能被自动选中。只读、转换，或范围明确且当前请求已经授权的本地工作在这一组：
+
+| Skill | 用途 |
+| --- | --- |
+| `$build` | 根据明确需求写代码并完成适用验证 |
+| `$todo` | 读当前项目的任务文档，推荐一个可审阅的下一步；`$todo adhd` 只是压缩输出 |
+| `$human-in-the-loop` | 留下证据、写回验收或取舍反馈，让人看清结果与可信边界 |
+| `$to-mmd` | 把流程、架构、时序、数据关系转成 Mermaid 图 |
+| `$ui-to-desc` | 把多轮提供的组件设计信息整理成一份可审阅的规格 |
+| `$context-shrink` | 在不改行为的前提下，缩小指定源码范围的重复、中转与维护负担 |
+| `$seo` | 审查或修复网站、仓库的搜索发现、抓取索引与元信息；`audit` 只读 |
+| `$geo` | 核对答案与来源，改善生成式搜索中的准确理解与引用；`audit` 只读 |
+
+只允许显式调用的那一组仍然会出现在宿主的 skill 列表和命令补全里，只是普通自然语言请求不会自动选中它们。
+
+## 关掉某个 skill
+
+编辑 `~/.codex/config.toml`，按 `SKILL.md` 的绝对路径禁用：
+
+```toml
+[[skills.config]]
+path = "/绝对路径/skills/<name>/SKILL.md"
+enabled = false
+```
+
+改完重启 Codex。想恢复就把 `false` 改成 `true`，或者删掉这段配置。
+
+关掉的是**选择**，不是安装：`setup` 照样会为它建立链接，文件还在本地，只是 Codex 不再选它，手写 `$name` 也不会调用。
+
+如果配置里写的是旧版源码根目录下的 `SKILL.md`，迁移后要改成对应的 `skills/<name>/SKILL.md`。安装器只迁移能证明归属的链接，不会改写宿主全局配置。
+
+## 维护者：怎么设定调用方式
+
+**只允许显式调用**——在 `skills/<name>/agents/openai.yaml` 里写：
 
 ```yaml
 interface:
@@ -68,30 +85,29 @@ policy:
   allow_implicit_invocation: false
 ```
 
-在 skill 已启用的前提下，`allow_implicit_invocation: false` 只关闭隐式触发；用户仍然可以显式调用 `$pr`。
+`false` 只关掉隐式调用，用户手写 `$name` 仍然有效。
 
-## 配置 P2
+**允许隐式调用**——同一个字段写 `true`，或者整个 `policy` 段落不写（默认允许）。
 
-在 `~/.codex/config.toml` 中按 `SKILL.md` 路径禁用 skill：
+校验由 `scripts/check-skills.sh` 负责：
 
-```toml
-[[skills.config]]
-path = "/absolute/path/to/skill/SKILL.md"
-enabled = false
-```
+- 只有脚本里 `explicit_only_skills` 名单中的 skill 需要 adapter；这份名单要和上表第一组（只允许显式调用）保持一致。
+- adapter 必须包含 `interface.display_name`、`interface.short_description` 和 `interface.default_prompt`，其中 `default_prompt` 必须出现准确的 `$name`。
+- `policy.allow_implicit_invocation` 必须恰好出现一次、两空格缩进、值是不带引号的 `false`。
 
-P2 是 host 层的禁用状态，不是安装过滤器；仓库 `setup` 仍然通过 `skills/*/SKILL.md` 发现全部公开包，并在宿主目录中按名称平铺链接。分类不参与安装或调用策略。修改全局配置后重启 Codex。重新启用时将 `enabled` 改为 `true`，或者删除对应配置项。
+被显式调用的 skill 可以把多个步骤组合起来完成一件事，但它要为整个结果统一承担授权、安全检查、停止条件和验证，也不能靠隐式调用去拉起另一个只允许显式调用的 skill。
 
-若配置直接引用了旧版源码根目录下的 `SKILL.md`，迁移后需改为对应的 `skills/<name>/SKILL.md` 路径。安装器只迁移能证明归属的链接，不改写宿主全局配置；指向宿主安装链接的路径无需因本次源码移动而改变。
+其余维护约定：
 
-## 维护原则
+1. 会改 Git 历史、远端状态或外部系统的流程，默认归为只允许显式调用。
+2. 只有高频、风险可控、触发边界清楚的才允许隐式调用；涉及本地写入时，当前请求必须已经覆盖该结果，并且有明确范围、停止条件和验证。
+3. 只适用于单个仓库的 skill 放仓库级 `.agents/skills`，不要全部装到全局。
+4. skill 名称保持唯一。同名不会自动合并，也不要靠目录层级覆盖另一个 skill。
+5. `description` 开头写最重要的目标和触发词，并说明相邻但不应触发的场景。skill 很多时，Codex 可能先缩短描述，再从初始列表中省略部分条目。
+6. 两个允许隐式调用的 skill 经常同时匹配时，先拆清职责、重写描述；仍有歧义就把高影响的一方改成只允许显式调用。
 
-1. 把会修改 Git 历史、远端状态或外部系统的工作流默认归为 P0。
-2. 仅让高频、风险可控且触发边界清楚的工作流保持 P1；若会本地写入，当前请求必须已覆盖该结果，且范围、停止条件和验证都必须明确。
-3. 把只适用于单个仓库的 skill 放在仓库级 `.agents/skills`，不要全部安装到全局。
-4. 保持 skill 名称唯一。相同名称不会自动合并，也不要依赖目录层级覆盖另一个 skill。
-5. 在 `description` 开头写最重要的用户目标和触发词，并说明相邻但不应触发的场景。Skill 很多时，Codex 可能先缩短描述，再从初始列表中省略部分条目。
-6. 当两个 P1 skill 经常同时匹配时，优先拆清职责和重写描述；仍有歧义时，把高影响的一方改成 P0。
-7. 让仓库 validator 强制检查每个 P0 adapter，拒绝缺失文件、非布尔 `false`，以及未包含准确 `$skill-name` 的默认提示。
+## 其他约定
 
-Codex 的显式与隐式调用、描述预算、启用配置及 `allow_implicit_invocation` 行为以官方 [Build skills](https://learn.chatgpt.com/docs/build-skills) 文档为准。
+`treefolk-category`、`treefolk-domain`、`treefolk-kind` 只负责分类，不控制安装或调用。
+
+调用方式与启用配置以官方 [Build skills](https://learn.chatgpt.com/docs/build-skills) 文档为准。安装位置见 [README](../README.md)，Claude Code 的差异见 [Claude Code 软链说明](../CLAUDE-CODE-LINK.md)。
