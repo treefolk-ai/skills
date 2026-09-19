@@ -44,6 +44,17 @@ $build 给设置页增加语言选择，刷新后保留选择
 
 详细参数见上表技能链接；自动选择与显式调用的区别见 [调用规则](docs/skill-priority.md)。
 
+## 装在哪里
+
+Codex 和 Grok 读 `~/.agents/skills`，Claude Code 只读 `~/.claude/skills`，两边不共用，所以各装一份：
+
+```sh
+./setup           # 链到 ~/.agents/skills，给 Codex 和 Grok
+./link-claude.sh  # 链到 ~/.claude/skills，给 Claude Code
+```
+
+软链指向本仓库源码，源码目录要保留。Claude Code 的用法与限制见 [Claude Code 软链说明](CLAUDE-CODE-LINK.md)。
+
 ## 安装与更新
 
 **复制到 Codex（推荐）：** 打开 Codex，把下面整段发给它：
@@ -81,9 +92,9 @@ curl -fsSL https://raw.githubusercontent.com/treefolk-ai/skills/v0.1.0/install.s
 
 </details>
 
-`./setup` 默认使用 Codex。技能链接位于 `~/.agents/skills`，因此需保留源码目录；正确链接会跳过，已支持的迁移按归属检查处理，并保留其他来源的链接和真实目录。
+`./setup` 是幂等的：正确链接会跳过，已支持的迁移按归属检查处理，并保留其他来源的链接和真实目录。
 
-安装、`setup` 和卸载均支持 `--dry-run` 预览。Grok 使用 `--host grok`，目前仅通过本地安装与卸载检查，尚未验证真实宿主调用。
+安装、`setup` 和卸载均支持 `--dry-run` 预览。
 
 **自有域名（TODO）：** 以下 `example.com` 链接仅为示意，尚不可安装；域名只简化地址。
 
